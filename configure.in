@@ -1,0 +1,112 @@
+AC_PREREQ(2.54)
+
+AC_INIT(tests)
+
+PACKAGE=ocfs2-test
+
+AC_SUBST(PACKAGE)
+
+# Adjust these for the software version.
+MAJOR_VERSION=0
+MINOR_VERSION=0
+MICRO_VERSION=1
+EXTRA_VERSION=
+
+# Adjust this only to bump the RPM packaging version
+RPM_VERSION=1
+
+DIST_VERSION=$MAJOR_VERSION.$MINOR_VERSION.$MICRO_VERSION
+if test -z "$EXTRA_VERSION"; then
+    VERSION=$DIST_VERSION
+else
+    VERSION=$DIST_VERSION-$EXTRA_VERSION
+fi
+
+AC_SUBST(MAJOR_VERSION)
+AC_SUBST(MINOR_VERSION)
+AC_SUBST(MICRO_VERSION)
+AC_SUBST(EXTRA_VERSION)
+
+AC_SUBST(DIST_VERSION)
+AC_SUBST(VERSION)
+AC_SUBST(RPM_VERSION)
+
+AC_CANONICAL_HOST
+
+case "$host" in
+  *-*-linux*)
+    ;;
+  *)
+    AC_MSG_ERROR([This filesystem will only work on Linux])
+    ;;
+esac
+
+AC_PROG_CC
+AC_PROG_CPP
+
+AC_PROG_INSTALL
+AC_PROG_LN_S
+AC_PROG_RANLIB
+
+AC_PATH_PROG(AR, ar)
+
+AC_HEADER_STDC
+AC_C_CONST
+
+if test "x$GCC" != "xyes"; then
+  AC_MSG_ERROR(GCC is required)
+fi
+
+COM_ERR_LIBS=
+PKG_CHECK_MODULES(COM_ERR, com_err,, [
+  AC_CHECK_LIB(com_err, com_err, COM_ERR_LIBS=-lcom_err)
+  if test "x$COM_ERR_LIBS" = "x"; then
+    AC_MSG_ERROR([Unable to find com_err library])
+  fi
+  AC_CHECK_HEADER(et/com_err.h, :,
+    AC_MSG_ERROR([Unable to find com_err headers]))
+  AC_SUBST(COM_ERR_LIBS)
+])
+
+O2CB_LIBS=
+PKG_CHECK_MODULES(O2CB, o2cb,, [
+  AC_CHECK_LIB(o2cb, o2cb_init, O2CB_LIBS="-lo2cb $COM_ERR_LIBS")
+  if test "x$O2CB_LIBS" = "x"; then
+    AC_MSG_ERROR([Unable to find o2cb library])
+  fi
+  AC_CHECK_HEADER(o2cb/o2cb.h, :,
+    AC_MSG_ERROR([Unable to find o2cb headers]))
+  AC_SUBST(O2CB_LIBS)
+])
+
+O2DLM_LIBS=
+PKG_CHECK_MODULES(O2DLM, o2dlm,, [
+  AC_CHECK_LIB(o2dlm, o2dlm_initialize, O2DLM_LIBS="-lo2dlm $COM_ERR_LIBS")
+  if test "x$O2DLM_LIBS" = "x"; then
+    AC_MSG_ERROR([Unable to find o2dlm library])
+  fi
+  AC_CHECK_HEADER(o2dlm/o2dlm.h, :,
+    AC_MSG_ERROR([Unable to find o2dlm headers]))
+  AC_SUBST(O2DLM_LIBS)
+])
+
+OCFS2_LIBS=
+PKG_CHECK_MODULES(OCFS2, ocfs2,, [
+  AC_CHECK_LIB(ocfs2, ocfs2_open, OCFS2_LIBS="-locfs2 -lo2dlm -lo2cb $COM_ERR_LIBS")
+  if test "x$OCFS2_LIBS" = "x"; then
+    AC_MSG_ERROR([Unable to find ocfs2 library])
+  fi
+  AC_CHECK_HEADER(ocfs2/ocfs2.h, :,
+    AC_MSG_ERROR([Unable to find ocfs2 headers]))
+  AC_SUBST(OCFS2_LIBS)
+])
+
+
+dnl check for Python
+AM_PATH_PYTHON(2.3, , AC_MSG_ERROR([could not find Python 2.3 or higher.]))
+
+AC_CONFIG_FILES([
+Config.make
+])
+
+AC_OUTPUT
