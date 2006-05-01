@@ -57,6 +57,11 @@ if test "x$GCC" != "xyes"; then
   AC_MSG_ERROR(GCC is required)
 fi
 
+AC_PATH_PROG(MPICC, mpicc)
+if test "x$MPICC" = "x"; then
+  AC_MSG_ERROR(mpicc is required)
+fi
+
 COM_ERR_LIBS=
 PKG_CHECK_MODULES(COM_ERR, com_err,, [
   AC_CHECK_LIB(com_err, com_err, COM_ERR_LIBS=-lcom_err)

@@ -7,8 +7,12 @@ TESTS = ttest
 
 CFLAGS = -O2 -Wall -g
 
+SOURCES = ttest.c
+OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 
-ttest: ttest.o
+DIST_FILES = $(SOURCES)
+
+ttest: $(OBJECTS)
 	$(LINK) 
 
 include $(TOPDIR)/Postamble.make
