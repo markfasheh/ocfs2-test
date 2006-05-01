@@ -1,0 +1,3 @@
+lamboot -v -ssi boot_rsh_agent /usr/bin/ssh /etc/bhost
+
+mpirun -np 2 n1-3 write_append_truncate /ocfs2/foo 10000

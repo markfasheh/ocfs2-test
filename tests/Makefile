@@ -7,6 +7,7 @@ SUBDIRS =			\
 	lock_grab		\
 	logwriter		\
 	lvb_torture		\
-	ttest
+	ttest			\
+	write_append_truncate
 
 include $(TOPDIR)/Postamble.make
