@@ -8,6 +8,7 @@ SUBDIRS =			\
 	lock_grab		\
 	logwriter		\
 	lvb_torture		\
+	mmap_test		\
 	multi_node_mmap		\
 	ttest			\
 	write_append_truncate	\
