@@ -1,0 +1,25 @@
+The lock_grab test uses the ocfs2 dlmfs to take and release cluster
+locks.  It works by a simple algoritm.
+
+First, it defines a lock space.  This space is merely a number of locks
+(the -c option, defaults to 100).  It then goes into a loop.  In each
+pass it does the following:
+
+1) choose whether to deal with PR or EX locks this pass
+
+If it is dealing with PR locks this pass, it does the following:
+
+2) choose whether to do an acquire or release
+3) choose what lock(s) to act on
+4) acquire or release the chosen PR locks
+
+If it is dealing with EX locks, it does this instead:
+
+2) choose an unlocked lock to act on
+3) lock that lock with an EX
+4) sleep a random amount of time
+5) unlock the lock
+
+The idea here is that nodes grabbing PR locks will wait on a sleeping EX
+lock, and nodes trying to get an EX lock will sleep on held PR locks.
+Thus, contention.

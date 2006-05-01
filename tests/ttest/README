@@ -1,0 +1,13 @@
+ocfs2 does not currently support holes in files.  Thus, when extending
+a file past the current allocation, ocfs2 must write zeros to any part
+of the file that is not covered by either the current allocation or the
+new write.  This is handled by ocfs2_zero_extend() in the filesystem.
+
+The ttest program stresses this functionality.  It first truncates a
+file at a specified size, then writes into the file at a given location.
+You can do many things with this.  You can truncate a large file to a
+smaller size, then write back out at the old location.  Everything
+between the small size and the write location should be zeroed.  You can
+truncate and then write at the truncate point, to see that they order
+correctly.  Quite a few other things.
+

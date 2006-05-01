@@ -1,0 +1,6 @@
+This is a simple test to see if mmap behaves correctly at the end of
+the file's size.  It first writes up to the existing end of the file.
+This should work.  Then it writes just past the end of the file.  This
+should error.
+
+This test really has no cluster relevance.
