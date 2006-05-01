@@ -3,6 +3,7 @@ TOPDIR = ..
 include $(TOPDIR)/Preamble.make
 
 SUBDIRS =			\
+	extend_and_write	\
 	extendo			\
 	lock_grab		\
 	logwriter		\
