@@ -37,7 +37,7 @@ int bufsize = SIZE;
 char buf1[SIZE+1];
 char buf2[SIZE+1];
 
-help()
+void help()
 {
  	printf("usage: <-is>\n"
         "-i <node> 0-this node, 1-other node\n"
@@ -45,7 +45,7 @@ help()
         "-w <type> the way of writing to the file. 1 means a normal read/write, 2 means a memorymap way\n"
         "-v <type> the way of verify the previous is ok. 1 means a normal read/write, 2 means a memorymap way\n"
 	);
-   
+
 }
 
 int node = 0;
@@ -53,7 +53,7 @@ int size = 512;
 int mode = 0;
 int do_type = NORMAL_READ_WRITE;
 
-getfilename()
+void getfilename()
 {
 	char *ocfsroot;
 
@@ -68,8 +68,8 @@ getfilename()
 void  writefile(char *filename, int node, int size)
 {
 
-	int fd, i, c;
-	int err;	
+	int fd, i;
+	int err;
 
 	memset(buf1, 'A' + node, bufsize);
 
@@ -79,8 +79,8 @@ void  writefile(char *filename, int node, int size)
 			filename, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
-	i = node;	
-	err = lseek(fd, bufsize * i, SEEK_SET);	
+	i = node;
+	err = lseek(fd, bufsize * i, SEEK_SET);
 	if(err == -1) {
 		fprintf(stderr, "lseek fail\n");
 		close(fd);
@@ -92,14 +92,14 @@ void  writefile(char *filename, int node, int size)
 		lseek(fd, bufsize * i, SEEK_SET);
 	}
 	close(fd);
-	
-	
+
+
 }
 
 int verify(char *filename, int node,int size)
 {
-	int fd, i, c;
-	int err;	
+	int fd, i;
+	int err;
 
 	fd = open(filename, O_RDONLY);
 	if (fd < 0) {
@@ -107,7 +107,7 @@ int verify(char *filename, int node,int size)
 			filename, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
-	i = node;	
+	i = node;
 	err = lseek(fd, bufsize * i, SEEK_SET);
 	if(err == -1) {
 		fprintf(stderr, "lseek fail\n");
@@ -134,8 +134,8 @@ int verify(char *filename, int node,int size)
 void writefile_mm(char *filename, int node, int size)
 {
 
-	int fd, i, c;
-	int err;	
+	int fd, i;
+	int err;
 	char *p;
 
 	if ( size < 2 ){
@@ -151,11 +151,11 @@ void writefile_mm(char *filename, int node, int size)
 			filename, strerror(errno));
 		exit(EXIT_FAILURE);
 	}
-	
+
 	/*debug only*/
 	memset(buf2, 'C' + node, bufsize);
 	i = 0;
-	err = lseek(fd, bufsize * i, SEEK_SET);	
+	err = lseek(fd, bufsize * i, SEEK_SET);
 	if(err == -1) {
 		fprintf(stderr, "lseek fail\n");
 		close(fd);
@@ -164,7 +164,7 @@ void writefile_mm(char *filename, int node, int size)
 	for (i = 0; i< size; i++) write(fd, buf2, bufsize);
 	/*debug only*/
 
-	i = node;	
+	i = node;
   	p = (char *) mmap(NULL, bufsize, PROT_READ | PROT_WRITE, MAP_SHARED,
 			   fd, bufsize * i);
   	if (p == MAP_FAILED) {
@@ -191,14 +191,14 @@ void writefile_mm(char *filename, int node, int size)
 
   	memcpy(p, buf1, bufsize);
 	munmap(p, bufsize);
-	
+
 	close(fd);
 }
 
 int  verify_mm(char *filename, int node,int size)
 {
-	int fd, i, c;
-	int err;	
+	int fd, i;
+	int err;
 	char *p;
 
 	if ( size < 2 ){
@@ -258,8 +258,8 @@ int  verify_mm(char *filename, int node,int size)
 int
 main(int argc, char *argv[])
 {
-	int fd, i, c;
-	int err;	
+	int c;
+	int err = 0;
 	void (*write_fun)(char *, int, int) = writefile;
 	int (*verify_fun)(char *, int, int) = verify;
 	int found_w=FALSE, found_v=FALSE;
@@ -292,8 +292,8 @@ main(int argc, char *argv[])
 		else{
 		     printf("pls input an valid way fo writing file. Only 1 or 2 is allowed to use");
 		     exit(1);
-		}  
-		    
+		}
+
 		break;
 
 	case 'v':
@@ -306,9 +306,9 @@ main(int argc, char *argv[])
 		else{
 		     printf("pls input an valid way fo writing file. Only 1 or 2 is allowed to use");
 		     exit(1);
-		}  
-		    
-		break;	  
+		}
+
+		break;
         case 'h':
         default:
             help();
@@ -319,7 +319,7 @@ main(int argc, char *argv[])
         if ( found_w )
 	  (*write_fun)(filename, node, size);
 	if ( found_v )
-	  err = (*verify_fun)(filename, node, size);		
+	  err = (*verify_fun)(filename, node, size);
 
 	return (err);
 }
