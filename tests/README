@@ -3,6 +3,5 @@ This directory contains files describing individual tests.
 Each file in this directory contains exactly one mpirun(1) command
 line. The command will call something to run on some set of nodes.  This
 will either be a direct program from the $(TESTDIR)/programs directory,
-or calling $(TESTDIR)/utilities/mpirun on a subdirectory under the
+or calling $(TESTDIR)/utilities/mpi-run-parts on a subdirectory under the
 $(TESTDIR)/programs directory.
-
