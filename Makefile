@@ -22,7 +22,7 @@ ifeq ($(TOOLSARCH),error)
 $(error could not detect architecture for tools)
 endif
 
-SUBDIRS = tests tools
+SUBDIRS = programs utilities
 
 
 DIST_FILES = \
