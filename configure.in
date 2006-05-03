@@ -1,6 +1,6 @@
 AC_PREREQ(2.54)
 
-AC_INIT(tests)
+AC_INIT(programs)
 
 PACKAGE=ocfs2-test
 

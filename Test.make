@@ -11,11 +11,16 @@ UNINST_PROGRAMS = $(TESTS)
 
 INSTALL_RULES = install-tests
 
+TEST_PWD = `pwd`
+TOPDIR_PWD = `cd $(TOPDIR) && pwd`
+
 install-tests: $(TESTS)
 ifdef TESTS
-	$(SHELL) $(TOPDIR)/mkinstalldirs $(DESTDIR)$(libdir)/ocfs2-tests
+	TEST_LOC="$(TEST_PWD)" ; \
+	TEST_LOC="$${TEST_LOC#$(TOPDIR_PWD)/}" ; \
+	$(SHELL) $(TOPDIR)/mkinstalldirs $(DESTDIR)$(TESTDIR)/$$TEST_LOC; \
 	for prog in $(TESTS); do \
-	  $(INSTALL_PROGRAM) $$prog $(DESTDIR)$(libdir)/ocfs2-tests/$$prog; \
+	  $(INSTALL_PROGRAM) $$prog $(DESTDIR)$(TESTDIR)/$$TEST_LOC/$$prog ; \
 	done
 endif
 

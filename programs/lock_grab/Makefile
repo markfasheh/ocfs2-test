@@ -1,7 +1,6 @@
 TOPDIR = ../..
 
 include $(TOPDIR)/Preamble.make
-include $(TOPDIR)/Test.make
 
 TESTS = lock_grab
 
@@ -15,4 +14,5 @@ DIST_FILES = $(SOURCES)
 lock_grab: $(OBJECTS)
 	$(LINK) $(O2DLM_LIBS)
 
+include $(TOPDIR)/Test.make
 include $(TOPDIR)/Postamble.make

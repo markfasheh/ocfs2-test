@@ -1,7 +1,6 @@
 TOPDIR = ../..
 
 include $(TOPDIR)/Preamble.make
-include $(TOPDIR)/Test.make
 
 TESTS = lvb_torture
 
@@ -17,4 +16,5 @@ DIST_FILES = $(SOURCES)
 lvb_torture: $(OBJECTS)
 	$(LINK) $(O2DLM_LIBS)
 
+include $(TOPDIR)/Test.make
 include $(TOPDIR)/Postamble.make

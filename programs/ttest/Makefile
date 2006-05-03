@@ -1,7 +1,6 @@
 TOPDIR = ../..
 
 include $(TOPDIR)/Preamble.make
-include $(TOPDIR)/Test.make
 
 TESTS = ttest
 
@@ -15,4 +14,5 @@ DIST_FILES = $(SOURCES)
 ttest: $(OBJECTS)
 	$(LINK) 
 
+include $(TOPDIR)/Test.make
 include $(TOPDIR)/Postamble.make

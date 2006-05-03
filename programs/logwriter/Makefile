@@ -1,7 +1,6 @@
 TOPDIR = ../..
 
 include $(TOPDIR)/Preamble.make
-include $(TOPDIR)/Test.make
 
 TESTS = logwriter
 
@@ -15,4 +14,5 @@ DIST_FILES = $(SOURCES)
 logwriter: $(OBJECTS)
 	$(LINK) 
 
+include $(TOPDIR)/Test.make
 include $(TOPDIR)/Postamble.make

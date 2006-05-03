@@ -1,7 +1,6 @@
 TOPDIR = ../..
 
 include $(TOPDIR)/Preamble.make
-include $(TOPDIR)/Test.make
 
 TESTS = extend_and_write verify
 
@@ -21,4 +20,5 @@ extend_and_write: $(EXTEND_AND_WRITE_OBJECTS)
 verify: $(VERIFY_OBJECTS)
 	$(LINK) 
 
+include $(TOPDIR)/Test.make
 include $(TOPDIR)/Postamble.make

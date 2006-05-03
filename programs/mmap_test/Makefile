@@ -1,7 +1,6 @@
 TOPDIR = ../..
 
 include $(TOPDIR)/Preamble.make
-include $(TOPDIR)/Test.make
 
 TESTS = mmap_test
 
@@ -15,4 +14,5 @@ DIST_FILES = $(SOURCES)
 mmap_test: $(OBJECTS)
 	$(LINK) 
 
+include $(TOPDIR)/Test.make
 include $(TOPDIR)/Postamble.make

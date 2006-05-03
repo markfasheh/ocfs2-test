@@ -1,7 +1,6 @@
 TOPDIR = ../..
 
 include $(TOPDIR)/Preamble.make
-include $(TOPDIR)/Test.make
 
 TESTS = write_append_truncate
 
@@ -17,4 +16,5 @@ DIST_FILES = $(SOURCES)
 write_append_truncate: $(OBJECTS)
 	$(LINK)
 
+include $(TOPDIR)/Test.make
 include $(TOPDIR)/Postamble.make

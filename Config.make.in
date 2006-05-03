@@ -24,6 +24,9 @@ mandir = @mandir@
 
 pyexecdir = @pyexecdir@
 
+
+TESTDIR = $(libdir)/ocfs2-test
+
 top_builddir = .
 
 INSTALL = @INSTALL@
