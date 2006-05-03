@@ -1,0 +1,5 @@
+This directory contains test suites.
+
+Each file is a suite.  It contains a list of tests from $(TESTDIR)/tests
+to run.  Each test is run in order.
+
