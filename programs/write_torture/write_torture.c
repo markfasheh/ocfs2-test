@@ -63,6 +63,9 @@ static void random_sleep(unsigned int max_usecs)
 static void signal_handler(int sig)
 {
 	dprintf("%u: signal %d recieved\n", mypid, sig);
+	if (sig == SIGALRM)
+		logprint("Alarm fired! (%d)\n", sig);
+
 	die = 1;
 }
 
@@ -233,11 +236,10 @@ static int truncate_caller(int up)
 			}
 		}
 
-		random_sleep(400000);
+		random_sleep(200000 + 200000 * up);
 	}
 
 	return ret;
-
 }
 
 static int truncate_down(void)
@@ -269,7 +271,7 @@ static int straddling_eof_writer(void)
 
 		lseek(fd, off, SEEK_SET);
 
-		logprint("write straddling offset\t: %lu\n",
+		logprint("write straddling offset\t\t: %lu\n",
 			 (unsigned long) off);
 
 		ret = do_write(fd, block, BLKLEN);
@@ -288,12 +290,18 @@ int main(int argc, char **argv)
 	int status;
 	pid_t pid;
 	char *fname;
+	unsigned int seconds = 0;
 
 	if (argc < 2) {
-		fprintf(stderr, "%s <path>\n", argv[0]);
+		fprintf(stderr, "%s <path> [<seconds>]\n", argv[0]);
 		return 1;
 	}
 	fname = argv[1];
+
+	if (argc > 2) {
+		seconds = atoi(argv[2]);
+		printf("Will bound the test at about %u seconds\n", seconds);
+	}
 
 	/* prep the file */
 	fd = open(fname, O_RDWR|O_CREAT|O_TRUNC,
@@ -329,8 +337,22 @@ int main(int argc, char **argv)
 		goto kill_all;
 	}
 
+	if (seconds) {
+		if (signal(SIGALRM, signal_handler) == SIG_ERR) {
+			fprintf(stderr, "Couldn't setup SIGALRM handler!\n");
+			goto kill_all;
+		}
+
+		ret = alarm(seconds);
+		if (ret) {
+			fprintf(stderr, "alarm(2) returns %u\n", ret);
+			goto kill_all;
+		}
+	}
+
 	while (1) {
-		pid = wait(&status);
+		status = 0;
+		pid = waitpid(-1, &status, WNOHANG);
 		if (die) {
 			dprintf("die has been set, kill remaining children\n");
 			break;
@@ -349,8 +371,9 @@ int main(int argc, char **argv)
 			break;
 		}
 
-		dprintf("child %u dies with status %d\n", pid,
-			WEXITSTATUS(status));
+		if (pid)
+			dprintf("child %u dies with status %d\n", pid,
+				WEXITSTATUS(status));
 
 		if (WEXITSTATUS(status)) {
 			ret = WEXITSTATUS(status);
@@ -358,6 +381,9 @@ int main(int argc, char **argv)
 				"stopping test\n", pid, ret);
 			break;
 		}
+
+		/* check every half a second */
+		usleep(500000);
 	}
 
 kill_all:
