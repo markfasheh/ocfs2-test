@@ -147,37 +147,45 @@ static int should_not_exec(const char *path)
 	return 0;
 }
 
-/* Expects that *first == NULL */
+static int run_filter(const struct dirent *dirent)
+{
+	if (!strcmp(".", dirent->d_name) ||
+	    !strcmp("..", dirent->d_name))
+		return 0;
+
+	if (should_not_exec(dirent->d_name))
+		return 0;
+
+	return 1;
+}
+
+/*
+ * This function expects that *first == NULL.
+ *
+ * XXX: Technically, there is no need for a linked list, so perhaps we
+ * just allocate an array in the future?
+ */
 static int build_item_list(const char *dirpath, struct run_item **first)
 {
-	int ret;
+	int ret, num, i;
 	char path[PATH_MAX + 1];
-	DIR *dir;
 	struct dirent *dirent;
+	struct dirent **namelist;
 	struct run_item *item;
 
-	dir = opendir(dirpath);
-	if (dir == NULL) {
-		ret = errno;
-		return ret;
-	}
+	num = scandir(dirpath, &namelist, run_filter, alphasort);
+	if (num == -1)
+		return errno;
+	if (num == 0)
+		return 0;
 
 	ret = 0;
-	do {
-		dirent = readdir(dir);
-		if (!dirent)
-			break;
-
-		if (!strcmp(".", dirent->d_name) ||
-		    !strcmp("..", dirent->d_name))
-			continue;
+	for(i = num - 1; i >= 0; i--) {
+		dirent = namelist[i];
 
 		snprintf(path, PATH_MAX + 1, "%s/%s", dirpath, dirent->d_name);
 
 		if (!is_runnable(path))
-			continue;
-
-		if (should_not_exec(path))
 			continue;
 
 		item = calloc(1, sizeof(struct run_item));
@@ -190,9 +198,12 @@ static int build_item_list(const char *dirpath, struct run_item **first)
 		item->ri_next = *first;
 
 		*first = item;
-	} while (1);
+	}
 
-	closedir(dir);
+	while(num--)
+		free(namelist[num]);
+	free(namelist);
+
 	return ret;
 }
 
