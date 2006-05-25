@@ -10,6 +10,7 @@ SUBDIRS =			\
 	lvb_torture		\
 	mmap_test		\
 	multi_node_mmap		\
+	truncate		\
 	ttest			\
 	write_append_truncate	\
 	write_torture
