@@ -205,6 +205,10 @@ static int random_past_size_writer(void)
 	return ret;
 }
 
+/* Give us some leeway so that the other writers don't have to check
+ * that the file size doesn't grow too large */
+#define MAX_TRUNCATE_SIZE (2147483647 - (100 * BLKLEN))
+
 static int truncate_caller(int up)
 {
 	int ret = 0;
@@ -216,12 +220,16 @@ static int truncate_caller(int up)
 		where = "up";
 
 	while (!die) {
-		ret = get_i_size(fd, &size);
-		if (ret)
-			break;
-		len = get_rand(0, size / 3);
-		if (up)
-			len += size;
+
+		do {
+			ret = get_i_size(fd, &size);
+			if (ret)
+				goto out;
+
+			len = get_rand(0, size / 3);
+			if (up)
+				len += size;
+		} while (len > MAX_TRUNCATE_SIZE);
 
 		if (size && len) {
 			logprint("truncate %s to size\t\t: %lu\n",
@@ -239,6 +247,7 @@ static int truncate_caller(int up)
 		random_sleep(200000 + 200000 * up);
 	}
 
+out:
 	return ret;
 }
 
