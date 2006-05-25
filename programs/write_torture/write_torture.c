@@ -13,12 +13,14 @@
 //#define dprintf printf
 #define dprintf(str, ...) 
 
+static unsigned int seconds = 0;
+#define DEFAULT_BLKLEN 8102
+static unsigned int blklen = DEFAULT_BLKLEN;
+
 static pid_t mypid, parent;
 static int die = 0;
 static int fd;
-#define BLKLEN 8102
-static char block[BLKLEN];
-
+static char *block;
 static int logfd = STDOUT_FILENO;
 
 static void __logprint(const char *fmt, ...)
@@ -117,10 +119,10 @@ static int append_writer(void)
 	int ret = 0;
 	int len;
 
-	memset(block, 'a', BLKLEN);
+	memset(block, 'a', blklen);
 
 	while (!die) {
-		len = get_rand(1, BLKLEN + 1);
+		len = get_rand(1, blklen + 1);
 		logprint("append write len             : %d\n", len);
 
 		ret = do_write(fd, block, len);
@@ -155,7 +157,7 @@ static int random_in_place_writer(void)
 	unsigned long size;
 	off_t off;
 
-	memset(block, 'i', BLKLEN);
+	memset(block, 'i', blklen);
 
 	while (!die) {
 		ret = get_i_size(fd, &size);
@@ -163,15 +165,15 @@ static int random_in_place_writer(void)
 			break;
 		off = 0;
 
-		if (size > BLKLEN)
-			off = get_rand(0, size - BLKLEN);
+		if (size > blklen)
+			off = get_rand(0, size - blklen);
 
 		lseek(fd, off, SEEK_SET);
 
 		logprint("write in place offset        : %lu\n",
 			 (unsigned long) off);
 
-		ret = do_write(fd, block, BLKLEN);
+		ret = do_write(fd, block, blklen);
 		if (ret)
 			break;
 
@@ -186,17 +188,17 @@ static int random_past_size_writer(void)
 	int ret = 0;
 	off_t off;
 
-	memset(block, 'p', BLKLEN);
+	memset(block, 'p', blklen);
 
 	while (!die) {
-		off = get_rand(0, 3 * BLKLEN);
+		off = get_rand(0, 3 * blklen);
 
 		lseek(fd, off, SEEK_END);
 
 		logprint("write past i_size offset     : %lu\n",
 			 (unsigned long) off);
 
-		ret = do_write(fd, block, BLKLEN);
+		ret = do_write(fd, block, blklen);
 		if (ret)
 			break;
 
@@ -208,7 +210,7 @@ static int random_past_size_writer(void)
 
 /* Give us some leeway so that the other writers don't have to check
  * that the file size doesn't grow too large */
-#define MAX_TRUNCATE_SIZE (2147483647 - (100 * BLKLEN))
+#define MAX_TRUNCATE_SIZE (2147483647 - (100 * blklen))
 
 static int truncate_caller(int up)
 {
@@ -230,11 +232,11 @@ static int truncate_caller(int up)
 			len = get_rand(0, size / 3);
 			if (up)
 				len += size;
-		} while (len > MAX_TRUNCATE_SIZE);
+		} while ((len > MAX_TRUNCATE_SIZE) && (len < 0));
 
 		if (size && len) {
-			logprint("truncate %s to size        : %lu\n",
-				 where, (unsigned long) len);
+			logprint("truncate %s to size        : %d\n",
+				 where, len);
 
 			ret = ftruncate(fd, len);
 			if (ret == -1) {
@@ -268,7 +270,7 @@ static int straddling_eof_writer(void)
 	unsigned long size;
 	off_t off;
 
-	memset(block, 's', BLKLEN);
+	memset(block, 's', blklen);
 
 	while (!die) {
 		ret = get_i_size(fd, &size);
@@ -276,15 +278,15 @@ static int straddling_eof_writer(void)
 			break;
 		off = size;
 
-		if (off >= BLKLEN)
-			off -= get_rand(0, BLKLEN);
+		if (off >= blklen)
+			off -= get_rand(0, blklen);
 
 		lseek(fd, off, SEEK_SET);
 
 		logprint("write straddling offset      : %lu\n",
 			 (unsigned long) off);
 
-		ret = do_write(fd, block, BLKLEN);
+		ret = do_write(fd, block, blklen);
 		if (ret)
 			break;
 
@@ -294,23 +296,74 @@ static int straddling_eof_writer(void)
 	return ret;
 }
 
+static void usage(void)
+{
+	fprintf(stderr,
+		"usage: write_torture [-s <seconds>] [-b <blocksize>] <path>\n"
+		"<seconds> defaults to '0' (run forever)\n"
+		"<blocksize> defaults to 8092\n"
+		"For best results choose a <blocksize> value that is not a\n"
+		"multiple of the file system cluster size.\n");
+}
+
+static int parse_opts(int argc, char **argv, char **fname)
+{
+	int c;
+
+	*fname = NULL;
+
+	while (1) {
+		c = getopt(argc, argv, "s:b:");
+		if (c == -1)
+			break;
+
+		switch (c) {
+		case 's':
+			seconds = atoi(optarg);
+			break;
+		case 'b':
+			blklen = atoi(optarg);
+			break;
+		default:
+			return EINVAL;
+		}
+	}
+ 
+	if (argc - optind != 1)
+		return EINVAL;
+
+	*fname = argv[optind];
+
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	int ret = 0;
 	int status;
 	pid_t pid;
 	char *fname;
-	unsigned int seconds = 0;
 
 	if (argc < 2) {
-		fprintf(stderr, "%s <path> [<seconds>]\n", argv[0]);
+		usage();
 		return 1;
 	}
-	fname = argv[1];
 
-	if (argc > 2) {
-		seconds = atoi(argv[2]);
+	if (parse_opts(argc, argv, &fname)) {
+		usage();
+		return 1;
+	}
+
+	if (seconds)
 		printf("Will bound the test at about %u seconds\n", seconds);
+	if (blklen != DEFAULT_BLKLEN)
+		printf("Using block size of %u bytes\n", blklen);
+
+	block = malloc(blklen);
+	if (!block) {
+		fprintf(stderr, "Not enough memory to allocate %u bytes\n",
+			blklen);
+		return ENOMEM;
 	}
 
 	/* prep the file */
