@@ -109,7 +109,8 @@ static int do_write(int fd, const char *buf, unsigned int len)
 		fprintf(stderr, "%d: append write failure %d\n", mypid,
 			ret);
 	} else if (written < len)
-		fprintf(stderr, "%d: short write!\n", mypid);
+		fprintf(stderr, "%d: short write! len = %u, written = %u\n",
+			mypid, len, written);
 
 	return ret;
 }
@@ -122,7 +123,7 @@ static int append_writer(void)
 	memset(block, 'a', blklen);
 
 	while (!die) {
-		len = get_rand(1, blklen + 1);
+		len = get_rand(1, blklen);
 		logprint("append write len             : %d\n", len);
 
 		ret = do_write(fd, block, len);
@@ -384,6 +385,12 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	/* We don't care. Getting back a short write is just fine. */
+	if (signal(SIGXFSZ, SIG_IGN) == SIG_ERR) {
+		fprintf(stderr, "Couldn't ignore SIGXFSZ!\n");
+		return 1;
+	}
+
 	ret = launch_child(fname, O_RDWR|O_APPEND, append_writer);
 	if (!ret)
 		ret = launch_child(fname, O_RDWR, random_in_place_writer);
@@ -431,6 +438,9 @@ int main(int argc, char **argv)
 		if (!WIFEXITED(status)) {
 			fprintf(stderr, "Child %u dies abormally - stopping "
 				"test\n", pid);
+			if (WIFSIGNALED(status))
+				fprintf(stderr, "It couldn't catch sig %d\n",
+					WTERMSIG(status));
 			break;
 		}
 
