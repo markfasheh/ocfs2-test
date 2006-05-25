@@ -121,7 +121,7 @@ static int append_writer(void)
 
 	while (!die) {
 		len = get_rand(1, BLKLEN + 1);
-		logprint("append write len\t\t: %d\n", len);
+		logprint("append write len             : %d\n", len);
 
 		ret = do_write(fd, block, len);
 		if (ret)
@@ -168,7 +168,7 @@ static int random_in_place_writer(void)
 
 		lseek(fd, off, SEEK_SET);
 
-		logprint("write in place offset\t\t: %lu\n",
+		logprint("write in place offset        : %lu\n",
 			 (unsigned long) off);
 
 		ret = do_write(fd, block, BLKLEN);
@@ -193,7 +193,8 @@ static int random_past_size_writer(void)
 
 		lseek(fd, off, SEEK_END);
 
-		logprint("write past i_size offset\t: %lu\n",(unsigned long) off);
+		logprint("write past i_size offset     : %lu\n",
+			 (unsigned long) off);
 
 		ret = do_write(fd, block, BLKLEN);
 		if (ret)
@@ -217,7 +218,7 @@ static int truncate_caller(int up)
 	char *where = "down";
 
 	if (up)
-		where = "up";
+		where = " up ";
 
 	while (!die) {
 
@@ -232,7 +233,7 @@ static int truncate_caller(int up)
 		} while (len > MAX_TRUNCATE_SIZE);
 
 		if (size && len) {
-			logprint("truncate %s to size\t\t: %lu\n",
+			logprint("truncate %s to size        : %lu\n",
 				 where, (unsigned long) len);
 
 			ret = ftruncate(fd, len);
@@ -280,7 +281,7 @@ static int straddling_eof_writer(void)
 
 		lseek(fd, off, SEEK_SET);
 
-		logprint("write straddling offset\t\t: %lu\n",
+		logprint("write straddling offset      : %lu\n",
 			 (unsigned long) off);
 
 		ret = do_write(fd, block, BLKLEN);
