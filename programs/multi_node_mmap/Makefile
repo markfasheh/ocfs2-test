@@ -2,16 +2,18 @@ TOPDIR = ../..
 
 include $(TOPDIR)/Preamble.make
 
-TESTS = dommap
+TESTS = multi_mmap
+
+CC = $(MPICC)
 
 CFLAGS = -O2 -Wall -g
 
-SOURCES = dommap.c
+SOURCES = multi_mmap.c
 OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 
 DIST_FILES = $(SOURCES)
 
-dommap: $(OBJECTS)
+multi_mmap: $(OBJECTS)
 	$(LINK) 
 
 include $(TOPDIR)/Test.make
