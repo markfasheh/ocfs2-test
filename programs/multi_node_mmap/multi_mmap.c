@@ -50,11 +50,14 @@ static int random_readers = 0;
 static int random_writers = 0;
 static int pre_populate = 0;
 static int zero_with_hole = 0;
+static unsigned int inject_truncate = 0;
+static unsigned int injection_pass;
 static unsigned int blocksize = 508;
 static unsigned int max_passes = 1;
 static char startchar = 'a';
 static unsigned int num_blocks;
 
+static int this_pass;
 static char *local_pattern;
 static char *tmpblock;
 static char *mapped_area = NULL;
@@ -107,7 +110,9 @@ static void usage(void)
        "-h\t\tNormally the file is zeroed via eof writes, but this instructs\n"
        "\t\tthe code to only ftruncate(), thus creating a hole where it\n"
        "\t\twill be writing\n"
-       "-i <iter>\tNumber of times to pass through the file. Default is 1\n");
+       "-i <iter>\tNumber of times to pass through the file. Default is 1\n"
+       "-e <which>\tHave the rank zero node inject an error by truncating\n"
+       "\t\tthe entire file length on iteration <which>\n");
 
 	MPI_Finalize();
 	exit(1);
@@ -131,7 +136,7 @@ static int parse_opts(int argc, char **argv)
 	int c;
 
 	while (1) {
-		c = getopt(argc, argv, "ctb:r:w:hi:");
+		c = getopt(argc, argv, "ctb:r:w:hi:e:");
 		if (c == -1)
 			break;
 
@@ -161,10 +166,22 @@ static int parse_opts(int argc, char **argv)
 		case 'i':
 			max_passes = atoi(optarg);
 			break;
+		case 'e':
+			inject_truncate = 1;
+			injection_pass = atoi(optarg);
+			break;
 		default:
 			return EINVAL;
 		}
 	}
+
+	if (zero_with_hole && !prep_open_flags) {
+		fprintf(stderr, "Mixing '-t' and -h' flags is not allowed!\n\n");
+		return EINVAL;
+	}
+
+	if (inject_truncate && (injection_pass > max_passes))
+		return EINVAL;
 
 	if (argc - optind != 1)
 		return EINVAL;
@@ -345,6 +362,21 @@ static int randomize_bool(void)
 	return 1;
 }
 
+static void trunc_file(int fd)
+{
+	int ret;
+
+	printf("%s (rank %d): Injecting an error by truncating to zero.\n",
+	       hostname, rank);
+
+	ret = ftruncate(fd, 0);
+	if (ret == -1) {
+		ret = errno;
+		abort_printf("Error %d truncating \"%s\" to 0: %s\n",
+			     ret, filename, strerror(ret));
+	}
+}
+
 static void do_writer(int fd, unsigned int block, char *pattern)
 {
 	int ret;
@@ -357,6 +389,10 @@ static void do_writer(int fd, unsigned int block, char *pattern)
 	       pattern[0]);
 
 	write_block(fd, block, pattern);
+
+	if (inject_truncate && (rank == 0) &&
+	    (this_pass == injection_pass))
+		trunc_file(fd);
 
 	ret = MPI_Barrier(MPI_COMM_WORLD);
 	if (ret != MPI_SUCCESS)
@@ -391,6 +427,8 @@ static void do_reader(int fd, unsigned int block, char *pattern)
 			"%s (rank %d): First 10 actual chars: \"%.*s\"\n",
 			hostname, rank, 10, tmpblock);
 
+		sleep(10);
+
 		MPI_Abort(MPI_COMM_WORLD, 1);
 	}
 }
@@ -417,7 +455,7 @@ static void write_verify_blocks(int fd)
 
 int main(int argc, char *argv[])
 {
-	int ret, fd, i;
+	int ret, fd;
 
 	ret = MPI_Init(&argc, &argv);
 	if (ret != MPI_SUCCESS) {
@@ -462,7 +500,7 @@ int main(int argc, char *argv[])
 
 	fd = prep_file();
 
-	for (i = 0; i < max_passes; i++) {
+	for (this_pass = 0; this_pass < max_passes; this_pass++) {
 		write_verify_blocks(fd);
 
 		if ((startchar + num_procs) > 'z')
