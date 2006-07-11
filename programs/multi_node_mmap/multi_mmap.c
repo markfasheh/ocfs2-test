@@ -62,8 +62,6 @@ static char *local_pattern;
 static char *tmpblock;
 static char *mapped_area = NULL;
 
-static int *initialized_blocks;
-
 static void abort_printf(const char *fmt, ...)
 {
 	va_list       ap;
@@ -82,8 +80,7 @@ static void fill_with_expected_pattern(char *buf, unsigned int block)
 	int i;
 	char c = '\0';
 
-	if (initialized_blocks[block])
-		c = startchar + block;
+	c = startchar + block;
 
 	for(i = 0; i < blocksize; i++)
 		buf[i] = c;
@@ -120,7 +117,7 @@ static void usage(void)
 
 static int set_rw_arg(const char *arg, int *use_mmap, int *random)
 {
-	if (strcmp("normal", optarg) == 0)
+	if (strcmp("regular", optarg) == 0)
 		*use_mmap = 0;
 	else if (strcmp("mmap", optarg) == 0)
 		*use_mmap = 1;
@@ -388,6 +385,8 @@ static void do_writer(int fd, unsigned int block, char *pattern)
 	       hostname, rank, mmap_writes ? "mmap " : "write", block,
 	       pattern[0]);
 
+	fflush(stdout);
+
 	write_block(fd, block, pattern);
 
 	if (inject_truncate && (rank == 0) &&
@@ -414,6 +413,8 @@ static void do_reader(int fd, unsigned int block, char *pattern)
 	       hostname, rank, mmap_reads ? "mmap " : "read ", block,
 	       pattern[0]);
 
+	fflush(stdout);
+
 	read_block(fd, block, tmpblock);
 
 	if (memcmp(pattern, tmpblock, blocksize)) {
@@ -427,6 +428,11 @@ static void do_reader(int fd, unsigned int block, char *pattern)
 			"%s (rank %d): First 10 actual chars: \"%.*s\"\n",
 			hostname, rank, 10, tmpblock);
 
+		fflush(stderr);
+
+		/* This sleep is here so that other processes who may
+		 * also be about to fail can do so before we abort the
+		 * mpi instance. */
 		sleep(10);
 
 		MPI_Abort(MPI_COMM_WORLD, 1);
@@ -443,7 +449,6 @@ static void write_verify_blocks(int fd)
 		block = i;
 
 		buf = mapped_area + (block * blocksize);
-		initialized_blocks[block] = 1;
 		fill_with_expected_pattern(local_pattern, block);
 
 		if ((i % num_procs) == rank)
@@ -492,9 +497,6 @@ int main(int argc, char *argv[])
 	tmpblock = calloc(1, blocksize);
 	if (!local_pattern || !tmpblock)
 		abort_printf("No memory to allocate pattern!\n");
-	initialized_blocks = calloc(num_blocks, sizeof(*initialized_blocks));
-	if (!initialized_blocks)
-		abort_printf("No memory to allocate tracking info!\n");
 
 	srand(getpid());
 
