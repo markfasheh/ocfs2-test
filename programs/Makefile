@@ -3,6 +3,7 @@ TOPDIR = ..
 include $(TOPDIR)/Preamble.make
 
 SUBDIRS =			\
+	aio-stress		\
 	create_racer		\
 	extend_and_write	\
 	extendo			\
