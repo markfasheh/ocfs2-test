@@ -1,0 +1,25 @@
+#!/bin/sh
+
+if [ $# -lt 3 ]
+then
+    echo "Usage: parallel_tar device mountpoint host[,host...]"
+    exit 1
+fi
+
+DEVICE="$1"
+MNTPT="$2"
+HOSTS="$3"
+HOST1="${HOSTS%%,*}"
+
+cat <<EOF | dsh -i -w "$HOSTS" -l root
+#mount -t ocfs2 "${DEVICE}" "${MNTPT}"
+# This awful line is to have each node rm the directory of the node
+# previous.  This includes wrapping the first node to the last node.
+DIR="${HOSTS}"; case "\${DIR}" in \$(hostname),*) DIR="\${DIR##*,}"; ;; *,\$(hostname),*) DIR="\${DIR%%,\$(hostname)*}"; DIR="\${DIR##*,}"; ;;  *,\$(hostname)) DIR="\${DIR%%,\$(hostname)}"; DIR="\${DIR##*,}"; ;; *) echo error; ;; esac; echo \$DIR
+#time umount "${MNTPT}"
+EOF
+
+echo "Running command \"fsck.ocfs2 -m -f ${DEVICE} on \"$HOST1\""
+#ssh "$HOST1" -l root 'fsck.ocfs2 -n -f '"${DEVICE}"
+
+exit $?

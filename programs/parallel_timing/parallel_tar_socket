@@ -1,0 +1,32 @@
+#!/bin/sh
+
+if [ $# -lt 3 ]
+then
+    echo "Usage: parallel_tar device mountpoint host[,host...]"
+    exit 1
+fi
+
+DEVICE="$1"
+MNTPT="$2"
+HOSTS="$3"
+HOST1="${HOSTS%%,*}"
+
+echo "Running comaned \"echo y | mkfs -t ocfs2 -N 2 -L ${USER}pooper -C 16384 -b 2048 ${DEVICE} on host \"$HOST1\""
+ssh "$HOST1" -l root 'echo y | mkfs -t ocfs2 -N 2 -L '"${USER}"'pooper -C 16384 -b 2048 '"${DEVICE}"
+if [ $? != 0 ]
+then
+    exit 1
+fi
+
+cat <<EOF | dsh -i -w "$HOSTS" -l root
+echo "SOCKET allow" > /proc/fs/ocfs2_nodemanager/log_mask
+mount -t ocfs2 "${DEVICE}" "${MNTPT}"
+echo "SOCKET off" > /proc/fs/ocfs2_nodemanager/log_mask
+cd "${MNTPT}" && mkdir \$(hostname) && cd \$(hostname) && time tar -jxvf /tmp/linux-2.6.11.tar.bz2 >/dev/null
+time umount "${MNTPT}"
+EOF
+
+echo "Running command \"fsck.ocfs2 -m -f ${DEVICE} on \"$HOST1\""
+ssh "$HOST1" -l root 'fsck.ocfs2 -n -f '"${DEVICE}"
+
+exit $?

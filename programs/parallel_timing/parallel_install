@@ -1,0 +1,19 @@
+#!/bin/sh
+
+if [ $# -lt 2 ]
+then
+    echo "Usage: parallel_install builddir host[,host...]"
+    exit 1
+fi
+
+BUILDDIR="$1"
+HOSTS="$2"
+
+cat <<EOF | dsh -i -w "$HOSTS" -l root
+/etc/init.d/o2cb stop
+cd "${BUILDDIR}" && make install && depmod -a
+cd "${BUILDDIR}"; INSINFO=\$(modinfo ocfs2 | awk '/^description/{sub(/^.*(build )/, ""); sub(/)$/, ""); print}'); BUILDINFO=\$(modinfo fs/ocfs2/ocfs2.ko | awk '/^description/{sub(/^.*(build )/, ""); sub(/)$/, ""); print}'); echo "installed: \${INSINFO}, build: \${BUILDINFO}"; test "\$INSINFO" = "\$BUILDINFO"
+/etc/init.d/o2cb online
+EOF
+
+exit $?

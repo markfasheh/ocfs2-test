@@ -1,0 +1,42 @@
+#!/bin/sh
+
+if [ $# -lt 3 ]
+then
+    echo "Usage: parallel_cp_a device mountpoint host[,host...]"
+    exit 1
+fi
+
+DEVICE="$1"
+MNTPT="$2"
+HOSTS="$3"
+HOST1="${HOSTS%%,*}"
+
+echo "Running comaned \"echo y | mkfs -t ocfs2 -N 2 -L ${USER}pooper -C 16384 -b 2048 ${DEVICE} on host \"$HOST1\""
+ssh "$HOST1" -l root 'echo y | mkfs -t ocfs2 -N 2 -L '"${USER}"'pooper -C 16384 -b 2048 '"${DEVICE}"
+if [ $? != 0 ]
+then
+    exit 1
+fi
+
+ssh "$HOST1" -l root 'cd /tmp && tar -jxvf linux-2.6.11.tar.bz2 >/dev/null'
+if [ $? != 0 ]
+then
+    exit 1
+fi
+
+
+cat <<EOF | dsh -i -w "$HOSTS" -l root
+cd /tmp && tar -jxvf linux-2.6.11.tar.bz2 >/dev/null
+mount -t ocfs2 "${DEVICE}" "${MNTPT}"
+time /bin/cp -a /tmp/linux-2.6.11 "${MNTPT}"
+time umount "${MNTPT}"
+rm -rf /tmplinux-2.6.11
+EOF
+
+echo "Running command \"fsck.ocfs2 -m -f ${DEVICE} on \"$HOST1\""
+ssh "$HOST1" -l root 'fsck.ocfs2 -n -f '"${DEVICE}"
+
+echo "Running command \"rm -rf /tmp/linux-2.6.11\" on \"$HOST1\""
+ssh "$HOST1" -l root 'rm -rf /tmp/linux-2.6.11'
+
+exit $?

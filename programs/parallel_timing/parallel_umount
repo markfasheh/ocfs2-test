@@ -1,0 +1,19 @@
+#!/bin/sh
+
+if [ $# -lt 3 ]
+then
+    echo "Usage: parallel_umount device mountpoint host[,host...]"
+    exit 1
+fi
+
+DEVICE="$1"
+MNTPT="$2"
+HOSTS="$3"
+HOST1="${HOSTS%%,*}"
+
+dsh -i -w "$HOSTS" -l root 'time umount '"${MNTPT}"
+
+echo "Running command \"fsck.ocfs2 -m -f ${DEVICE} on \"$HOST1\""
+ssh "$HOST1" -l root 'fsck.ocfs2 -n -f '"${DEVICE}"
+
+exit $?

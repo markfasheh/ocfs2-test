@@ -1,0 +1,12 @@
+#!/bin/sh
+
+if [ $# -lt 1 ]
+then
+    echo "Usage: parallel_init host[,host...]"
+    exit 1
+fi
+
+HOSTS="$1"
+
+dsh -w "$HOSTS" -l root '/scratch/root/bin/netconsole-start'
+exit $?
