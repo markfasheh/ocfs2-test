@@ -6,6 +6,7 @@ SUBDIRS =			\
 	aio-stress		\
 	aio_direct		\
 	basic-dual-data		\
+	bonnie			\
 	create_and_open		\
 	create_files		\
 	create_racer		\
