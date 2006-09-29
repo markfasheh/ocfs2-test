@@ -29,6 +29,7 @@ SUBDIRS =			\
 	parallel_timing		\
 	quick_appending_writes	\
 	sendfiletest		\
+	splice			\
 	truncate		\
 	ttest			\
 	untar_files		\
