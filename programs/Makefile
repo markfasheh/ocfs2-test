@@ -18,6 +18,7 @@ SUBDIRS =			\
 	extend_and_write	\
 	extend_files		\
 	extendo			\
+	fill_verify_holes	\
 	fsx			\
 	iozone			\
 	kernel_build_parallel_find			\

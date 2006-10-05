@@ -1,0 +1,202 @@
+#define _XOPEN_SOURCE 500
+#include <unistd.h>
+#include <errno.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
+
+#include "fill_holes.h"
+
+
+/*
+3rd test program with verify util:
+Given file name, size, optional #iters, optional logfile (uses stdout otherwise
+create and ftruncate file to size
+for each iter:
+        pick random offset
+        pick random size
+        pick random 8 bit value
+        print to log the triple
+        write size bytes of value at offset
+Verify program can parse log, sort triples into a list (removing and merging
+triples as they overwrite each other). It can then read the file from 0 to
+size, verifying it's contents.
+*/
+
+static void usage(void)
+{
+	printf("fill_holes [-i ITER] [-o LOGFILE] FILE SIZE\n"
+	       "FILE is a path to a file\n"
+	       "SIZE is in bytes\n"
+	       "ITER defaults to 1000\n"
+	       "LOGFILE defaults to stdout\n\n"
+	       "FILE will be truncated to zero, then truncated out to SIZE\n"
+	       "For each iteration, a randomly selected character will be\n"
+	       "written a randomly selected number of times at a random\n"
+	       "offset. The exact patterns written will be logged such that\n"
+	       "the log can be replayed by a verification program.\n");
+
+	exit(0);
+}
+
+#define MAX_WRITE_SIZE 32768
+static char buf[MAX_WRITE_SIZE];
+
+static unsigned int max_iter = 1000;
+static char *fname = NULL;
+static char *logname = NULL;
+static unsigned long file_size;
+static FILE *logfile = NULL;
+
+static int parse_opts(int argc, char **argv)
+{
+	int c;
+
+	while (1) {
+		c = getopt(argc, argv, "i:o:");
+		if (c == -1)
+			break;
+
+		switch (c) {
+		case 'i':
+			max_iter = atoi(optarg);
+			break;
+		case 'o':
+			logname = optarg;
+			break;
+		default:
+			return EINVAL;
+		}
+	}
+ 
+	if (argc - optind != 2)
+		return EINVAL;
+
+	fname = argv[optind];
+	file_size = atol(argv[optind+1]);
+
+	return 0;
+}
+
+static int prep_file(char *name, unsigned long size)
+{
+	int ret, fd;
+
+	fd = open(name, O_WRONLY|O_CREAT|O_TRUNC,
+		  S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+	if (fd == -1) {
+		fprintf(stderr, "open error %d: \"%s\"\n", errno,
+			strerror(errno));
+		return -1;
+	}
+
+	ret = ftruncate(fd, size);
+	if (ret == -1) {
+		close(fd);
+
+		fprintf(stderr, "ftruncate error %d: \"%s\"\n", errno,
+			strerror(errno));
+		return -1;
+	}
+
+	return fd;
+}
+
+static int open_logfile(void)
+{
+	if (!logname)
+		logfile = stdout;
+	else
+		logfile = fopen(logname, "wa");
+	if (!logfile) {
+		fprintf(stderr, "Error %d creating logfile: %s\n", errno,
+			strerror(errno));
+		return EINVAL;
+	}
+	return 0;
+}
+
+static void log_write(struct write_unit *wu)
+{
+	fprintf(logfile, "%c\t%lu\t%u\n", wu->w_char, wu->w_offset, wu->w_len);
+}
+
+static unsigned long get_rand(unsigned long min, unsigned long max)
+{
+	if (min == 0 && max == 0)
+		return 0;
+
+	return min + ((rand() % max) - min);
+}
+
+static void prep_write_unit(struct write_unit *wu)
+{
+	wu->w_char = 'A' + (char) get_rand(0, 52);
+	wu->w_offset = get_rand(0, file_size - 1);
+	wu->w_len = (unsigned int) get_rand(1, MAX_WRITE_SIZE);
+
+	if (wu->w_offset + wu->w_len > file_size)
+		wu->w_len = file_size - wu->w_offset;
+
+	assert(wu->w_char >= 'A' && wu->w_char <= 'z');
+	assert(wu->w_len <= MAX_WRITE_SIZE);
+}
+
+int do_write(int fd, struct write_unit *wu)
+{
+	int ret;
+
+	memset(buf, wu->w_char, wu->w_len);
+	ret = pwrite(fd, buf, wu->w_len, wu->w_offset);
+	if (ret == -1) {
+		fprintf(stderr, "write error %d: \"%s\"\n", errno,
+			strerror(errno));
+		return -1;
+	}
+
+	return 0;
+}
+
+int main(int argc, char **argv)
+{
+	int ret, i, fd;
+	struct write_unit wu;
+
+	if (argc < 3) {
+		usage();
+		return 1;
+	}
+
+	ret = parse_opts(argc, argv);
+	if (ret) {
+		usage();
+		return 1;
+	}
+
+	fd = prep_file(fname, file_size);
+	if (fd == -1)
+		return 1;
+
+	ret = open_logfile();
+	if (ret)
+		return 1;
+
+	srand(getpid());
+
+	for(i = 0; i < max_iter; i++) {
+		prep_write_unit(&wu);
+
+		log_write(&wu);
+
+		ret = do_write(fd, &wu);
+		if (ret)
+			return 1;
+	}
+
+	return 0;
+}
