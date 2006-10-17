@@ -1,0 +1,7 @@
+Single node test to test tunefs.ocfs2 volume growth.
+
+usage: resize_test.sh -c -o <outdir> -d <device> -i <iters>
+       -i number of resize iterations
+       -o output directory for the logs
+       -d device
+       -c consume space after resize
