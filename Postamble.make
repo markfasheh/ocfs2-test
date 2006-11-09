@@ -59,7 +59,7 @@ all-rules: subdirs $(UNINST_LIBRARIES) $(LIBRARIES) $(BIN_PROGRAMS) $(SBIN_PROGR
 
 INSTALL_SUBDIRS = $(addsuffix -install,$(SUBDIRS))
 
-.PHONY: install-rules install-subdirs $(INSTALL_RULES) install-libraries install-headers install-bin-programs install-bin-extra install-sbin-programs install-sbin-extra
+.PHONY: install-rules install-subdirs $(INSTALL_RULES) install-libraries install-headers install-bin-programs install-bin-extra install-sbin-programs install-sbin-extra install-workfiles
 
 install-subdirs: $(INSTALL_SUBDIRS)
 
@@ -136,7 +136,16 @@ ifdef MANS
 	done
 endif
 
-install-rules: install-subdirs $(INSTALL_RULES) install-libraries install-headers install-bin-programs install-bin-extra install-sbin-programs install-sbin-extra install-mans
+install-workfiles: $(WORKFILES)
+ifdef WORKFILES
+	$(SHELL) $(TOPDIR)/mkinstalldirs $(DESTDIR)/workfiles
+	for prog in $(WORKFILES); do \
+	  $(INSTALL_PROGRAM) $$prog $(DESTDIR)/workfiles/$$prog; \
+	done
+endif
+
+
+install-rules: install-subdirs $(INSTALL_RULES) install-libraries install-headers install-bin-programs install-bin-extra install-sbin-programs install-sbin-extra install-mans install-workfiles
 
 
 CLEAN_SUBDIRS = $(addsuffix -clean,$(SUBDIRS))
