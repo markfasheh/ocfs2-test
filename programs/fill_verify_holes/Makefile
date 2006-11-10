@@ -16,5 +16,4 @@ fill_holes: fill_holes.o fill_holes.h
 verify_holes: verify_holes.o fill_holes.h
 	$(LINK) $(OCFS2_LIBS)
 
-include $(TOPDIR)/Test.make
 include $(TOPDIR)/Postamble.make

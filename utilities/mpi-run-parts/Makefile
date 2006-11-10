@@ -13,8 +13,10 @@ OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 
 DIST_FILES = $(SOURCES)
 
+BIN_PROGRAMS = mpi-run-parts
+
+
 mpi-run-parts: $(OBJECTS)
 	$(LINK)
 
-include $(TOPDIR)/Test.make
 include $(TOPDIR)/Postamble.make

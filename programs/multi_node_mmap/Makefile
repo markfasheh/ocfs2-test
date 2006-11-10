@@ -13,8 +13,9 @@ OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 
 DIST_FILES = $(SOURCES)
 
+BIN_PROGRAMS = multi_mmap
+
 multi_mmap: $(OBJECTS)
 	$(LINK) 
 
-include $(TOPDIR)/Test.make
 include $(TOPDIR)/Postamble.make

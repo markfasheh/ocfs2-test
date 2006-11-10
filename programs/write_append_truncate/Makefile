@@ -13,8 +13,9 @@ OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 
 DIST_FILES = $(SOURCES)
 
+BIN_PROGRAMS = write_append_truncate
+
 write_append_truncate: $(OBJECTS)
 	$(LINK)
 
-include $(TOPDIR)/Test.make
 include $(TOPDIR)/Postamble.make

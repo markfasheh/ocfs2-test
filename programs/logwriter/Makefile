@@ -11,8 +11,9 @@ OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 
 DIST_FILES = $(SOURCES)
 
+BIN_PROGRAMS = logwriter
+
 logwriter: $(OBJECTS)
 	$(LINK) 
 
-include $(TOPDIR)/Test.make
 include $(TOPDIR)/Postamble.make

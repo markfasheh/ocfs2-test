@@ -13,8 +13,9 @@ OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 
 DIST_FILES = $(SOURCES)
 
+BIN_PROGRAMS = sendfiletest
+
 sendfiletest: $(OBJECTS)
 	$(LINK)
 
-include $(TOPDIR)/Test.make
 include $(TOPDIR)/Postamble.make

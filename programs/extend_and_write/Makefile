@@ -15,10 +15,11 @@ SOURCES = $(EXTEND_AND_WRITE_SOURCES) $(VERIFY_SOURCES)
 
 DIST_FILES = $(SOURCES)
 
+BIN_PROGRAMS = extend_and_write verify
+
 extend_and_write: $(EXTEND_AND_WRITE_OBJECTS)
 	$(LINK) 
 verify: $(VERIFY_OBJECTS)
 	$(LINK) 
 
-include $(TOPDIR)/Test.make
 include $(TOPDIR)/Postamble.make

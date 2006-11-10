@@ -7,6 +7,7 @@ SUBDIRS =			\
 	aio_direct		\
 	basic-dual-data		\
 	bonnie			\
+	buildkernel		\
 	create_and_open		\
 	create_files		\
 	create_racer		\
@@ -28,6 +29,7 @@ SUBDIRS =			\
 	mmap_test		\
 	multi_node_mmap		\
 	parallel_timing		\
+	python_common		\
 	quick_appending_writes	\
 	sendfiletest		\
 	splice			\

@@ -13,8 +13,9 @@ OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 
 DIST_FILES = $(SOURCES)
 
+BIN_PROGRAMS = create_and_open
+
 create_and_open: $(OBJECTS)
 	$(LINK)
 
-include $(TOPDIR)/Test.make
 include $(TOPDIR)/Postamble.make

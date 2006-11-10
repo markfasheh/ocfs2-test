@@ -20,5 +20,4 @@ splice_read: $(SPLICE_READ_OBJECTS)
 splice_write: $(SPLICE_WRITE_OBJECTS)
 	$(LINK) 
 
-include $(TOPDIR)/Test.make
 include $(TOPDIR)/Postamble.make

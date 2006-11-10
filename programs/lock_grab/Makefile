@@ -11,8 +11,9 @@ OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 
 DIST_FILES = $(SOURCES)
 
+BIN_PROGRAMS = lock_grab
+
 lock_grab: $(OBJECTS)
 	$(LINK) $(O2DLM_LIBS)
 
-include $(TOPDIR)/Test.make
 include $(TOPDIR)/Postamble.make

@@ -13,8 +13,9 @@ OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 
 DIST_FILES = $(SOURCES)
 
+BIN_PROGRAMS = lvb_torture
+
 lvb_torture: $(OBJECTS)
 	$(LINK) $(O2DLM_LIBS)
 
-include $(TOPDIR)/Test.make
 include $(TOPDIR)/Postamble.make
