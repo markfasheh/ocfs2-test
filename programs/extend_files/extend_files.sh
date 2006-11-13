@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #TRUNC=/home/mfasheh/src/ocfs2_utils/truncate64
-TRUNC=/home/mfasheh/src/ocfs2_utils/truncate_direct
+TRUNC=./truncate_direct
 
 file1=$1
 file2=$2
