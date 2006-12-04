@@ -1,17 +1,8 @@
 #!/usr/bin/env python
 #
 import os, sys, optparse, time, o2tf, pdb, config
-
-#pdb.set_trace()
-
-#args = sys.argv[1:]
 #
-if os.path.dirname(sys.argv[0]) == '.':
-   basedirname = str(os.path.dirname(os.getcwd()))
-else:
-   basedirname = str(os.path.dirname(os.path.dirname(sys.argv[0])))
-
-deftarfile = basedirname + '/workfiles/linux-2.6.tar.gz'
+deftarfile = os.path.join(config.WORKFILESDIR, config.TARFILE)
 #
 #
 DEBUGON = os.getenv('DEBUG',0)
@@ -49,7 +40,7 @@ if __name__=='__main__':
     parser.add_option('-l', 
 			'--logfile', 
 			dest='logfile',
-			default='%s/log/run_buildkernel.log' % basedirname,
+			default='%s/log/run_buildkernel.log' % config.O2TDIR,
 			type='string', 
 			help='If logfile is specified, a single logfile will \
 				be used by all processes, otherwise, \
@@ -93,6 +84,7 @@ if DEBUGON:
    o2tf.printlog('logfile = (%s)' % logfile, logfile, 0, '')
    o2tf.printlog('tarfile = (%s)' % tarfile, logfile, 0, '')
    o2tf.printlog('buildcmd = (%s)' % buildcmd, logfile, 0, '')
+o2tf.StartMPI(DEBUGON, options.nodelist, logfile)
 o2tf.mpirun( DEBUGON, config.NPROC, str('%s -d %s -c %s -l %s -n %s -t %s' % \
 			(buildcmd, 
 			options.dirlist, 
