@@ -288,11 +288,12 @@ for n in range(nodelen):
 # Call crdel_gen_files.py to do that on each node using mpi-run-parts.
 #
 cmdline = os.path.join(config.BINDIR, 'crdel_gen_files.py')
+o2tf.StartMPI(DEBUGON, ','.join(nodelist), logfile)
 o2tf.mpirun( DEBUGON, config.NPROC, str('%s -s %s -l %s -t %s' % \
 			(cmdline, stagedir, 
 			options.logfile, 
 			tarfile) ), 
-			options.nodes, 
+			','.join(nodelist), 
 			logfile)
 #
 # Now, invert the pair directories (A = Bdir and B = Adir).
@@ -329,5 +330,5 @@ for n in range(nodelen):
 cmdline = os.path.join(config.BINDIR, 'crdel_del_files.py')
 o2tf.mpirun( DEBUGON, config.NPROC, str('%s -s %s -l %s ' % \
 			(cmdline, stagedir, options.logfile) ), 
-			options.nodes, 
+			','.join(nodelist), 
 			logfile)

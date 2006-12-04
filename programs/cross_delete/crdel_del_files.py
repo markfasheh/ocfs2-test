@@ -131,5 +131,5 @@ for i in range(dirlen):
 #
 from os import access, F_OK
 if os.access(os.path.join(stagedir, socket.gethostname()), F_OK) == 1:
-   os.remove(os.path.join(stagedir, socket.gethostname()))
+   os.remove(os.path.join(stagedir, socket.gethostname() + '.dat'))
 sys.exit()
