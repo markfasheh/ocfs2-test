@@ -253,7 +253,6 @@ def mpirun(DEBUGON, nproc, cmd, nodes, logfile):
     found = 0
     uname = os.uname()
     nodelen = len(string.split(nodes,','))
-    StartMPI(DEBUGON, nodes, logfile)
     try:
        if DEBUGON:
           printlog('o2tf.mpirun: MPIRUN = %s' % config.MPIRUN, 
