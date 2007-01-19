@@ -1,0 +1,28 @@
+Checking OCFS2 filesystem in @DEVICE@:
+  label:              <NONE>
+  uuid:               bf f2 14 d7 c1 06 41 04 88 30 72 b1 a5 a8 ad 1b
+  number of blocks:   1048576
+  bytes per block:    4096
+  number of clusters: 1048576
+  bytes per cluster:  4096
+  max slots:          4
+
+@DEVICE@ was run with -f, check forced.
+Pass 0a: Checking cluster allocation chains
+Pass 0b: Checking inode allocation chains
+Pass 0c: Checking extent block allocation chains
+Pass 1: Checking inodes and blocks.
+Pass 2: Checking directory entries.
+[DIRENT_ZERO] Directory entry has a zero-length name, clear it? y
+[DIRENT_NAME_CHARS] Directory entry '/est' contains invalid characters, replace them with dots? y
+[DIRENT_INODE_RANGE] Directory entry 'test' refers to inode number 1048577 which is out of range, clear the entry? y
+[DIRENT_INODE_FREE] Directory entry 'test' refers to inode number 17861 which isn't allocated, clear the entry? y
+[DIRENT_TYPE] Directory entry test contains file type OCFS2_FT_SYMLINK (7) but its inode 16863 leads to type OCFS2_FT_REG_FILE (1).  Reset the entry's type to match the inode's? y
+[DIRENT_DUPLICATE] Directory inode 16864 contains a duplicate occurance of the file name 'test'.  Replace this duplicate name with 'test_'? y
+[DIRENT_LENGTH] Directory inode 16866 corrupted in logical block 0 physical block 17886 offset 32. Attempt to repair this block's directory entries? y
+Pass 3: Checking directory connectivity.
+Pass 4a: checking for orphaned inodes
+Pass 4b: Checking inodes link counts.
+[INODE_COUNT] Inode 16865 has a link count of 1 on disk but directory entry references come to 2. Update the count on disk to match? y
+[INODE_NOT_CONNECTED] Inode 16865 isn't referenced by any directory entries.  Move it to lost+found? y
+All passes succeeded.

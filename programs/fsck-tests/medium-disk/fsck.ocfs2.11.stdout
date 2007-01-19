@@ -1,0 +1,26 @@
+Checking OCFS2 filesystem in @DEVICE@:
+  label:              <NONE>
+  uuid:               bf f2 14 d7 c1 06 41 04 88 30 72 b1 a5 a8 ad 1b
+  number of blocks:   1048576
+  bytes per block:    4096
+  number of clusters: 1048576
+  bytes per cluster:  4096
+  max slots:          4
+
+@DEVICE@ was run with -f, check forced.
+Pass 0a: Checking cluster allocation chains
+[CHAIN_BITS] Chain 0 in allocator inode 11 has 14377 bits marked free out of 32256 total bits but the block groups in the chain have 0 free out of 0 total.  Fix this by updating the chain record? y
+[CHAIN_EMPTY] Chain 0 in allocator inode 11 is empty.  Remove it from the chain record array in the inode and shift further chains into its place? y
+[GROUP_CHAIN] Group descriptor at block 1032192 was found in chain 0 but it claims to be in chain 32. Update the descriptor's recorded chain? y
+[CHAIN_GROUP_BITS] Allocator inode 11 has 17911 bits marked used out of 1048576 total bits but the chains have 32 used out of 1016320 total.  Fix this by updating the inode counts? y
+[CHAIN_I_CLUSTERS] Allocator inode 11 has 1016320 clusters represented in its allocator chains but has an i_clusters value of 1048576. Fix this by updating i_clusters? y
+[CHAIN_I_SIZE] Allocator inode 11 has 1016320 clusters represented in its allocator chain which accounts for 4162846720 total bytes, but its i_size is 4294967296. Fix this by updating i_size? y
+[GROUP_EXPECTED_DESC] Block 3 should be a group descriptor for the bitmap chain allocator but it wasn't found in any chains.  Reinitialize it as a group desc and link it into the bitmap allocator? y
+Pass 0b: Checking inode allocation chains
+Pass 0c: Checking extent block allocation chains
+Pass 1: Checking inodes and blocks.
+Pass 2: Checking directory entries.
+Pass 3: Checking directory connectivity.
+Pass 4a: checking for orphaned inodes
+Pass 4b: Checking inodes link counts.
+All passes succeeded.

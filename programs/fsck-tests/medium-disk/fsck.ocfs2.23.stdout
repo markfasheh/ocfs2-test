@@ -1,0 +1,29 @@
+Checking OCFS2 filesystem in @DEVICE@:
+  label:              <NONE>
+  uuid:               bf f2 14 d7 c1 06 41 04 88 30 72 b1 a5 a8 ad 1b
+  number of blocks:   967936
+  bytes per block:    4096
+  number of clusters: 967936
+  bytes per cluster:  4096
+  max slots:          4
+
+@DEVICE@ was run with -f, check forced.
+Pass 0a: Checking cluster allocation chains
+[CHAIN_HEAD_LINK_RANGE] Chain 31 in allocator inode 11 contains an initial block reference to 999936 which is out of range.  Clear this reference? y
+[CHAIN_HEAD_LINK_RANGE] Chain 32 in allocator inode 11 contains an initial block reference to 1032192 which is out of range.  Clear this reference? y
+[CHAIN_BITS] Chain 31 in allocator inode 11 has 32255 bits marked free out of 32256 total bits but the block groups in the chain have 0 free out of 0 total.  Fix this by updating the chain record? y
+[CHAIN_EMPTY] Chain 31 in allocator inode 11 is empty.  Remove it from the chain record array in the inode and shift further chains into its place? y
+[CHAIN_BITS] Chain 31 in allocator inode 11 has 16383 bits marked free out of 16384 total bits but the block groups in the chain have 0 free out of 0 total.  Fix this by updating the chain record? y
+[CHAIN_EMPTY] Chain 31 in allocator inode 11 is empty.  Remove it from the chain record array in the inode and shift further chains into its place? y
+[CHAIN_GROUP_BITS] Allocator inode 11 has 17911 bits marked used out of 1048576 total bits but the chains have 17909 used out of 999936 total.  Fix this by updating the inode counts? y
+[CHAIN_I_CLUSTERS] Allocator inode 11 has 999936 clusters represented in its allocator chains but has an i_clusters value of 1048576. Fix this by updating i_clusters? y
+[CHAIN_I_SIZE] Allocator inode 11 has 999936 clusters represented in its allocator chain which accounts for 4095737856 total bytes, but its i_size is 4294967296. Fix this by updating i_size? y
+[SUPERBLOCK_CLUSTERS] Superblock has clusters set to 967936 instead of 999936. Fix? y
+Pass 0b: Checking inode allocation chains
+Pass 0c: Checking extent block allocation chains
+Pass 1: Checking inodes and blocks.
+Pass 2: Checking directory entries.
+Pass 3: Checking directory connectivity.
+Pass 4a: checking for orphaned inodes
+Pass 4b: Checking inodes link counts.
+All passes succeeded.

@@ -1,0 +1,31 @@
+Checking OCFS2 filesystem in @DEVICE@:
+  label:              <NONE>
+  uuid:               bf f2 14 d7 c1 06 41 04 88 30 72 b1 a5 a8 ad 1b
+  number of blocks:   1048576
+  bytes per block:    4096
+  number of clusters: 1048576
+  bytes per cluster:  4096
+  max slots:          4
+
+@DEVICE@ was run with -f, check forced.
+Pass 0a: Checking cluster allocation chains
+Pass 0b: Checking inode allocation chains
+Pass 0c: Checking extent block allocation chains
+Pass 1: Checking inodes and blocks.
+[ROOT_NOTDIR] Root inode isn't a directory.  Clear it in preparation for fixing it? y
+[INODE_ALLOC_REPAIR] Inode 5 is marked as invalid but its position in the inode allocator is marked as in use.  Fix the allocation of this and all future inodes? y
+[CLUSTER_ALLOC_BIT] Cluster 207 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+Pass 2: Checking directory entries.
+[DIRENT_INODE_FREE] Directory entry '..' refers to inode number 5 which isn't allocated, clear the entry? y
+[DIRENT_INODE_FREE] Directory entry '..' refers to inode number 5 which isn't allocated, clear the entry? y
+Pass 3: Checking directory connectivity.
+[ROOT_DIR_MISSING] The super block claims that inode 5 is the root directory but it isn't allocated.  Create a new root directory and update the super block? y
+[LOSTFOUND_MISSING] /lost+found does not exist.  Create it so that we can possibly fill it with orphaned inodes? y
+[DIR_NOT_CONNECTED] Directory inode 16855 isn't connected to the filesystem.  Move it to lost+found? y
+[DIR_DOTDOT] Directory inode 16855 is referenced by a dirent in directory 16858 but its '..' entry points to inode 5. Fix the '..' entry to reference 16858? y
+[DIR_NOT_CONNECTED] Directory inode 16856 isn't connected to the filesystem.  Move it to lost+found? y
+[DIR_DOTDOT] Directory inode 16856 is referenced by a dirent in directory 16858 but its '..' entry points to inode 5. Fix the '..' entry to reference 16858? y
+Pass 4a: checking for orphaned inodes
+Pass 4b: Checking inodes link counts.
+[INODE_COUNT] Inode 16858 has a link count of 2 on disk but directory entry references come to 4. Update the count on disk to match? y
+All passes succeeded.

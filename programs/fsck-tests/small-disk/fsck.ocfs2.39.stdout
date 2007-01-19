@@ -1,0 +1,26 @@
+Checking OCFS2 filesystem in @DEVICE@:
+  label:              <NONE>
+  uuid:               bf f2 14 d7 c1 06 41 04 88 30 72 b1 a5 a8 ad 1b 
+  number of blocks:   262144
+  bytes per block:    1024
+  number of clusters: 65536
+  bytes per cluster:  4096
+  max slots:          4
+
+@DEVICE@ was run with -f, check forced.
+Pass 0a: Checking cluster allocation chains
+Pass 0b: Checking inode allocation chains
+Pass 0c: Checking extent block allocation chains
+Pass 1: Checking inodes and blocks.
+Pass 2: Checking directory entries.
+[DIRENT_DOTTY_DUP] Duplicate '.' directory entry found, remove it? y
+[DIRENT_NOT_DOTTY] The first directory entry in directory inode 16884 is 'a' instead of '.'.  Clobber the current name with the expected dot name? y
+[DIRENT_DOT_INODE] The '.' entry in directory inode 16885 points to inode 16895 instead of itself.  Fix the '.' entry? y
+[DIRENT_DOT_EXCESS] The '.' entry in directory inode 16886 is too long.  Try to create another directory entry from the excess? y
+[DIRENT_LENGTH] Directory inode 16886 corrupted in logical block 0 physical block 18948 offset 16. Attempt to repair this block's directory entries? y
+[DIRENT_NOT_DOTTY] The second directory entry in directory inode 16886 is '' instead of '..'.  Clobber the current name with the expected dot name? y
+Pass 3: Checking directory connectivity.
+[DIR_DOTDOT] Directory inode 16886 is referenced by a dirent in directory 16882 but its '..' entry points to inode 0. Fix the '..' entry to reference 16882? y
+Pass 4a: checking for orphaned inodes
+Pass 4b: Checking inodes link counts.
+All passes succeeded.

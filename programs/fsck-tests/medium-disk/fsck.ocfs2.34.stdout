@@ -1,0 +1,21 @@
+Checking OCFS2 filesystem in @DEVICE@:
+  label:              <NONE>
+  uuid:               bf f2 14 d7 c1 06 41 04 88 30 72 b1 a5 a8 ad 1b
+  number of blocks:   1048576
+  bytes per block:    4096
+  number of clusters: 1048576
+  bytes per cluster:  4096
+  max slots:          4
+
+@DEVICE@ was run with -f, check forced.
+Pass 0a: Checking cluster allocation chains
+Pass 0b: Checking inode allocation chains
+Pass 0c: Checking extent block allocation chains
+Pass 1: Checking inodes and blocks.
+[DEALLOC_COUNT] Truncate log inode 34 claims space for 497 records but only 487 records are possible.  Set the inode's count to the maximum? y
+[DEALLOC_USED] Truncate log inode 34 claims to be using 507 records but the inode can only hold 487 records.  Change the number used to reflect the maximum possible in the inode? y
+Pass 2: Checking directory entries.
+Pass 3: Checking directory connectivity.
+Pass 4a: checking for orphaned inodes
+Pass 4b: Checking inodes link counts.
+All passes succeeded.

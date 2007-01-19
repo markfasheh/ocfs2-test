@@ -1,0 +1,23 @@
+Checking OCFS2 filesystem in @DEVICE@:
+  label:              <NONE>
+  uuid:               bf f2 14 d7 c1 06 41 04 88 30 72 b1 a5 a8 ad 1b 
+  number of blocks:   262144
+  bytes per block:    1024
+  number of clusters: 65536
+  bytes per cluster:  4096
+  max slots:          4
+
+@DEVICE@ was run with -f, check forced.
+Pass 0a: Checking cluster allocation chains
+Pass 0b: Checking inode allocation chains
+Pass 0c: Checking extent block allocation chains
+Pass 1: Checking inodes and blocks.
+Pass 2: Checking directory entries.
+Pass 3: Checking directory connectivity.
+[DIR_NOT_CONNECTED] Directory inode 16883 isn't connected to the filesystem.  Move it to lost+found? y
+[DIR_DOTDOT] Directory inode 16883 is referenced by a dirent in directory 16881 but its '..' entry points to inode 16882. Fix the '..' entry to reference 16881? y
+Pass 4a: checking for orphaned inodes
+Pass 4b: Checking inodes link counts.
+[INODE_COUNT] Inode 16881 has a link count of 2 on disk but directory entry references come to 3. Update the count on disk to match? y
+[INODE_COUNT] Inode 16882 has a link count of 3 on disk but directory entry references come to 2. Update the count on disk to match? y
+All passes succeeded.

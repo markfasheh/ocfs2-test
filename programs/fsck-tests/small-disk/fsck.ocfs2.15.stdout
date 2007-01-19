@@ -1,0 +1,25 @@
+Checking OCFS2 filesystem in @DEVICE@:
+  label:              <NONE>
+  uuid:               bf f2 14 d7 c1 06 41 04 88 30 72 b1 a5 a8 ad 1b 
+  number of blocks:   262144
+  bytes per block:    1024
+  number of clusters: 65536
+  bytes per cluster:  4096
+  max slots:          4
+
+@DEVICE@ was run with -f, check forced.
+Pass 0a: Checking cluster allocation chains
+Pass 0b: Checking inode allocation chains
+Pass 0c: Checking extent block allocation chains
+Pass 1: Checking inodes and blocks.
+[EXTENT_BLKNO_UNALIGNED] The extent record for cluster offset 0 in inode 16883 refers to block 18937 which isn't aligned with the start of a cluster.  Point the extent record at block 18936 which starts this cluster? y
+[EXTENT_BLKNO_RANGE] Extent record 0 in inode 16884 refers to a block that is out of range.  Remove this record from the extent list? y
+[EXTENT_CLUSTERS_OVERRUN] The extent record for cluster offset 0 in inode 16885 refers to an extent that goes beyond the end of the volume.  Truncate the extent by 65536 clusters to fit it in the volume? y
+[CLUSTER_ALLOC_BIT] Cluster 4735 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4736 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 65535 is in use but isn't set in the global cluster bitmap. Set its bit in the bitmap? y
+Pass 2: Checking directory entries.
+Pass 3: Checking directory connectivity.
+Pass 4a: checking for orphaned inodes
+Pass 4b: Checking inodes link counts.
+All passes succeeded.

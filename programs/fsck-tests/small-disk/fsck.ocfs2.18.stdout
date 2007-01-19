@@ -1,0 +1,22 @@
+Checking OCFS2 filesystem in @DEVICE@:
+  label:              <NONE>
+  uuid:               bf f2 14 d7 c1 06 41 04 88 30 72 b1 a5 a8 ad 1b 
+  number of blocks:   262144
+  bytes per block:    1024
+  number of clusters: 65536
+  bytes per cluster:  4096
+  max slots:          4
+
+@DEVICE@ was run with -f, check forced.
+Pass 0a: Checking cluster allocation chains
+Pass 0b: Checking inode allocation chains
+[CHAIN_GROUP_BITS] Allocator inode 26 has 10 bits marked used out of 0 total bits but the chains have 0 used out of 0 total.  Fix this by updating the inode counts? y
+[CHAIN_I_CLUSTERS] Allocator inode 26 has 0 clusters represented in its allocator chains but has an i_clusters value of 10. Fix this by updating i_clusters? y
+[CHAIN_I_SIZE] Allocator inode 26 has 0 clusters represented in its allocator chain which accounts for 0 total bytes, but its i_size is 10. Fix this by updating i_size? y
+Pass 0c: Checking extent block allocation chains
+Pass 1: Checking inodes and blocks.
+Pass 2: Checking directory entries.
+Pass 3: Checking directory connectivity.
+Pass 4a: checking for orphaned inodes
+Pass 4b: Checking inodes link counts.
+All passes succeeded.
