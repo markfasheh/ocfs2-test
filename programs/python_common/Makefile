@@ -6,7 +6,7 @@ pre-install:
 
 include $(TOPDIR)/Preamble.make
 
-SUBDIRS = workfiles
+SUBDIRS = 
 
 DIST_FILES = config.py o2tf.py
 

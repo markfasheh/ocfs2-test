@@ -1,5 +1,5 @@
 
-O2TDIR = '<DESTDIR>'
+O2TDIR = '/home/mmatsuna/runtest'
 
 BINDIR = O2TDIR + '/bin'
 
@@ -19,9 +19,7 @@ RECON = '/usr/bin/recon'
 
 MPIRUNPARTS = BINDIR + '/mpi-run-parts'
 
-TARFILE = 'linux-2.6.tar.gz'
-
-KERNELDIR = 'linux-2.6'
+KERNELDIR = 'linux*'
 
 MPIRUN = '/usr/bin/mpirun'
 
