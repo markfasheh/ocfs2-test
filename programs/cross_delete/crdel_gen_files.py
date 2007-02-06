@@ -36,8 +36,6 @@ import config
 #
 #args = sys.argv[1:]
 #
-deftarfile = config.WORKFILESDIR + '/' + config.TARFILE
-#
 DEBUGON = os.getenv('DEBUG',0)
 #
 uname = os.uname()
@@ -48,12 +46,13 @@ lhostname = str(socket.gethostname())
 #
 # MAIN
 #
+Usage = 'usage: %prog [-d|--dirlist dirlist] \
+                                [-l|-logfile logfilename] \
+                                [-s | --stagedir stagedir] \
+                                [-t|--tarfile fullpath tar filename] \
+                                [-h|--help]'
 if __name__=='__main__':
-   parser = optparse.OptionParser('usage: %prog [-d|--dirlist dirlist] \
-				[-l|-logfile logfilename] \
-				[-s | --stagedir stagedir] \
-				[-t|--tarfile fullpath tar filename] \
-				[-h|--help]')
+   parser = optparse.OptionParser(Usage)
 #
    parser.add_option('-d', 
 			'--dirlist', 
@@ -78,24 +77,26 @@ if __name__=='__main__':
    parser.add_option('-t', 
 			'--tarfile', 
 			dest='tarfile', 
-			default=deftarfile,
 			type='string', 
 			help='Fullpath filename of the tar file that will be \
-				used to poulated the directory. Defaults \
-				to \'%s\'' % deftarfile)
+				used to poulated the directory.')
 #
    (options, args) = parser.parse_args()
-#    if len(args) != 0:
-#        o2tf.printlog('args left %s' % len(args), logfile, 0, '')
-#        parser.error('incorrect number of arguments')
+   if len(args) != 0:
+       parser.error('incorrect number of arguments')
+#
+   if not options.tarfile:
+       parser.error('Must provide a gzipped kernel tarball to run the test.')
+   tarfile = options.tarfile
+#
    if options.dirlist != '':
       dirlist = options.dirlist.split(',')
       dirlen = len(dirlist)
    else:
       dirlen = 0
+#
    logfile = options.logfile
    stagedir = options.stagedir
-   tarfile = options.tarfile
 #
 # First thing. Check if the dirlist is actually a directory or a file 
 # containing the directory list.

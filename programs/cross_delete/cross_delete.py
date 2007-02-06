@@ -32,8 +32,6 @@
 import os, sys, time, optparse, socket, string, o2tf, config, pdb, timing
 import time, config
 #
-deftarfile = config.WORKFILESDIR + '/' + config.TARFILE
-#
 MAXDIRLEVEL = 12
 DEBUGON = os.getenv('DEBUG',0)
 #
@@ -114,13 +112,14 @@ def check_thread(runnumber, wdir, logfile):
 #
 # MAIN
 #
+Usage = 'usage: %prog [-c|count count] \
+[-d|--dirlist dirlist] \
+[-l|-logfile logfilename] \
+[-n|nodes nodelist] \
+[-t|--tarfile fullpath tar filename] \
+[-h|--help]'
 if __name__=='__main__':
-   parser = optparse.OptionParser('usage: %prog [-c|count count] \
-					[-d|--dirlist dirlist] \
-					[-l|-logfile logfilename] \
-					[-n|nodes nodelist] \
-					[-t|--tarfile fullpath tar filename] \
-					[-h|--help]')
+   parser = optparse.OptionParser(Usage)
 #
    parser.add_option('-c', 
 			'--count', 
@@ -151,23 +150,24 @@ if __name__=='__main__':
    parser.add_option('-t', 
 			'--tarfile', 
 			dest='tarfile', 
-			default=deftarfile,
 			type='string', 
-			help='Fullpath filename of the tar file that will \
-				be used to poulated the directory. Defaults \
-				to \'%s\'' % deftarfile)
+                        help='Fullpath filename of the tar file containing \
+                                the kernel that will be used.')
 #
    (options, args) = parser.parse_args()
-#    if len(args) != 0:
-#        o2tf.printlog('args left %s' % len(args), logfile, 0, '')
-#        parser.error('incorrect number of arguments')
+   if len(args) != 0:
+      parser.error('incorrect number of arguments')
+#
+   if not options.tarfile:
+      parser.error('Must provide a gzipped kernel tarball to run the test.')
+#
+   tarfile = options.tarfile
    count = options.count
    dirlist = options.dirlist.split(',')
    dirlen = len(dirlist)
    nodelist = options.nodes.split(',')
    nodelen = len(nodelist)
    logfile = options.logfile
-   tarfile = options.tarfile
 if nodelen < 2:
    o2tf.printlog('cross_delete: nodelist must have at least 2 nodes' % \
 			dirlist, 
