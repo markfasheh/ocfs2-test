@@ -2,19 +2,18 @@
 #
 import os, sys, optparse, time, o2tf, pdb, config
 #
-deftarfile = os.path.join(config.WORKFILESDIR, config.TARFILE)
-#
-#
 DEBUGON = os.getenv('DEBUG',0)
 #
+Usage = 'Usage: %prog [-c|--count count] \
+[-n|--nodes nodelist] \
+[-t|--tarfile fullpath tar filename] \
+[-d|--directorylist dirlist] \
+[-l|-logfile logfilename] \
+[-u|--user username] \
+[-h|--help]'
+#
 if __name__=='__main__':
-    parser = optparse.OptionParser('usage: %prog [-c|--count count] \
-				[-n|--nodes nodelist] \
-				[-t|--tarfile fullpath tar filename] \
-				[-d|--directorylist dirlist] \
-				[-l|-logfile logfilename] \
-				[-u|--user username] \
-				[-h|--help]')
+    parser = optparse.OptionParser(Usage)
 #
     parser.add_option('-c', 
 			'--count', 
@@ -57,15 +56,15 @@ if __name__=='__main__':
     parser.add_option('-t', 
 			'--tarfile', 
 			dest='tarfile', 
-			default=deftarfile,
 			type='string', 
 			help='Fullpath filename of the tar file containing \
-				the kernel that will be used. Defaults \
-				to \'%s\'' % deftarfile)
+				the kernel that will be used.')
 
     (options, args) = parser.parse_args()
     if len(args) != 0:
         parser.error('incorrect number of arguments')
+    if not options.tarfile:
+        parser.error('Must provide a gzipped kernel tarball to run the test.')
     dirlist = options.dirlist.split(',')
     dirlen = len(dirlist)
     nodelen = len(options.nodelist)
@@ -93,4 +92,4 @@ o2tf.mpirun( DEBUGON, config.NPROC, str('%s -d %s -c %s -l %s -n %s -t %s' % \
 			options.nodelist, 
 			tarfile) ), 
 			options.nodelist, 
-			options.userid )
+			options.logfile )

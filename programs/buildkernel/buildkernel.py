@@ -31,8 +31,6 @@
 #
 import os, sys, time, optparse, socket, string, o2tf, pdb, timing, time, config
 #
-deftarfile = config.WORKFILESDIR + '/' + config.TARFILE
-#
 DEBUGON = os.getenv('DEBUG',0)
 #
 uname = os.uname()
@@ -114,13 +112,14 @@ def check_thread(runnumber, wdir, logfile):
 #
 # MAIN
 #
+Usage = 'Usage: %prog [-c|--count count] \
+[-d|--dirlist dirlist] \
+[-l|-logfile logfilename] \
+[-n | --nodelist nodename] \
+[-t|--tarfile fullpath tar filename] \
+[-h|--help]'
 if __name__=='__main__':
-    parser = optparse.OptionParser('usage: %prog [-c|--count count] \
-			[-d|--dirlist dirlist] \
-			[-l|-logfile logfilename] \
-			[-n | --nodelist nodename] \
-			[-t|--tarfile fullpath tar filename] \
-			[-h|--help]')
+    parser = optparse.OptionParser(Usage)
 
     parser.add_option('-c', 
 			'--count', 
@@ -153,16 +152,22 @@ if __name__=='__main__':
 			type='string', 
 			help='Nodename owner of the directory it will run the \
 				find command. Default to local hostname.')
-    parser.add_option('-t', 
-			'--tarfile', 
-			dest='tarfile', 
-			default=deftarfile,
-			type='string', 
-			help='Fullpath filename of the tar file containing the\
-				 kernel that will be used. Defaults to \'%s\'' \
-				% deftarfile)
+#
+    parser.add_option('-t',
+                        '--tarfile',
+                        dest='tarfile',
+                        type='string',
+                        help='Fullpath filename of the tar file containing \
+                                the kernel that will be used.')
+
 #
     (options, args) = parser.parse_args()
+    if len(args) != 0:
+        parser.error('incorrect number of arguments')
+#
+    if not options.tarfile:
+        parser.error('Must provide a gzipped kernel tarball to run the test.')
+    tarfile = options.tarfile
     dirlist = options.dirlist.split(',')
     dirlen = len(dirlist)
     count = options.count
@@ -173,7 +178,6 @@ if __name__=='__main__':
     else:
        nodelist = options.nodelist.split(',')
     nodelen = len(nodelist)
-    tarfile = options.tarfile
 #
 if DEBUGON:
    o2tf.printlog('buildkernel: dirlist = (%s)' % dirlist, logfile, 0, '')
@@ -208,7 +212,7 @@ for i in range(int(count)):
     pidlist = [0] * dirlen * 2
     for x in range(dirlen):
        wdir = dirlist[x] + '/' + str(socket.gethostname()) +'/'+ config.KERNELDIR
-       cmd = 'cd ' + wdir + ';  /usr/bin/make -j2 V=1 2>&1 >> %s' % logfile
+       cmd = 'cd ' + wdir + ';  make mrproper; make defconfig; /usr/bin/make -j2 V=1 2>&1 >> %s' % logfile
 
        if DEBUGON:
           o2tf.printlog('buildkernel: main - current directory %s' % \
