@@ -1,5 +1,5 @@
 
-O2TDIR = '/home/mmatsuna/runtest'
+O2TDIR = '<DESTDIR>'
 
 BINDIR = O2TDIR + '/bin'
 
