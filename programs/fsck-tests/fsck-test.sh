@@ -498,7 +498,7 @@ done
 
 if [ "" = "$CORRUPT" ]
 then
-	CORRUPT="$(seq -f "%02g" 00 42)"
+	CORRUPT="$(seq -f "%02g" 00 43)"
 fi
 
 [ -b "$DEVICE" ]

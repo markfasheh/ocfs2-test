@@ -1,0 +1,120 @@
+Checking OCFS2 filesystem in @DEVICE@:
+  label:              <NONE>
+  uuid:               70 52 16 03 1d 53 4f f4 b6 e2 9d 0c c0 85 47 7c 
+  number of blocks:   262144
+  bytes per block:    1024
+  number of clusters: 65536
+  bytes per cluster:  4096
+  max slots:          4
+
+@DEVICE@ was run with -f, check forced.
+Pass 0a: Checking cluster allocation chains
+[GROUP_FREE_BITS] Group descriptor at block 4 claims to have 7690 free bits which is more than 2847 bits indicated by the bitmap. Drop its free bit count down to the total? y
+Pass 0b: Checking inode allocation chains
+Pass 0c: Checking extent block allocation chains
+Pass 1: Checking inodes and blocks.
+[CLUSTER_ALLOC_BIT] Cluster 4733 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4734 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4735 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4736 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4737 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4738 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4739 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4740 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4741 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4742 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4743 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4744 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4745 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4746 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4747 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4748 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4749 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4750 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4751 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4752 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4753 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4754 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4755 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4756 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4757 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4758 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4759 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4760 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4761 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4762 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4763 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4764 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4765 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4766 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4767 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4768 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4769 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4770 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4771 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4772 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4773 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4774 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4775 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4776 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4777 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4778 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4779 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4780 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4781 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4782 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4783 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4784 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4785 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4786 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4787 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4788 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4789 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4790 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4791 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4792 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4793 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4794 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4795 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4796 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4797 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4798 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4799 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4800 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4801 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4802 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4803 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4804 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4805 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4806 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4807 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4808 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4809 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4810 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4811 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4812 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4813 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4814 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4815 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4816 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4817 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4818 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4819 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4820 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4821 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4822 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4823 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4824 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4825 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4826 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4827 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4828 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4829 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4830 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4831 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 4832 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+Pass 2: Checking directory entries.
+Pass 3: Checking directory connectivity.
+Pass 4a: checking for orphaned inodes
+Pass 4b: Checking inodes link counts.
+All passes succeeded.
