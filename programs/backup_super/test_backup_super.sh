@@ -448,6 +448,8 @@ function normal_test()
 #
 # main
 #
+. `dirname ${0}`/config.sh
+#
 if [ "$#" -eq "0" ]
 then
 	usage
@@ -504,7 +506,7 @@ check_executes
 set_log_file
 
 #from now on all the command and log will be recorded to the logfile.
-set -x
+#set -x
 
 normal_test
 

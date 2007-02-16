@@ -5,6 +5,7 @@ include $(TOPDIR)/Preamble.make
 SUBDIRS =			\
 	aio-stress		\
 	aio_direct		\
+	backup_super		\
 	basic-dual-data		\
 	bonnie			\
 	buildkernel		\
@@ -20,6 +21,7 @@ SUBDIRS =			\
 	extend_files		\
 	extendo			\
 	fill_verify_holes	\
+	fsck-tests		\
 	fsx			\
 	iozone			\
 	kernel_build_parallel_find			\

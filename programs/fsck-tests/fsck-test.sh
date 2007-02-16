@@ -126,7 +126,8 @@ function internal_setup()
 
 	umask 0077
 
-	BASE_DIR="${0%/*}"
+#	BASE_DIR="${0%/*}"
+ 	BASE_DIR=${O2TDIR}
 	TMP_DIR="/tmp/${0##*/}-$$"
 	mkdir -p "$TMP_DIR"
 
@@ -411,7 +412,7 @@ function corrupt_test()
 
 	cp "$STDOUT" "$TMP_DIR/fsck.ocfs2.$corrupt.actual.stdout" &>/dev/null
 	sed -e "s#@DEVICE@#$DEVICE#" \
-		<"$BASE_DIR/${disk_size}-disk/fsck.ocfs2.$corrupt.stdout" \
+		<"$BASE_DIR/workfiles/fsck-test/${disk_size}-disk/fsck.ocfs2.$corrupt.stdout" \
 		>"$TMP_DIR/fsck.ocfs2.$corrupt.expect.stdout" 2>/dev/null
 
 	diff -u -I "  uuid:              \( [0-9a-f][0-9a-f]\)\{16\}" \
@@ -429,7 +430,7 @@ function corrupt_test()
 	cp "$STDOUT" "$TMP_DIR/fsck.ocfs2.$corrupt.actual.stdout" &>/dev/null
 	[ -f "$TMP_DIR/fsck.ocfs2.clean.expect.stdout" ] ||
 		sed -e "s#@DEVICE@#$DEVICE#" \
-		<"$BASE_DIR/${disk_size}-disk/fsck.ocfs2.clean.stdout" \
+		<"$BASE_DIR/workfiles/fsck-test/${disk_size}-disk/fsck.ocfs2.clean.stdout" \
 		>"$TMP_DIR/fsck.ocfs2.clean.expect.stdout" 2>/dev/null
 
 	diff -u -I "  uuid:              \( [0-9a-f][0-9a-f]\)\{16\}" \
@@ -456,6 +457,8 @@ function basic_test()
 #
 # main
 #
+. `dirname ${0}`/config.sh
+
 internal_setup
 
 if [ "$#" -eq "0" ]

@@ -1,0 +1,29 @@
+
+O2TDIR=<DESTDIR>
+export O2TDIR
+BINDIR=${O2TDIR}/bin
+export BINDIR
+COMMONDIR=${O2TDIR}/common
+export COMMONDIR
+WORKFILESDIR=${O2TDIR}/workfiles
+export WORKFILESDIR
+LIBDIR=${O2TDIR}/lib
+export LIBDIR
+LOGFILE=${O2TDIR}/log/o2t.log
+export LOGFILE
+LAMBOOT=/usr/bin/lamboot
+export LAMBOOT
+LAMHOSTS=${WORKFILESDIR}/lamhosts
+export LAMHOSTS
+RECON=/usr/bin/recon
+export RECON
+MPIRUNPARTS=${BINDIR}/mpi-run-parts
+export MPIRUNPARTS
+KERNELDIR=linux*
+export KERNELDIR
+MPIRUN=/usr/bin/mpirun
+export MPIRUN
+LAMEXEC=/usr/bin/lamexec
+export LAMEXEC
+NPROC=1
+export NPROC

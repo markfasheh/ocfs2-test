@@ -1,7 +1,7 @@
 #
 # Makefile to configure config.py and create the directories workfiles and log.
 
-CONFIG_SCRIPT := config.sh
+CONFIG_SCRIPT := setup.sh
 
 CURDIR = $(shell pwd)
 
