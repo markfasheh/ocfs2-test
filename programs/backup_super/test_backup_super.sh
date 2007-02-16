@@ -17,6 +17,25 @@
 # Boston, MA 021110-1307, USA.
 #
 
+#
+# This script will check the whole mechanism of backup super in ocfs2-tools.
+#
+# The whole test script works like this:
+# 1. Iterate all the block size and cluster size and do the normal test.
+# 2. The normal test will calucate out some boudary volume size and test
+#    whether mkfs.ocfs2, fsck.ocfs2, debugfs.ocfs2 and tunefs.ocfs2 can
+#    work suitable with backup superblocks. It will create an ocfs2 
+#    volume, corrupt the super block and recover it using the specified
+#    backup superblock.
+# 3. It also includes another test which will format a volume with no backup
+#    superblocks and use tunefs.ocfs2 to add them to test whether tunefs.ocfs2
+#    can work properly for old-formatted volumes.
+#
+# In order to make the test runs, the volume must have at least +1G size to
+# have a space for a backup superblock since the first backup super block
+# will resides at 1G byte offset.
+#
+
 MKFS_BIN=`which mkfs.ocfs2`
 FSCK_BIN=`which fsck.ocfs2`
 DEBUGFS_BIN=`which debugfs.ocfs2`
