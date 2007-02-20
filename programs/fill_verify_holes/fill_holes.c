@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <limits.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,16 +31,20 @@ size, verifying it's contents.
 
 static void usage(void)
 {
-	printf("fill_holes [-i ITER] [-o LOGFILE] FILE SIZE\n"
+	printf("fill_holes [-i ITER] [-o LOGFILE] [-r REPLAYLOG] FILE SIZE\n"
 	       "FILE is a path to a file\n"
-	       "SIZE is in bytes\n"
-	       "ITER defaults to 1000\n"
-	       "LOGFILE defaults to stdout\n\n"
+	       "SIZE is in bytes and must always be specified, even with a REPLAYLOG\n"
+	       "ITER defaults to 1000, unless REPLAYLOG is specified.\n"
+	       "LOGFILE defaults to stdout\n"
+	       "REPLAYLOG is an optional file to generate values from\n\n"
 	       "FILE will be truncated to zero, then truncated out to SIZE\n"
-	       "For each iteration, a randomly selected character will be\n"
-	       "written a randomly selected number of times at a random\n"
-	       "offset. The exact patterns written will be logged such that\n"
-	       "the log can be replayed by a verification program.\n");
+	       "For each iteration, a character, offset and length will be\n"
+	       "randomly generated or read from the optional REPLAYLOG and\n"
+	       "written to FILE. The program ends after ITER iterations, or\n"
+	       "until the end of the replay log, whichever comes first.\n"
+	       "The exact patterns written will be logged such that\n"
+	       "the log can be replayed by a verification program, or given\n"
+	       "back to this software as a REPLAYLOG argument\n");
 
 	exit(0);
 }
@@ -50,24 +55,36 @@ static char buf[MAX_WRITE_SIZE];
 static unsigned int max_iter = 1000;
 static char *fname = NULL;
 static char *logname = NULL;
+static char *replaylogname = NULL;
 static unsigned long file_size;
 static FILE *logfile = NULL;
+static FILE *replaylogfile = NULL;
 
 static int parse_opts(int argc, char **argv)
 {
-	int c;
+	int c, iter_specified = 0;
 
 	while (1) {
-		c = getopt(argc, argv, "i:o:");
+		c = getopt(argc, argv, "i:o:r:");
 		if (c == -1)
 			break;
 
 		switch (c) {
 		case 'i':
 			max_iter = atoi(optarg);
+			iter_specified = 1;
 			break;
 		case 'o':
 			logname = optarg;
+			break;
+		case 'r':
+			replaylogname = optarg;
+			/*
+			 * Trick the code into replaying until the log
+			 * is empty.
+			 */
+			if (!iter_specified)
+				max_iter = UINT_MAX;
 			break;
 		default:
 			return EINVAL;
@@ -121,6 +138,28 @@ static int open_logfile(void)
 	return 0;
 }
 
+static int replay_eof(void)
+{
+	if (!replaylogfile)
+		return 0;
+
+	return feof(replaylogfile);
+}
+
+static int open_replaylog(void)
+{
+	if (!replaylogname)
+		return 0;
+
+	replaylogfile = fopen(replaylogname, "r");
+	if (!replaylogfile) {
+		fprintf(stderr, "Error %d opening replay log: %s\n", errno,
+			strerror(errno));
+		return EINVAL;
+	}
+	return 0;
+}
+
 static void log_write(struct write_unit *wu)
 {
 	fprintf(logfile, "%c\t%lu\t%u\n", wu->w_char, wu->w_offset, wu->w_len);
@@ -134,7 +173,7 @@ static unsigned long get_rand(unsigned long min, unsigned long max)
 	return min + ((rand() % max) - min);
 }
 
-static void prep_write_unit(struct write_unit *wu)
+static void prep_rand_write_unit(struct write_unit *wu)
 {
 	wu->w_char = 'A' + (char) get_rand(0, 52);
 	wu->w_offset = get_rand(0, file_size - 1);
@@ -145,6 +184,26 @@ static void prep_write_unit(struct write_unit *wu)
 
 	assert(wu->w_char >= 'A' && wu->w_char <= 'z');
 	assert(wu->w_len <= MAX_WRITE_SIZE);
+}
+
+static int prep_write_unit(struct write_unit *wu)
+{
+	int ret;
+
+	if (!replaylogfile) {
+		prep_rand_write_unit(wu);
+		return 0;
+	}
+
+	ret = fscanf(replaylogfile, "%c\t%lu\t%u\n", &wu->w_char,
+		     &wu->w_offset, &wu->w_len);
+	if (ret != 3) {
+		fprintf(stderr, "input failure from replay log, ret %d, %d %s\n",
+			ret, errno, strerror(errno));
+		return -EINVAL;
+	}
+
+	return 0;
 }
 
 int do_write(int fd, struct write_unit *wu)
@@ -186,10 +245,16 @@ int main(int argc, char **argv)
 	if (ret)
 		return 1;
 
+	ret = open_replaylog();
+	if (ret)
+		return 1;
+
 	srand(getpid());
 
-	for(i = 0; i < max_iter; i++) {
-		prep_write_unit(&wu);
+	for(i = 0; (i < max_iter) && !replay_eof(); i++) {
+		ret = prep_write_unit(&wu);
+		if (ret)
+			return 1;
 
 		log_write(&wu);
 
