@@ -1,0 +1,5 @@
+Single node test to test mkfs.ocfs2.
+
+usage: mkfs_test -o <outdir> -d <device>
+       -o output directory for the logs
+       -d device
