@@ -13,7 +13,7 @@ OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 
 DIST_FILES = $(SOURCES)
   
-truncate: $(OBJECTS)
-	$(LINK)
+aio-stress: $(OBJECTS)
+	$(LINK) -laio
 
 include $(TOPDIR)/Postamble.make

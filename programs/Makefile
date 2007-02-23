@@ -34,6 +34,7 @@ SUBDIRS =			\
 	parallel_timing		\
 	python_common		\
 	quick_appending_writes	\
+	resize_test		\
 	sendfiletest		\
 	splice			\
 	truncate		\

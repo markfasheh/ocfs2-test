@@ -22,11 +22,12 @@ endif
 
 include $(TOPDIR)/Preamble.make
 
-SUBDIR = iozone3_263/src/current
+SUBDIR = iozone3_263/src/current/
 
 all:
 	$(MAKE) -C $(SUBDIR) $(TARGET)
 
 include $(TOPDIR)/Postamble.make
 
-
+clean:
+	$(MAKE) -C $(SUBDIR) clean

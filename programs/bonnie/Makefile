@@ -14,4 +14,5 @@ all: bonnie
 
 include $(TOPDIR)/Postamble.make
 
-
+clean:
+	$(MAKE) -C $(SUBDIR) clean
