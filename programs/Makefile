@@ -28,6 +28,7 @@ SUBDIRS =			\
 	lock_grab		\
 	logwriter		\
 	lvb_torture		\
+	mkfs-tests		\
 	mmap_test		\
 	multi_node_mmap		\
 	parallel_timing		\
@@ -37,6 +38,7 @@ SUBDIRS =			\
 	splice			\
 	truncate		\
 	ttest			\
+	tunefs-test			\
 	untar_files		\
 	write_append_truncate	\
 	write_torture
