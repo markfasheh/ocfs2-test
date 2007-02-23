@@ -58,9 +58,9 @@ static int setup_signals()
 {
     int rc = 0;
     struct sigaction act;
+    memset(&act, 0, sizeof(act));
 
     act.sa_sigaction = NULL;
-    act.sa_restorer = NULL;
     sigemptyset(&act.sa_mask);
     act.sa_handler = handler;
 #ifdef SA_INTERRUPT
