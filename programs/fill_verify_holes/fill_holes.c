@@ -31,11 +31,12 @@ size, verifying it's contents.
 
 static void usage(void)
 {
-	printf("fill_holes [-i ITER] [-o LOGFILE] [-r REPLAYLOG] FILE SIZE\n"
+	printf("fill_holes [-f] [-i ITER] [-o LOGFILE] [-r REPLAYLOG] FILE SIZE\n"
 	       "FILE is a path to a file\n"
 	       "SIZE is in bytes and must always be specified, even with a REPLAYLOG\n"
 	       "ITER defaults to 1000, unless REPLAYLOG is specified.\n"
 	       "LOGFILE defaults to stdout\n"
+	       "-f will result in logfile being flushed after every write\n"
 	       "REPLAYLOG is an optional file to generate values from\n\n"
 	       "FILE will be truncated to zero, then truncated out to SIZE\n"
 	       "For each iteration, a character, offset and length will be\n"
@@ -53,6 +54,7 @@ static void usage(void)
 static char buf[MAX_WRITE_SIZE];
 
 static unsigned int max_iter = 1000;
+static unsigned int flush_output = 0;
 static char *fname = NULL;
 static char *logname = NULL;
 static char *replaylogname = NULL;
@@ -65,11 +67,14 @@ static int parse_opts(int argc, char **argv)
 	int c, iter_specified = 0;
 
 	while (1) {
-		c = getopt(argc, argv, "i:o:r:");
+		c = getopt(argc, argv, "fi:o:r:");
 		if (c == -1)
 			break;
 
 		switch (c) {
+		case 'f':
+			flush_output = 1;
+			break;
 		case 'i':
 			max_iter = atoi(optarg);
 			iter_specified = 1;
@@ -162,7 +167,15 @@ static int open_replaylog(void)
 
 static void log_write(struct write_unit *wu)
 {
+	int fd;
+
 	fprintf(logfile, "%c\t%lu\t%u\n", wu->w_char, wu->w_offset, wu->w_len);
+	if (flush_output) {
+		fflush(logfile);
+
+		fd = fileno(logfile);
+		fsync(fd);
+	}
 }
 
 static unsigned long get_rand(unsigned long min, unsigned long max)
