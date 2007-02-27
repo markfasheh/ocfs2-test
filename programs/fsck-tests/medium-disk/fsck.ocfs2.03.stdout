@@ -10,7 +10,7 @@ Checking OCFS2 filesystem in @DEVICE@:
 @DEVICE@ was run with -f, check forced.
 Pass 0a: Checking cluster allocation chains
 [CHAIN_HEAD_LINK_RANGE] Chain 32 in allocator inode 11 contains an initial block reference to 1048577 which is out of range.  Clear this reference? y
-[CHAIN_GROUP_BITS] Allocator inode 11 has 17911 bits marked used out of 1048576 total bits but the chains have 17910 used out of 1032192 total.  Fix this by updating the inode counts? y
+[CHAIN_GROUP_BITS] Allocator inode 11 has 17912 bits marked used out of 1048576 total bits but the chains have 17911 used out of 1032192 total.  Fix this by updating the inode counts? y
 [CHAIN_I_CLUSTERS] Allocator inode 11 has 1032192 clusters represented in its allocator chains but has an i_clusters value of 1048576. Fix this by updating i_clusters? y
 [CHAIN_I_SIZE] Allocator inode 11 has 1032192 clusters represented in its allocator chain which accounts for 4227858432 total bytes, but its i_size is 4294967296. Fix this by updating i_size? y
 [GROUP_EXPECTED_DESC] Block 1032192 should be a group descriptor for the bitmap chain allocator but it wasn't found in any chains.  Reinitialize it as a group desc and link it into the bitmap allocator? y

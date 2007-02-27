@@ -9,7 +9,7 @@ Checking OCFS2 filesystem in @DEVICE@:
 
 @DEVICE@ was run with -f, check forced.
 Pass 0a: Checking cluster allocation chains
-[CHAIN_GROUP_BITS] Allocator inode 11 has 0 bits marked used out of 1048586 total bits but the chains have 17911 used out of 1048576 total.  Fix this by updating the inode counts? y
+[CHAIN_GROUP_BITS] Allocator inode 11 has 0 bits marked used out of 1048586 total bits but the chains have 17912 used out of 1048576 total.  Fix this by updating the inode counts? y
 Pass 0b: Checking inode allocation chains
 Pass 0c: Checking extent block allocation chains
 Pass 1: Checking inodes and blocks.
