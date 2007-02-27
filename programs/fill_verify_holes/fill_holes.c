@@ -188,6 +188,7 @@ static unsigned long get_rand(unsigned long min, unsigned long max)
 
 static void prep_rand_write_unit(struct write_unit *wu)
 {
+again:
 	wu->w_char = 'A' + (char) get_rand(0, 52);
 	wu->w_offset = get_rand(0, file_size - 1);
 	wu->w_len = (unsigned int) get_rand(1, MAX_WRITE_SIZE);
@@ -195,8 +196,13 @@ static void prep_rand_write_unit(struct write_unit *wu)
 	if (wu->w_offset + wu->w_len > file_size)
 		wu->w_len = file_size - wu->w_offset;
 
+	/* sometimes the random number might work out like this */
+	if (wu->w_len == 0)
+		goto again;
+
 	assert(wu->w_char >= 'A' && wu->w_char <= 'z');
 	assert(wu->w_len <= MAX_WRITE_SIZE);
+	assert(wu->w_len > 0);
 }
 
 static int prep_write_unit(struct write_unit *wu)
