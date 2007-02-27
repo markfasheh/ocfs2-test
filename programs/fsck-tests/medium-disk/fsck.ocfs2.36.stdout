@@ -1,6 +1,6 @@
 Checking OCFS2 filesystem in @DEVICE@:
   label:              <NONE>
-  uuid:               bf f2 14 d7 c1 06 41 04 88 30 72 b1 a5 a8 ad 1b
+  uuid:               7f 68 36 03 41 2a 4a fb 88 fa 56 22 f8 7c f8 1f 
   number of blocks:   1048576
   bytes per block:    4096
   number of clusters: 1048576
@@ -15,13 +15,12 @@ Pass 1: Checking inodes and blocks.
 [LINK_NULLTERM] The target of symlink inode 16858 isn't null terminated.  Clear the inode? y
 [INODE_ALLOC_REPAIR] Inode 16858 is marked as invalid but its position in the inode allocator is marked as in use.  Fix the allocation of this and all future inodes? y
 [LINK_SIZE] The target of symlink inode 16859 is 16 bytes long on disk, but i_size is 26 bytes long.  Update i_size to reflect the length on disk? y
-[LINK_BLOCKS] The target of symlink inode 16860 fits in 1 blocks but the inode has 2 allocated.  Clear the inode? y
+[INODE_CLUSTERS] Inode 16860 has 1 clusters but its blocks fit in 2 clusters.  Correct the number of clusters? y
 [CLUSTER_ALLOC_BIT] Cluster 17880 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
 [CLUSTER_ALLOC_BIT] Cluster 17881 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
-[CLUSTER_ALLOC_BIT] Cluster 17883 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
+[CLUSTER_ALLOC_BIT] Cluster 17884 is in use but isn't set in the global cluster bitmap. Set its bit in the bitmap? y
 Pass 2: Checking directory entries.
-[DIRENT_INODE_FREE] Directory entry 'testzeCDMg' refers to inode number 16858 which isn't allocated, clear the entry? y
-[DIRENT_INODE_FREE] Directory entry 'test7hr8Es' refers to inode number 16860 which isn't allocated, clear the entry? y
+[DIRENT_INODE_FREE] Directory entry 'testg5YRcl' refers to inode number 16858 which isn't allocated, clear the entry? y
 Pass 3: Checking directory connectivity.
 Pass 4a: checking for orphaned inodes
 Pass 4b: Checking inodes link counts.
