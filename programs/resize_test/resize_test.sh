@@ -272,7 +272,7 @@ do
 
     do_fsck ${fsckout}
 
-    if [ $alldone -eq 1 ] || [ ${blocks} -eq 0 ]
+    if [ $alldone -eq 1 ] || [ ${blocks} -eq 0 ] || [ ${blocks} -eq ${partsz} ]
     then
         break;
     fi
