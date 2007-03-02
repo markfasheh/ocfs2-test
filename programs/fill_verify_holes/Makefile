@@ -10,6 +10,8 @@ SOURCES = fill_holes.c verify_holes.c fill_holes.h
 
 DIST_FILES = $(SOURCES)
 
+BIN_PROGRAMS = fill_holes verify_holes burn-in.sh
+
 fill_holes: fill_holes.o fill_holes.h
 	$(LINK) $(OCFS2_LIBS)
 
