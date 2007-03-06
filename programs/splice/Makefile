@@ -15,6 +15,8 @@ SOURCES = $(SPLICE_WRITE_SOURCES) $(SPLICE_READ_SOURCES)
 
 DIST_FILES = $(SOURCES)
 
+BIN_PROGRAMS = splice_read splice_write
+
 splice_read: $(SPLICE_READ_OBJECTS)
 	$(LINK) 
 splice_write: $(SPLICE_WRITE_OBJECTS)
