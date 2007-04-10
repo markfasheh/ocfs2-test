@@ -16,6 +16,7 @@ SUBDIRS =			\
 	db_resize		\
 	dbench			\
 	dirop_fileop_racer	\
+	dlmstress1		\
 	exorcist		\
 	extend_and_write	\
 	extend_files		\
