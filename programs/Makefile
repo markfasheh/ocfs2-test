@@ -32,6 +32,7 @@ SUBDIRS =			\
 	mkfs-tests		\
 	mmap_test		\
 	multi_node_mmap		\
+	open_delete		\
 	parallel_timing		\
 	python_common		\
 	quick_appending_writes	\
