@@ -84,7 +84,7 @@ if DEBUGON:
    o2tf.printlog('tarfile = (%s)' % tarfile, logfile, 0, '')
    o2tf.printlog('buildcmd = (%s)' % buildcmd, logfile, 0, '')
 o2tf.StartMPI(DEBUGON, options.nodelist, logfile)
-o2tf.mpirun( DEBUGON, config.NPROC, str('%s -d %s -c %s -l %s -n %s -t %s' % \
+o2tf.mpi_runparts( DEBUGON, config.NPROC, str('%s -d %s -c %s -l %s -n %s -t %s' % \
 			(buildcmd, 
 			options.dirlist, 
 			options.count, 

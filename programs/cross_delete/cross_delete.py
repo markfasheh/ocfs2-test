@@ -289,7 +289,7 @@ for n in range(nodelen):
 #
 cmdline = os.path.join(config.BINDIR, 'crdel_gen_files.py')
 o2tf.StartMPI(DEBUGON, ','.join(nodelist), logfile)
-o2tf.mpirun( DEBUGON, config.NPROC, str('%s -s %s -l %s -t %s' % \
+o2tf.mpi_runparts( DEBUGON, config.NPROC, str('%s -s %s -l %s -t %s' % \
 			(cmdline, stagedir, 
 			options.logfile, 
 			tarfile) ), 
@@ -328,7 +328,7 @@ for n in range(nodelen):
 # Call crdel_del_files.py to do that on each node using mpi-run-parts.
 #
 cmdline = os.path.join(config.BINDIR, 'crdel_del_files.py')
-o2tf.mpirun( DEBUGON, config.NPROC, str('%s -s %s -l %s ' % \
+o2tf.mpi_runparts( DEBUGON, config.NPROC, str('%s -s %s -l %s ' % \
 			(cmdline, stagedir, options.logfile) ), 
 			','.join(nodelist), 
 			logfile)

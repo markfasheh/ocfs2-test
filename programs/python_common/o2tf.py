@@ -28,7 +28,6 @@ def printlog(message, logfile, prflag=0, prsep=''):
    datetime = time.asctime(time.localtime())
    from os import access,F_OK
    if os.access(logfile,F_OK) == 0:
-      print 'logfile %s does not exist.' % logfile
       os.system('touch ' + logfile)
    
 #
@@ -244,10 +243,11 @@ def StartMPI(DEBUGON, nodes, logfile):
     except os.error:
        pass
 #
-# mpirun is used by :
+# calls mpi-run-parts
+# mpi_runparts is used by :
 #   - o2tf.py
 #   - run_buildkernel.py
-def mpirun(DEBUGON, nproc, cmd, nodes, logfile):
+def mpi_runparts(DEBUGON, nproc, cmd, nodes, logfile):
     'Execute commands in parallel using LAM/MPI.'
     from os import access,F_OK
     found = 0
@@ -255,23 +255,23 @@ def mpirun(DEBUGON, nproc, cmd, nodes, logfile):
     nodelen = len(string.split(nodes,','))
     try:
        if DEBUGON:
-          printlog('o2tf.mpirun: MPIRUN = %s' % config.MPIRUN, 
+          printlog('o2tf.mpi_runparts: MPIRUN = %s' % config.MPIRUN, 
 			logfile, 
 			0, 
 			'')
-          printlog('o2tf.mpirun: nproc = %s' % nproc, 
+          printlog('o2tf.mpi_runparts: nproc = %s' % nproc, 
 			logfile, 
 			0, 
 			'')
-          printlog('o2tf.mpirun: nodelen = %d' % nodelen, 
+          printlog('o2tf.mpi_runparts: nodelen = %d' % nodelen, 
 			logfile, 
 			0, 
 			'')
-          printlog('o2tf.mpirun: MPIRUNPARTS = %s' % config.MPIRUNPARTS, 
+          printlog('o2tf.mpi_runparts: MPIRUNPARTS = %s' % config.MPIRUNPARTS, 
 			logfile, 
 			0, 
 			'')
-          printlog('o2tf.mpirun: cmd = %s' % cmd, 
+          printlog('o2tf.mpi_runparts: cmd = %s' % cmd, 
 			logfile, 
 			0, 
 			'')
@@ -281,6 +281,43 @@ def mpirun(DEBUGON, nproc, cmd, nodes, logfile):
 			'-xc', 
 			config.MPIRUN + ' -w n0-%d %s %s' % \
 			( nodelen - 1, config.MPIRUNPARTS, cmd)])
+       os.waitpid(pid,0)
+    except os.error:
+       pass
+#
+# Calls mpirun (Original from the LAM/MPI Package)
+# mpi_run is used by :
+#   - open_delete.py
+def mpi_run(DEBUGON, nproc, cmd, nodes, logfile):
+    'Execute commands in parallel using LAM/MPI.'
+    from os import access,F_OK
+    found = 0
+    uname = os.uname()
+    nodelen = len(string.split(nodes,','))
+    try:
+       if DEBUGON:
+          printlog('o2tf.mpi_run: MPIRUN = %s' % config.MPIRUN, 
+			logfile, 
+			0, 
+			'')
+          printlog('o2tf.mpi_run: nproc = %s' % nproc, 
+			logfile, 
+			0, 
+			'')
+          printlog('o2tf.mpi_run: nodelen = %d' % nodelen, 
+			logfile, 
+			0, 
+			'')
+          printlog('o2tf.mpi_run: cmd = %s' % cmd, 
+			logfile, 
+			0, 
+			'')
+       pid = os.spawnv(os.P_NOWAIT, 
+			'/bin/bash', 
+			['bash', 
+			'-xc', 
+			config.MPIRUN + ' -w n0-%d %s' % \
+			( nodelen - 1, cmd)])
        os.waitpid(pid,0)
     except os.error:
        pass
@@ -296,23 +333,23 @@ def lamexec(DEBUGON, nproc, cmd, nodes, logfile):
     StartMPI(DEBUGON, nodes, logfile)
     try:
        if DEBUGON:
-          printlog('o2tf.mpirun: MPIRUN = %s' % config.MPIRUN, 
+          printlog('o2tf.lamexec: MPIRUN = %s' % config.MPIRUN, 
 			logfile, 
 			0, 
 			'')
-          printlog('o2tf.mpirun: nproc = %s' % nproc, 
+          printlog('o2tf.lamexec: nproc = %s' % nproc, 
 			logfile, 
 			0, 
 			'')
-          printlog('o2tf.mpirun: nodelen = %d' % nodelen, 
+          printlog('o2tf.lamexec: nodelen = %d' % nodelen, 
 			logfile, 
 			0, 
 			'')
-          printlog('o2tf.mpirun: MPIRUNPARTS = %s' % config.MPIRUNPARTS, 
+          printlog('o2tf.lamexec: MPIRUNPARTS = %s' % config.MPIRUNPARTS, 
 			logfile, 
 			0, 
 			'')
-          printlog('o2tf.mpirun: cmd = %s' % cmd, 
+          printlog('o2tf.lamexec: cmd = %s' % cmd, 
 			logfile, 
 			0, 
 			'')
