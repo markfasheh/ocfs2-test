@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <sys/mman.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,12 +32,13 @@ size, verifying it's contents.
 
 static void usage(void)
 {
-	printf("fill_holes [-f] [-i ITER] [-o LOGFILE] [-r REPLAYLOG] FILE SIZE\n"
+	printf("fill_holes [-f] [-m] [-i ITER] [-o LOGFILE] [-r REPLAYLOG] FILE SIZE\n"
 	       "FILE is a path to a file\n"
 	       "SIZE is in bytes and must always be specified, even with a REPLAYLOG\n"
 	       "ITER defaults to 1000, unless REPLAYLOG is specified.\n"
 	       "LOGFILE defaults to stdout\n"
 	       "-f will result in logfile being flushed after every write\n"
+	       "-m instructs the test to use mmap to write to FILE\n"
 	       "REPLAYLOG is an optional file to generate values from\n\n"
 	       "FILE will be truncated to zero, then truncated out to SIZE\n"
 	       "For each iteration, a character, offset and length will be\n"
@@ -61,17 +63,22 @@ static char *replaylogname = NULL;
 static unsigned long file_size;
 static FILE *logfile = NULL;
 static FILE *replaylogfile = NULL;
+static int use_mmap = 0;
+static void *mapped;
 
 static int parse_opts(int argc, char **argv)
 {
 	int c, iter_specified = 0;
 
 	while (1) {
-		c = getopt(argc, argv, "fi:o:r:");
+		c = getopt(argc, argv, "mfi:o:r:");
 		if (c == -1)
 			break;
 
 		switch (c) {
+		case 'm':
+			use_mmap = 1;
+			break;
 		case 'f':
 			flush_output = 1;
 			break;
@@ -109,7 +116,7 @@ static int prep_file(char *name, unsigned long size)
 {
 	int ret, fd;
 
-	fd = open(name, O_WRONLY|O_CREAT|O_TRUNC,
+	fd = open(name, O_RDWR|O_CREAT|O_TRUNC,
 		  S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
 	if (fd == -1) {
 		fprintf(stderr, "open error %d: \"%s\"\n", errno,
@@ -124,6 +131,17 @@ static int prep_file(char *name, unsigned long size)
 		fprintf(stderr, "ftruncate error %d: \"%s\"\n", errno,
 			strerror(errno));
 		return -1;
+	}
+
+	if (use_mmap) {
+		mapped = mmap(0, size, PROT_WRITE, MAP_SHARED, fd, 0);
+		if (mapped == MAP_FAILED) {
+			close(fd);
+
+			fprintf(stderr, "mmap error %d: \"%s\"\n", errno,
+				strerror(errno));
+			return -1;
+		}
 	}
 
 	return fd;
@@ -228,6 +246,11 @@ static int prep_write_unit(struct write_unit *wu)
 int do_write(int fd, struct write_unit *wu)
 {
 	int ret;
+
+	if (use_mmap) {
+		memset(mapped + wu->w_offset, wu->w_char, wu->w_len);
+		return 0;
+	}
 
 	memset(buf, wu->w_char, wu->w_len);
 	ret = pwrite(fd, buf, wu->w_len, wu->w_offset);
