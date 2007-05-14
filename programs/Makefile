@@ -31,6 +31,7 @@ SUBDIRS =			\
 	lvb_torture		\
 	mkfs-tests		\
 	mmap_test		\
+	mmap_truncate		\
 	multi_node_mmap		\
 	open_delete		\
 	parallel_timing		\
