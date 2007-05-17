@@ -437,6 +437,66 @@ Add_Backup_Super()
 	   test_pass;
 	fi;
 }
+
+#
+# Journal_Node_Change - Change journal size and node slots simultaneously.
+#
+Journal_Node_Change()
+{
+	LogMsg "tunefs_test : Testing Changing journal size and node slots simultaneously."
+
+	# Increase journal size and node slots.
+	(( ++NUM_OF_TESTS ))
+	Set_Volume_For_Test;
+	CURRENT_TEST="Increase Journal Size to ${JOURNAL3} and increase nodes to ${NNODES2}";
+	echo "y"|${TUNEFS_BIN} -N ${NNODES2} -J size=${JOURNAL3} ${DEVICE} 2>&1 >> ${TUNEFSLOG};
+
+	# Check whether we succeed.
+	Check_Volume;
+	SB_NNODES=`${DEBUGFS_BIN} -n -R "stats" ${DEVICE}|${GREP} Slots| \
+		 ${GAWK} '{print \$4; exit}'`;
+	if [ ${SB_NNODES} -ne ${NNODES2} ]; then
+	   test_fail;
+	   LogMsg "tunefs_test : #of nodes change failed. \c"
+	   LogMsg "Superblock number of nodes (${SB_NNODES})"
+	else
+		SB_JSIZE=`${DEBUGFS_BIN} -n -R "ls -l //" ${DEVICE}|${GREP} -i Journal:0001| 
+			${GAWK} '{print \$6; exit}'`;
+		if [ ${SB_JSIZE} -ne ${JOURNAL3} ]; then
+		   test_fail;
+		   LogMsg "tunefs_test : Journal size change failed.\c"
+		   LogMsg " Superblock Journal Size (${SB_JSIZE})"
+		else
+		   test_pass;
+		fi;
+	fi;
+
+
+	# Decrease journal size and increase the slot nums.
+	(( ++NUM_OF_TESTS ))
+	CURRENT_TEST="Decrease Journal Size to ${JOURNAL2} and increase nodes to ${NNODES3}";
+	echo "y"|${TUNEFS_BIN} -N ${NNODES3} -J size=${JOURNAL2} ${DEVICE} 2>&1 >> ${TUNEFSLOG};
+
+	# Check whether we succeed.
+	Check_Volume;
+	SB_NNODES=`${DEBUGFS_BIN} -n -R "stats" ${DEVICE}|${GREP} Slots| \
+		 ${GAWK} '{print \$4; exit}'`;
+	if [ ${SB_NNODES} -ne ${NNODES3} ]; then
+	   test_fail;
+	   LogMsg "tunefs_test : #of nodes change failed. \c"
+	   LogMsg "Superblock number of nodes (${SB_NNODES})"
+	else
+		SB_JSIZE=`${DEBUGFS_BIN} -n -R "ls -l //" ${DEVICE}|${GREP} -i Journal:0001| 
+			${GAWK} '{print \$6; exit}'`;
+		if [ ${SB_JSIZE} -ne ${JOURNAL2} ]; then
+		   test_fail;
+		   LogMsg "tunefs_test : Journal size change failed.\c"
+		   LogMsg " Superblock Journal Size (${SB_JSIZE})"
+		else
+		   test_pass;
+		fi;
+	fi;
+}
 ################################################################
 
 #
@@ -521,6 +581,8 @@ Change_UUID
 Change_Mount_Type
 
 Add_Backup_Super
+
+Journal_Node_Change
 
 test_summary
 
