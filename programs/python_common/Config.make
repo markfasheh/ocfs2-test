@@ -11,4 +11,6 @@ ifdef CONFIG_SCRIPT
 endif
 
 	mkdir -p  $(DESTDIR)/workfiles $(DESTDIR)/log
+	chmod 1777 $(DESTDIR)/log
+
 install: config-script
