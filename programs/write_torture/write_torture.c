@@ -22,6 +22,10 @@ static int die = 0;
 static int fd;
 static char *block;
 static int logfd = STDOUT_FILENO;
+#ifndef MAXHOSTNAMELEN
+#define MAXHOSTNAMELEN 256
+#endif
+static char hostn[MAXHOSTNAMELEN];
 
 static void __logprint(const char *fmt, ...)
 {
@@ -34,14 +38,14 @@ static void __logprint(const char *fmt, ...)
 	len = vsnprintf(str, 4096, fmt, ap);
 	if (len == -1) {
 		len = errno;
-		fprintf(stderr, "Can't log, error %d\n", len);
+		fprintf(stderr, "%s: Can't log, error %d\n", hostn, len);
 		return;
 	}
 
 	write(logfd, str, len);
 }
 
-#define logprint(fmt, args...) __logprint("[%u]: "fmt, mypid, args)
+#define logprint(fmt, args...) __logprint("%s: [%u]: "fmt, hostn, mypid, args)
 
 static unsigned long get_rand(unsigned long min, unsigned long max)
 {
@@ -58,13 +62,13 @@ static void random_sleep(unsigned int max_usecs)
 
 	usec = r % max_usecs;
 
-	dprintf("%u: sleep %u usec\n", mypid, usec);
+	dprintf("%s:%u: sleep %u usec\n", hostn, mypid, usec);
 	usleep(usec);
 }
 
 static void signal_handler(int sig)
 {
-	dprintf("%u: signal %d recieved\n", mypid, sig);
+	dprintf("%s:%u: signal %d recieved\n", hostn, mypid, sig);
 	if (sig == SIGALRM)
 		logprint("Alarm fired! (%d)\n", sig);
 
@@ -82,7 +86,8 @@ static int launch_child(char *fname, int open_flags, int (*newmain)(void))
 		if (fd == -1) {
 			ret = errno;
 			fprintf(stderr,
-				"Error %d opening \"%s\"\n", ret, fname);
+				"%s: Error %d opening \"%s\"\n", hostn, 
+				ret, fname);
 			exit(ret);
 		}
 
@@ -93,7 +98,7 @@ static int launch_child(char *fname, int open_flags, int (*newmain)(void))
 	}
 	if (pid == -1) {
 		ret = errno;
-		fprintf(stderr, "could not fork: %d\n", ret);
+		fprintf(stderr, "%s: could not fork: %d\n", hostn, ret);
 	}
 
 	return ret;
@@ -106,11 +111,11 @@ static int do_write(int fd, const char *buf, unsigned int len)
 	written = write(fd, buf, len);
 	if (written == -1) {
 		ret = errno;
-		fprintf(stderr, "%d: append write failure %d\n", mypid,
-			ret);
+		fprintf(stderr, "%s:%d: append write failure %d len[%d]\n", 
+			hostn, mypid, ret, len);
 	} else if (written < len)
-		fprintf(stderr, "%d: short write! len = %u, written = %u\n",
-			mypid, len, written);
+		fprintf(stderr, "%s:%d: short write! len = %u, written = %u\n",
+			hostn, mypid, len, written);
 
 	return ret;
 }
@@ -144,7 +149,8 @@ static int get_i_size(int fd, unsigned long *size)
 	ret = fstat(fd, &stat);
 	if (ret == -1) {
 		ret = errno;
-		fprintf(stderr, "%d: stat failure %d\n", mypid, ret);
+		fprintf(stderr, "%s:%d: stat failure %d\n", 
+		        hostn, mypid, ret);
 		return ret;
 	}
 
@@ -242,8 +248,8 @@ static int truncate_caller(int up)
 			ret = ftruncate(fd, len);
 			if (ret == -1) {
 				ret = errno;
-				fprintf(stderr, "%d: truncate error %d\n",
-					mypid, ret);
+				fprintf(stderr, "%s:%d: truncate error %d\n",
+					hostn, mypid, ret);
 				break;
 			}
 		}
@@ -284,7 +290,7 @@ static int straddling_eof_writer(void)
 
 		lseek(fd, off, SEEK_SET);
 
-		logprint("write straddling offset      : %lu\n",
+		logprint(" write straddling offset      : %lu\n",
 			 (unsigned long) off);
 
 		ret = do_write(fd, block, blklen);
@@ -344,6 +350,10 @@ int main(int argc, char **argv)
 	int status;
 	pid_t pid;
 	char *fname;
+	printf("will get hostname\n");
+        gethostname(hostn, MAXHOSTNAMELEN);
+	printf("got hostname\n");
+
 
 	if (argc < 2) {
 		usage();
@@ -356,14 +366,15 @@ int main(int argc, char **argv)
 	}
 
 	if (seconds)
-		printf("Will bound the test at about %u seconds\n", seconds);
+		printf("%s: Will bound the test at about %u seconds\n", 
+			hostn, seconds);
 	if (blklen != DEFAULT_BLKLEN)
-		printf("Using block size of %u bytes\n", blklen);
+		printf("%s: Using block size of %u bytes\n", hostn, blklen);
 
 	block = malloc(blklen);
 	if (!block) {
-		fprintf(stderr, "Not enough memory to allocate %u bytes\n",
-			blklen);
+		fprintf(stderr, "%s: Not enough memory to allocate %u bytes\n",
+			hostn, blklen);
 		return ENOMEM;
 	}
 
@@ -372,7 +383,8 @@ int main(int argc, char **argv)
 		  S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
 	if (fd == -1) {
 		ret = errno;
-		fprintf(stderr, "Error %d opening \"%s\"\n", ret, fname);
+		fprintf(stderr, "%s: Error %d opening \"%s\"\n", 
+		        hostn, ret, fname);
 		return ret;
 	}
 	close(fd);
@@ -381,13 +393,14 @@ int main(int argc, char **argv)
 
 	/* setup the parent. */
 	if (signal(SIGINT, signal_handler) == SIG_ERR) {
-		fprintf(stderr, "Couldn't setup parent signal handler!\n");
+		fprintf(stderr, "%s: Couldn't setup parent signal handler!\n",
+		        hostn);
 		return 1;
 	}
 
 	/* We don't care. Getting back a short write is just fine. */
 	if (signal(SIGXFSZ, SIG_IGN) == SIG_ERR) {
-		fprintf(stderr, "Couldn't ignore SIGXFSZ!\n");
+		fprintf(stderr, "%s: Couldn't ignore SIGXFSZ!\n", hostn);
 		return 1;
 	}
 
@@ -403,19 +416,22 @@ int main(int argc, char **argv)
 	if (!ret)
 		ret = launch_child(fname, O_WRONLY, straddling_eof_writer);
 	if (ret) {
-		fprintf(stderr, "Error %d launching children\n", ret);
+		fprintf(stderr, "%s: Error %d launching children\n", 
+		        hostn, ret);
 		goto kill_all;
 	}
 
 	if (seconds) {
 		if (signal(SIGALRM, signal_handler) == SIG_ERR) {
-			fprintf(stderr, "Couldn't setup SIGALRM handler!\n");
+			fprintf(stderr, "%s: Couldn't setup SIGALRM handler!\n",
+			        hostn);
 			goto kill_all;
 		}
 
 		ret = alarm(seconds);
 		if (ret) {
-			fprintf(stderr, "alarm(2) returns %u\n", ret);
+			fprintf(stderr, "%s: alarm(2) returns %u\n", 
+				hostn, ret);
 			goto kill_all;
 		}
 	}
@@ -424,34 +440,38 @@ int main(int argc, char **argv)
 		status = 0;
 		pid = waitpid(-1, &status, WNOHANG);
 		if (die) {
-			dprintf("die has been set, kill remaining children\n");
+			dprintf("%s: die has been set, kill remaining "
+				"children\n", hostn);
 			break;
 		}
 		if (pid == -1) {
 			ret = errno;
 			if (ret != -ECHILD)
 				fprintf(stderr,
-					"Error %d returned from wait\n", ret);
+					"%s: Error %d returned from wait\n", 
+					hostn, ret);
 			break;
 		}
 
 		if (!WIFEXITED(status)) {
-			fprintf(stderr, "Child %u dies abormally - stopping "
-				"test\n", pid);
+			fprintf(stderr, 
+			        "%s: Child %u dies abormally - stopping "
+				"test\n", hostn, pid);
 			if (WIFSIGNALED(status))
-				fprintf(stderr, "It couldn't catch sig %d\n",
-					WTERMSIG(status));
+				fprintf(stderr, 
+					"%s: It couldn't catch sig %d\n",
+					hostn, WTERMSIG(status));
 			break;
 		}
 
 		if (pid)
-			dprintf("child %u dies with status %d\n", pid,
-				WEXITSTATUS(status));
+			dprintf("%s:child %u dies with status %d\n", 
+				hostn, pid, WEXITSTATUS(status));
 
 		if (WEXITSTATUS(status)) {
 			ret = WEXITSTATUS(status);
-			fprintf(stderr, "Child %u dies with error %d - "
-				"stopping test\n", pid, ret);
+			fprintf(stderr, "%s: Child %u dies with error %d - "
+				"stopping test\n", hostn, pid, ret);
 			break;
 		}
 
@@ -463,7 +483,7 @@ kill_all:
 	/* Kill the remaining children */
 	if (ret != -ECHILD) {
 		kill(0, SIGINT);
-		dprintf("Killed children\n");
+		dprintf("%s: Killed children\n", hostn);
 	}
 
 	return ret == -ECHILD ? ret : 0;
