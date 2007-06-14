@@ -6,7 +6,7 @@ TESTS = logwriter enospc_test
 
 CFLAGS = -O2 -Wall -g -D_GNU_SOURCE
 
-LOGWRITER_SOURCES = enospc_test.c
+LOGWRITER_SOURCES = logwriter.c
 LOGWRITE_OBJECTS = $(patsubst %.c,%.o,$(LOGWRITER_SOURCES))
 ENOSPC_TEST_SOURCES = enospc_test.c
 ENOSPC_TEST_OBJECTS = $(patsubst %.c,%.o,$(ENOSPC_TEST_SOURCES))

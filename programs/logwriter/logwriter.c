@@ -80,10 +80,10 @@ int main(int argc, char **argv)
 
 	logfile = argv[1];
 
-	if (argc == 3)
+	if (argc >= 3)
 		usec = atoi(argv[2]);
 
-	if (argc == 4)
+	if (argc >= 4)
 		loopc = atoi(argv[3]);
 
 	printf("write %u times to file %s and sleep %u microseconds\n", \

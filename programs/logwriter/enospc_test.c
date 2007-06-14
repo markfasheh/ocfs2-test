@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2007 Oracle.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public
+ * License along with this program; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 021110-1307, USA.
+ */
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -6,7 +25,7 @@
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <strings.h>
+#include <string.h>
 #include <malloc.h>
 
 #define MB 1048576
@@ -43,7 +62,7 @@ unsigned long create_file(char *file_name, unsigned long file_size,
 	fsz_bytes = HDR_SIZE;
 	bw = pwrite(fd, hdr, fsz_bytes, 0);
 	if (bw < 1) {
-		printf("error %d, writing to file header, bytes written %d\n", 
+		printf("error %d, writing to file header, bytes written %lu\n", 
 								errno, bw);
 		goto exit2;
 	}
@@ -69,7 +88,7 @@ unsigned long create_file(char *file_name, unsigned long file_size,
 	while (offset < file_size) {
 		bw = pwrite(fd, buf, MB, offset);
 		if (bw < 0) {
-			printf("error %d, during write\n");
+			printf("error %d, during write\n", errno);
 			goto exit1;
 		}
 		offset += MB;
@@ -103,8 +122,8 @@ int main(int argc, char *argv[])
 {
 	struct statfs fs_stat;
 	char *dirname, *file_name, *file_ext;
-	int fno, fsz, tsz, numfiles, file_name_len, start_fileno;
-	unsigned long fill_size, vol_size, free_size, fs_size, file_size;
+	int file_name_len, start_fileno;
+	unsigned long numfiles, fill_size, vol_size, free_size, file_size;
 
 	int ret=0;
 	if (argc != 2) {
@@ -142,7 +161,7 @@ int main(int argc, char *argv[])
         if (free_size < TEST_FILE_SIZE) {
                 printf("volume has not enough free space(required free "
 		"size %lu, free size %luMB)\n", 
-		TEST_FILE_SIZE/MB, free_size/MB);
+		(unsigned long)(TEST_FILE_SIZE/MB), (free_size/MB));
                 return 0;
         }
 	fill_size = free_size - TEST_FILE_SIZE;
@@ -168,7 +187,7 @@ int main(int argc, char *argv[])
 	printf("\n\nvolume size %lu\n", vol_size/MB);
 	printf("space occupied %luMB\n", (vol_size - free_size)/MB);
 	printf("free space %luMB\n", free_size/MB);
-	printf("number of files used to fill %d\n", numfiles);
+	printf("number of files used to fill %lu\n", numfiles);
 	printf("each filesize %luMB\n\n\n", file_size/MB);
 	file_name_len = strlen(file_name);
 	start_fileno=1;
