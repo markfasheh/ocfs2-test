@@ -33,6 +33,8 @@ import os, sys, time, optparse, socket, string, o2tf, pdb, timing, time, config
 #
 DEBUGON = os.getenv('DEBUG',0)
 #
+CHECKTHREAD_SLEEPTIME = 30
+#
 uname = os.uname()
 lhostname = str(socket.gethostname())
 #
@@ -44,12 +46,12 @@ def tbuild(thrid, command):
    '   thrid - Thread number, which will index pidlist'
    '   command - command to be executed'
    if DEBUGON:
-      o2tf.printlog('tbuild - current directory %s' % \
+      o2tf.printlog('buildkernel:tbuild - current directory %s' % \
 			os.getcwd(), 
 			logfile, 
 			0, 
 			'')
-      o2tf.printlog('command  %s ' % \
+      o2tf.printlog('buildkernel:tbuild - command  %s ' % \
 			command, 
 			logfile, 
 			0, 
@@ -60,47 +62,45 @@ def tbuild(thrid, command):
 			'-c', 
 			command])
 #   
-def check_thread(runnumber, wdir, logfile):
+def check_thread(runnumber, logfile):
    'check_thread checks the pidlist for running tasks until the last one \
 	completes.'
    'check_thread takes 3 arguments:'
    '   runnumer - Sequence number of a specific batch.'
-   '   wdir - working directory.'
    '   logfile - logfile name'
-   o2tf.printlog('buildkernel.check_thread: Waiting for processes to finish \
-	on thread %s, directory %s' % \
-			(runnumber, wdir), 
+   o2tf.printlog('buildkernel:check_thread: Waiting for processes to finish \
+	on thread %s' % \
+			(runnumber), 
 			logfile, 
 			0, 
 			'')
    while len(pidlist) > 0:
-      o2tf.printlog('buildkernel.check_thread: Checking processes on thread \
-		%s, directory %s' % \
-			(runnumber, wdir), 
+      o2tf.printlog('buildkernel:check_thread: Checking thread processes' \
+			(runnumber), 
 			logfile, 
 			0, 
 			'')
-      o2tf.printlog('buildkernel.check_thread: pid list %s' % 
+      o2tf.printlog('buildkernel:check_thread: pid list %s' % 
 			(pidlist), 
 			logfile, 
 			0, 
 			'')
       for z in range(len(pidlist)):
            out = os.waitpid(pidlist[z],os.WNOHANG)
-           o2tf.printlog('buildkernel.check_thread: z=%s, out=%s' % \
+           o2tf.printlog('buildkernel:check_thread: z=%s, out=%s' % \
 			(z, out[1]), 
 			logfile, 
 			0, 
 			'')
            if out[0] > 0:
-              o2tf.printlog('buildkernel.check_thread: Removing pid \
+              o2tf.printlog('buildkernel:check_thread: Removing pid \
 		%s from the list' %  \
 			pidlist[z], 
 			logfile, 
 			0, 
 			'')
-              t2 = time.clock()
-              o2tf.printlog('buildkernel.check_thread: %s [%s]: Build \
+              t2 = time.time()
+              o2tf.printlog('buildkernel:check_thread: %s [%s]: Build \
 		time is %f seconds' % 
 			(str(socket.gethostname()), pidlist[z], t2 - t1), 
 			logfile, 
@@ -108,7 +108,7 @@ def check_thread(runnumber, wdir, logfile):
 			'')
               pidlist.remove(out[0])
               break
-      time.sleep(10)
+      time.sleep(CHECKTHREAD_SLEEPTIME)
 #
 # MAIN
 #
@@ -201,7 +201,7 @@ for y in range(nodelen):
        else:
           nodefind = nodelist[ y - 1 ]
        if DEBUGON:
-          o2tf.printlog('buildkernel: Main - Node to use on find %s' % \
+          o2tf.printlog('buildkernel:Main - Node to use on find %s' % \
 			nodefind, 
 			logfile, 
 			0, 
@@ -215,32 +215,32 @@ for i in range(int(count)):
        cmd = 'cd ' + wdir + ';  make mrproper; make defconfig; /usr/bin/make -j2 V=1 2>&1 >> %s' % logfile
 
        if DEBUGON:
-          o2tf.printlog('buildkernel: main - current directory %s' % \
+          o2tf.printlog('buildkernel:Main - current directory %s' % \
 			os.getcwd(), \
 			logfile, \
 			0, \
 			'')
-          o2tf.printlog('buildkernel: main - working directory %s' % \
+          o2tf.printlog('buildkernel:Main - working directory %s' % \
 			dirlist[x], \
 			logfile, \
 			0, \
 			'')
-          o2tf.printlog('buildkernel: main - wdir =  %s' % \
+          o2tf.printlog('buildkernel:Main - wdir =  %s' % \
 			wdir, \
 			logfile, \
 			0, \
 			'')
-          o2tf.printlog('buildkernel: main - cmd = %s' % \
+          o2tf.printlog('buildkernel:Main - cmd = %s' % \
 			cmd, \
 			logfile, \
 			0, \
 			'')
-       t1 = time.clock()
+       t1 = time.time()
        tbuild(x, cmd)
        cmd = 'cd ' + dirlist[x] + '/' + nodefind + '; find . -print \
 			(2>&1 >> %s' % logfile
        tbuild(int(x + dirlen), cmd)
        if DEBUGON:
-          o2tf.printlog('buildkernel: main - cmd = %s' % cmd, logfile, 0, '')
-    check_thread(i, wdir, logfile)
+          o2tf.printlog('buildkernel:Main - cmd = %s' % cmd, logfile, 0, '')
+    check_thread(i, logfile)
                                                                                                                       
