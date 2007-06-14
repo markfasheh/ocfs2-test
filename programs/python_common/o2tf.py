@@ -73,7 +73,6 @@ def extract_tar(DEBUGON, logfile, nodes, dirl, tarfile):
 			logfile, 
 			0, 
 			'')
-    srcdir=os.path.dirname(tarfile)
     if len(nodes) == 1:
        nodelist = nodelist.add(nodes)
     else:
@@ -90,11 +89,6 @@ def extract_tar(DEBUGON, logfile, nodes, dirl, tarfile):
            if DEBUGON:
               printlog('o2tf.extract_tar: wdir = %s' % 
 			wdir, 
-			logfile, 
-			0, 
-			'')
-              printlog('o2tf.extract_tar: srcdir = %s' % 
-			srcdir, 
 			logfile, 
 			0, 
 			'')
@@ -115,20 +109,12 @@ def extract_tar(DEBUGON, logfile, nodes, dirl, tarfile):
            os.chdir(dirlist[i] + '/' + nodelist[x])
            untar(DEBUGON, (dirlist[i] + '/' + nodelist[x]), tarfile, logfile)
            if DEBUGON:
-              printlog('o2tf.extract_tar: Src Config file = %s' % \
-			str(srcdir + '/' + platform.machine() + \
-			'-linux-2.6.config'), 
-			logfile, 
-			0, 
-			'')
               printlog('o2tf.extract_tar: Dest Config file = %s' % \
 			str(dirlist[i] + '/' + nodelist[x] + \
 			'/linux-2.6/.config'), 
 			logfile, 
 			0, 
 			'')
-           shutil.copy2(srcdir+'/'+platform.machine()+'-linux-2.6.config', 
-			dirlist[i]+'/'+nodelist[x]+'/linux-2.6/.config')
 #
 # CreateDir is used by :
 #   - o2tf.py
@@ -330,10 +316,9 @@ def lamexec(DEBUGON, nproc, cmd, nodes, logfile):
     found = 0
     uname = os.uname()
     nodelen = len(string.split(nodes,','))
-    StartMPI(DEBUGON, nodes, logfile)
     try:
        if DEBUGON:
-          printlog('o2tf.lamexec: MPIRUN = %s' % config.MPIRUN, 
+          printlog('o2tf.lamexec: LAMEXEC = %s' % config.LAMEXEC, 
 			logfile, 
 			0, 
 			'')
@@ -341,15 +326,15 @@ def lamexec(DEBUGON, nproc, cmd, nodes, logfile):
 			logfile, 
 			0, 
 			'')
+          printlog('o2tf.lamexec: cmd = %s' % cmd, 
+			logfile, 
+			0, 
+			'')
           printlog('o2tf.lamexec: nodelen = %d' % nodelen, 
 			logfile, 
 			0, 
 			'')
-          printlog('o2tf.lamexec: MPIRUNPARTS = %s' % config.MPIRUNPARTS, 
-			logfile, 
-			0, 
-			'')
-          printlog('o2tf.lamexec: cmd = %s' % cmd, 
+          printlog('o2tf.lamexec: nodes = %s' % nodes, 
 			logfile, 
 			0, 
 			'')
@@ -357,8 +342,8 @@ def lamexec(DEBUGON, nproc, cmd, nodes, logfile):
 			'/bin/bash', 
 			['bash', 
 			'-xc', 
-			config.LAMEXEC + ' -w n0-%d %s' % \
-			( nodelen - 1, cmd)])
+			config.LAMEXEC + ' -np %s -w n0-%d %s' % \
+			( nproc, nodelen - 1, cmd)])
        os.waitpid(pid,0)
     except os.error:
        pass
