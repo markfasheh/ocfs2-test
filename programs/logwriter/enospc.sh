@@ -3,9 +3,13 @@
 # enospc.sh <outdir> <DEVICE>
 #
 if [ `dirname ${0}` == '.' ]; then
-   . ./config.sh
+   if [ -f config.sh ]; then
+      . ./config.sh;
+	fi;
 else
+   if [ -f `dirname ${0}`/config.sh ]; then
    . `dirname ${0}`/config.sh
+	fi;
 fi;
 
 if [ $# != 2 ]
