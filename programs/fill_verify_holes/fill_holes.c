@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #define _XOPEN_SOURCE 500
 #include <unistd.h>
 #include <errno.h>
@@ -13,6 +14,7 @@
 #include <assert.h>
 
 #include "fill_holes.h"
+#include "reservations.h"
 
 
 /*
@@ -32,13 +34,14 @@ size, verifying it's contents.
 
 static void usage(void)
 {
-	printf("fill_holes [-f] [-m] [-i ITER] [-o LOGFILE] [-r REPLAYLOG] FILE SIZE\n"
+	printf("fill_holes [-f] [-m] [-u] [-i ITER] [-o LOGFILE] [-r REPLAYLOG] FILE SIZE\n"
 	       "FILE is a path to a file\n"
 	       "SIZE is in bytes and must always be specified, even with a REPLAYLOG\n"
 	       "ITER defaults to 1000, unless REPLAYLOG is specified.\n"
 	       "LOGFILE defaults to stdout\n"
 	       "-f will result in logfile being flushed after every write\n"
 	       "-m instructs the test to use mmap to write to FILE\n"
+	       "-u will create an unwritten region instead of ftruncate\n"
 	       "REPLAYLOG is an optional file to generate values from\n\n"
 	       "FILE will be truncated to zero, then truncated out to SIZE\n"
 	       "For each iteration, a character, offset and length will be\n"
@@ -57,6 +60,7 @@ static char buf[MAX_WRITE_SIZE];
 
 static unsigned int max_iter = 1000;
 static unsigned int flush_output = 0;
+static unsigned int create_unwritten = 0;
 static char *fname = NULL;
 static char *logname = NULL;
 static char *replaylogname = NULL;
@@ -71,11 +75,14 @@ static int parse_opts(int argc, char **argv)
 	int c, iter_specified = 0;
 
 	while (1) {
-		c = getopt(argc, argv, "mfi:o:r:");
+		c = getopt(argc, argv, "umfi:o:r:");
 		if (c == -1)
 			break;
 
 		switch (c) {
+		case 'u':
+			create_unwritten = 1;
+			break;
 		case 'm':
 			use_mmap = 1;
 			break;
@@ -115,6 +122,7 @@ static int parse_opts(int argc, char **argv)
 static int prep_file(char *name, unsigned long size)
 {
 	int ret, fd;
+	struct ocfs2_space_resv sr;
 
 	fd = open(name, O_RDWR|O_CREAT|O_TRUNC,
 		  S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
@@ -122,6 +130,20 @@ static int prep_file(char *name, unsigned long size)
 		fprintf(stderr, "open error %d: \"%s\"\n", errno,
 			strerror(errno));
 		return -1;
+	}
+
+	if (create_unwritten) {
+		memset(&sr, 0, sizeof(sr));
+		sr.l_whence = 0;
+		sr.l_start = 0;
+		sr.l_len = size;
+
+		ret = ioctl(fd, OCFS2_IOC_RESVSP64, &sr);
+		if (ret == -1) {
+			fprintf(stderr, "ioctl error %d: \"%s\"\n",
+				errno, strerror(errno));
+			return -1;
+		}
 	}
 
 	ret = ftruncate(fd, size);
