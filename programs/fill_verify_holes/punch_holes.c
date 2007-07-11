@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 #define _XOPEN_SOURCE 500
 #include <unistd.h>
 #include <errno.h>
@@ -13,39 +14,24 @@
 #include <assert.h>
 
 #include "fill_holes.h"
-
-
-/*
-3rd test program with verify util:
-Given file name, size, optional #iters, optional logfile (uses stdout otherwise
-create and ftruncate file to size
-for each iter:
-        pick random offset
-        pick random size
-        pick random 8 bit value
-        print to log the triple
-        write size bytes of value at offset
-Verify program can parse log, sort triples into a list (removing and merging
-triples as they overwrite each other). It can then read the file from 0 to
-size, verifying it's contents.
-*/
+#include "reservations.h"
 
 static void usage(void)
 {
-	printf("fill_holes [-f] [-m] [-i ITER] [-o LOGFILE] [-r REPLAYLOG] FILE SIZE\n"
+	printf("punch_holes [-f] [-i ITER] [-o LOGFILE] [-r REPLAYLOG] FILE SIZE\n"
 	       "FILE is a path to a file\n"
 	       "SIZE is in bytes and must always be specified, even with a REPLAYLOG\n"
 	       "ITER defaults to 1000, unless REPLAYLOG is specified.\n"
 	       "LOGFILE defaults to stdout\n"
 	       "-f will result in logfile being flushed after every write\n"
-	       "-m instructs the test to use mmap to write to FILE\n"
 	       "REPLAYLOG is an optional file to generate values from\n\n"
 	       "FILE will be truncated to zero, then truncated out to SIZE\n"
-	       "For each iteration, a character, offset and length will be\n"
-	       "randomly generated or read from the optional REPLAYLOG and\n"
-	       "written to FILE. The program ends after ITER iterations, or\n"
-	       "until the end of the replay log, whichever comes first.\n"
-	       "The exact patterns written will be logged such that\n"
+	       "A random series of characters will be written into the\n"
+	       "file range. After the entire file has been populated a series\n"
+	       "of random holes will be punched into the file\n"
+	       "The program ends after ITER iterations, or until the end of\n"
+	       "the replay log, whichever comes first.\n"
+	       "The exact patterns written (and punched) will be logged such that\n"
 	       "the log can be replayed by a verification program, or given\n"
 	       "back to this software as a REPLAYLOG argument\n");
 
@@ -63,22 +49,17 @@ static char *replaylogname = NULL;
 static unsigned long file_size;
 static FILE *logfile = NULL;
 static FILE *replaylogfile = NULL;
-static int use_mmap = 0;
-static void *mapped;
 
 static int parse_opts(int argc, char **argv)
 {
 	int c, iter_specified = 0;
 
 	while (1) {
-		c = getopt(argc, argv, "mfi:o:r:");
+		c = getopt(argc, argv, "fi:o:r:");
 		if (c == -1)
 			break;
 
 		switch (c) {
-		case 'm':
-			use_mmap = 1;
-			break;
 		case 'f':
 			flush_output = 1;
 			break;
@@ -102,62 +83,13 @@ static int parse_opts(int argc, char **argv)
 			return EINVAL;
 		}
 	}
- 
+
 	if (argc - optind != 2)
 		return EINVAL;
 
 	fname = argv[optind];
 	file_size = atol(argv[optind+1]);
 
-	return 0;
-}
-
-static int prep_file(char *name, unsigned long size)
-{
-	int ret, fd;
-
-	fd = open(name, O_RDWR|O_CREAT|O_TRUNC,
-		  S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
-	if (fd == -1) {
-		fprintf(stderr, "open error %d: \"%s\"\n", errno,
-			strerror(errno));
-		return -1;
-	}
-
-	ret = ftruncate(fd, size);
-	if (ret == -1) {
-		close(fd);
-
-		fprintf(stderr, "ftruncate error %d: \"%s\"\n", errno,
-			strerror(errno));
-		return -1;
-	}
-
-	if (use_mmap) {
-		mapped = mmap(0, size, PROT_WRITE, MAP_SHARED, fd, 0);
-		if (mapped == MAP_FAILED) {
-			close(fd);
-
-			fprintf(stderr, "mmap error %d: \"%s\"\n", errno,
-				strerror(errno));
-			return -1;
-		}
-	}
-
-	return fd;
-}
-
-static int open_logfile(void)
-{
-	if (!logname)
-		logfile = stdout;
-	else
-		logfile = fopen(logname, "wa");
-	if (!logfile) {
-		fprintf(stderr, "Error %d creating logfile: %s\n", errno,
-			strerror(errno));
-		return EINVAL;
-	}
 	return 0;
 }
 
@@ -243,14 +175,9 @@ static int prep_write_unit(struct write_unit *wu)
 	return 0;
 }
 
-int do_write(int fd, struct write_unit *wu)
+static int do_write(int fd, struct write_unit *wu)
 {
 	int ret;
-
-	if (use_mmap) {
-		memset(mapped + wu->w_offset, wu->w_char, wu->w_len);
-		return 0;
-	}
 
 	memset(buf, wu->w_char, wu->w_len);
 	ret = pwrite(fd, buf, wu->w_len, wu->w_offset);
@@ -260,6 +187,91 @@ int do_write(int fd, struct write_unit *wu)
 		return -1;
 	}
 
+	return 0;
+}
+
+static int prep_file(char *name, unsigned long size)
+{
+	int ret, fd;
+	unsigned long start;
+	struct write_unit wu;
+
+	fd = open(name, O_RDWR|O_CREAT|O_TRUNC,
+		  S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+	if (fd == -1) {
+		fprintf(stderr, "open error %d: \"%s\"\n", errno,
+			strerror(errno));
+		return -1;
+	}
+
+	ret = ftruncate(fd, size);
+	if (ret == -1) {
+		close(fd);
+
+		fprintf(stderr, "ftruncate error %d: \"%s\"\n", errno,
+			strerror(errno));
+		return -1;
+	}
+
+	start = 0;
+	while (start < size) {
+again:
+		ret = prep_write_unit(&wu);
+		if (ret) {
+			fprintf(stderr, "error during prep, quitting.\n");
+			return ret;
+		}
+
+		if (!replaylogfile) {
+			wu.w_offset = start;
+			if (wu.w_offset + wu.w_len > file_size)
+				wu.w_len = file_size - wu.w_offset;
+			if (wu.w_len == 0)
+				goto again;
+		}
+
+		log_write(&wu);
+
+		ret = do_write(fd, &wu);
+		if (ret)
+			return ret;
+
+		start += wu.w_offset + wu.w_len;
+	}
+
+	return fd;
+}
+
+static int punch_hole(int fd, struct write_unit *wu)
+{
+	int ret;
+	struct ocfs2_space_resv sr;
+
+	memset(&sr, 0, sizeof(sr));
+	sr.l_whence = 0;
+	sr.l_start = wu->w_offset;
+	sr.l_len = wu->w_len;
+
+	ret = ioctl(fd, OCFS2_IOC_UNRESVSP64, &sr);
+	if (ret == -1) {
+		fprintf(stderr, "ioctl error %d: \"%s\"\n",
+			errno, strerror(errno));
+		return -1;
+	}
+	return 0;
+}
+
+static int open_logfile(void)
+{
+	if (!logname)
+		logfile = stdout;
+	else
+		logfile = fopen(logname, "wa");
+	if (!logfile) {
+		fprintf(stderr, "Error %d creating logfile: %s\n", errno,
+			strerror(errno));
+		return EINVAL;
+	}
 	return 0;
 }
 
@@ -273,15 +285,13 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	srand(getpid());
+
 	ret = parse_opts(argc, argv);
 	if (ret) {
 		usage();
 		return 1;
 	}
-
-	fd = prep_file(fname, file_size);
-	if (fd == -1)
-		return 1;
 
 	ret = open_logfile();
 	if (ret)
@@ -291,16 +301,20 @@ int main(int argc, char **argv)
 	if (ret)
 		return 1;
 
-	srand(getpid());
+	fd = prep_file(fname, file_size);
+	if (fd == -1)
+		return 1;
 
 	for(i = 0; (i < max_iter) && !replay_eof(); i++) {
 		ret = prep_write_unit(&wu);
 		if (ret)
 			return 1;
 
+		wu.w_char = MAGIC_HOLE_CHAR;
+
 		log_write(&wu);
 
-		ret = do_write(fd, &wu);
+		ret = punch_hole(fd, &wu);
 		if (ret)
 			return 1;
 	}

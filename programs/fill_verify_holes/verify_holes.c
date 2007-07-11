@@ -241,6 +241,8 @@ static int read_log(FILE *logfile)
 		ret = fscanf(logfile, "%c\t%lu\t%u\n", &wu->w_char,
 			     &wu->w_offset, &wu->w_len);
 		if (ret == 3) {
+			if (wu->w_char == MAGIC_HOLE_CHAR)
+				wu->w_char = '\0';
 			insert_chunk(chunk);
 			line++;
 			continue;
@@ -267,8 +269,9 @@ static int check_chunk(struct write_unit *wu, int fd)
 		print_extent("check chunk", stdout, wu);
 
 	while (len) {
-		unsigned int count = len;
+		unsigned int count;
 
+		count = len;
 		if (len > MAX_WRITE_SIZE)
 			count = MAX_WRITE_SIZE;
 
@@ -289,12 +292,22 @@ static int check_chunk(struct write_unit *wu, int fd)
 			fprintf(stderr, "short read. asked %u, read %u\n",
 				count, ret);
 			return EINVAL;
-
 		}
 
 		for(i = 0; i < count; i++) {
-			if (buf[i] != wu->w_char)
+			if (buf[i] != wu->w_char) {
+				if (verbose) {
+					unsigned long pos;
+
+					pos = wu->w_offset +
+						(unsigned long)(wu->w_len - len + i);
+					fprintf(stdout, "Failure. %lu bytes "
+						"into the file we expected "
+						"0x%x but got 0x%x\n", pos,
+						wu->w_char, buf[i]);
+				}
 				return 1;
+			}
 		}
 
 		len -= count;
