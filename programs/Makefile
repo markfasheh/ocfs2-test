@@ -38,6 +38,7 @@ SUBDIRS =			\
 	python_common		\
 	quick_appending_writes	\
 	resize_test		\
+	reserve_space		\
 	sendfiletest		\
 	splice			\
 	truncate		\
