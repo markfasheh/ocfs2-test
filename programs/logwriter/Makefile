@@ -17,7 +17,7 @@ DIST_FILES = $(SOURCES)
 
 BIN_PROGRAMS = logwriter enospc_test
 
-BIN_EXTRA = enospc.sh
+BIN_EXTRA = enospc.sh rename_write_race.sh
 
 logwriter: $(LOGWRITE_OBJECTS)
 	$(LINK) 

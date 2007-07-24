@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 	unsigned long numfiles, fill_size, vol_size, free_size, file_size;
 
 	int ret=0;
-	if (argc != 2) {
+	if ((argc != 2) || (strcmp(argv[1],"-h") == 0)) {
 		printf("USAGE: enospc_test </path/to/ocfs2/volume> \n");
 		return 0;
 	}
