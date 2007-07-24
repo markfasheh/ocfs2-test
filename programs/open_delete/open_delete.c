@@ -76,6 +76,8 @@ static int parse_opts(int argc, char **argv)
 {
 	int c;
 
+	if (strcmp(argv[1],"-h") == 0)
+		return EINVAL;
 	while (1) {
 		c = getopt(argc, argv, "i:");
 		if (c == -1)

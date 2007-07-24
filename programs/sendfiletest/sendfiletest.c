@@ -25,7 +25,7 @@ main (int argc, char **argv)
     struct hostent *hp;
 
     if (argc < 3) {
-        fputs("not enough arguments\n", stderr);
+        fputs("Usage: sendfiletest <src> <host>\n", stderr);
         exit(1);
     }
 

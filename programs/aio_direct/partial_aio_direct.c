@@ -32,8 +32,8 @@ int main(int argc, char **argv)
 	long rc;
 	int fd1, fd2;
 
-	if (argc < 2) {
-		printf("I'd like a filename prefix to write to.\n");
+	if ((argc < 2) || (strcmp(argv[1],"-h") == 0)) {
+		printf("Usage: partial_aio_direct <filename>\n");
 		exit(1);
 	}
 
