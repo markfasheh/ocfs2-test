@@ -40,7 +40,7 @@ MAXBLOCKSIZE = 8192
 #
 DEBUGON = os.getenv('DEBUG',0)
 #
-EXECPGM = os.path.join(os.getcwd(),'write_torture')
+EXECPGM = os.path.join(config.BINDIR,'write_torture')
 #
 uname = os.uname()
 lhostname = str(socket.gethostname())

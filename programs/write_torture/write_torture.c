@@ -355,7 +355,7 @@ int main(int argc, char **argv)
 	printf("got hostname\n");
 
 
-	if (argc < 2) {
+	if ((argc < 2) || (strcmp(argv[1],"-h") == 0)) {
 		usage();
 		return 1;
 	}
