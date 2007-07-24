@@ -39,46 +39,6 @@ uname = os.uname()
 lhostname = str(socket.gethostname())
 logfile = config.LOGFILE
 #
-# FUNCTIONS
-#
-def DeleteAll(top):
-#	glogal logfile
-#
-	print 'logfile = %s' % logfile
-	'Delete Files and Directories recursively'
-	if string.rstrip(top) == '/':
-		o2tf.printlog('crdel_del_files: directory (%s)' % top,
-			logfile,
-			0,
-			'')
-	else:
-		o2tf.printlog('crdel_del_files:normal directory (%s)' % top,
-			logfile,
-			0,
-			'')
-#
-	for root, dirs, files in os.walk(top, topdown=False):
-		for name in files:
-			o2tf.printlog('crdel_del_files:Removing file %s' %
-				(os.path.join(root,name)),
-				logfile,
-				0,
-				'')
-			if os.path.islink(os.path.join(root,name)):
-				os.unlink(os.path.join(root, name))
-			else:
-				os.remove(os.path.join(root, name))
-#
-		for name in dirs:
-			o2tf.printlog('Removing directory %s' % (os.path.join(root,name)),
-				logfile,
-				0,
-				'')
-			if os.path.islink(os.path.join(root,name)):
-				os.unlink(os.path.join(root, name))
-			else:
-				os.rmdir(os.path.join(root, name))
-#
 # MAIN
 #
 if __name__=='__main__':
@@ -124,25 +84,25 @@ dirlist = string.split(fd.read(), ',')
 fd.close()
 dirlen = len(dirlist)
 if DEBUGON:
-	o2tf.printlog('crdel_gen_files: dirlist = (%s)' % dirlist,
+	o2tf.printlog('crdel_del_files: dirlist = (%s)' % dirlist,
 		logfile,
 		0,
 		'')
-	o2tf.printlog('crdel_gen_files: stagedir = (%s)' % stagedir,
+	o2tf.printlog('crdel_del_files: stagedir = (%s)' % stagedir,
 		logfile,
 		0,
 		'')
-	o2tf.printlog('crdel_gen_files: dirlen = (%s)' % dirlen,
+	o2tf.printlog('crdel_del_files: dirlen = (%s)' % dirlen,
 		logfile,
 		0,
 		'')
-	o2tf.printlog('crdel_gen_files: logfile = (%s)' % logfile,
+	o2tf.printlog('crdel_del_files: logfile = (%s)' % logfile,
 		logfile,
 		0,
 		'')
 #
 for i in range(dirlen):
-	o2tf.printlog('crdel_gen_files: Removing directory %s.' % 
+	o2tf.printlog('crdel_del_files: Removing directory %s.' % 
 		dirlist[i],
 		logfile,
 		0,
