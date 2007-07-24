@@ -151,7 +151,7 @@ int main(int argc, char **argv)
 	pid_t pid;
 	pid_t *pids = NULL;
 
-	if ((argc < 2) || (argc > 5)) {
+	if ((argc < 2) || (argc > 5) || (strcmp(argv[1],"-h") == 0)) {
 		printf("usage: %s file [loops] [procs] [sleep]\n\n",
 		       basename(argv[0]));
 		printf("\tfile:\tname used to generate the logfile created\n"

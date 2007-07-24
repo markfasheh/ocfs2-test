@@ -13,11 +13,11 @@ FORKWRITER_OBJECTS = $(patsubst %.c,%.o,$(FORKWRITER_SOURCES))
 SOURCES = $(FORKWRITER_SOURCES)
 OBJECTS = $(FORKWRITER_OBJECTS)
 
-DIST_FILES = $(SOURCES)
+DIST_FILES = $(SOURCES) run_forkwriter.py
 
 BIN_PROGRAMS = forkwriter
 
-#BIN_EXTRA = 
+BIN_EXTRA = run_forkwriter.py 
 
 forkwriter: $(FORKWRITER_OBJECTS)
 	$(LINK) 
