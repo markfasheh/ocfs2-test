@@ -9,6 +9,7 @@ SUBDIRS =			\
 	basic-dual-data		\
 	bonnie			\
 	buildkernel		\
+	check_file_size_limits	\
 	create_and_open		\
 	create_files		\
 	create_racer		\
