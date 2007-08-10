@@ -94,7 +94,7 @@ if __name__=='__main__':
 	nodelist = options.nodelist.split(',')
 	nodelen = len(nodelist)
 	if nodelen == 1:
-		nodelist = nodelist.add(options.nodelist)
+		nodelist = nodelist.append(options.nodelist)
 	else:
 		nodelist = options.nodelist.split(',')
 	logfile = options.logfile
