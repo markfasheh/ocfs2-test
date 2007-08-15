@@ -1,4 +1,5 @@
 TOPDIR = ../..
+SUBDIRS = remove-slot
 
 include $(TOPDIR)/Preamble.make
 

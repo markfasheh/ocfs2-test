@@ -1,0 +1,177 @@
+diff -urNp ocfs2-tools/tunefs.ocfs2/remove_slot.c corrupt.ocfs2-tools/tunefs.ocfs2/remove_slot.c
+--- ocfs2-tools/tunefs.ocfs2/remove_slot.c	2007-07-10 15:28:56.000000000 -0400
++++ corrupt.ocfs2-tools/tunefs.ocfs2/remove_slot.c	2007-07-10 15:29:10.000000000 -0400
+@@ -32,6 +32,12 @@
+ 
+ extern ocfs2_tune_opts opts;
+ 
++static inline void test_corrupt(enum corrupt_place place)
++{
++	if (opts.corrupt_place == place)
++		abort();
++}
++
+ struct moved_group {
+ 	uint64_t blkno;
+ 	char *gd_buf;
+@@ -138,6 +144,8 @@ static errcode_t move_group(ocfs2_filesy
+ 	if (ret)
+ 		goto bail;
+ 
++	test_corrupt(RS_AFTER_LINK_GROUP);
++
+ 	/* modify the chain record and the new files simultaneously. */
+ 	cr->c_blkno = gd->bg_blkno;
+ 	cr->c_total += gd->bg_bits;
+@@ -235,11 +243,15 @@ static errcode_t move_chain_rec(ocfs2_fi
+ 			}
+ 		}
+ 
++		test_corrupt(RS_AFTER_CHANGE_SUB_ALLOC);
++
+ 		/* move the group to the new slots. */
+ 		ret = move_group(fs, ctxt, group);
+ 		if (ret)
+ 			goto bail;
+ 
++		test_corrupt(RS_AFTER_MOVE_ONE_GROUP);
++
+ 		group = group->next;
+ 	}
+ 
+@@ -340,6 +352,8 @@ static errcode_t relink_system_alloc(ocf
+ 				"while iterating system alloc file");
+ 			goto bail;
+ 		}
++
++		test_corrupt(RS_AFTER_MOVE_SOME_REC);
+ 	}
+ 
+ 
+@@ -427,6 +441,8 @@ static errcode_t empty_and_truncate_jour
+ 	if (ret)
+ 		goto bail;
+ 
++	test_corrupt(RS_AFTER_EMPTY_JOURNAL);
++
+ 	ret = ocfs2_truncate(fs, blkno, 0);
+ 	if (ret)
+ 		goto bail;
+@@ -542,12 +558,16 @@ errcode_t remove_slots(ocfs2_filesys *fs
+ 		if (ret)
+ 			goto bail;
+ 
++		test_corrupt(RS_AFTER_RELINK_EXTENT_ALLOC);
++
+ 		/* Link the specified inode alloc file to others. */
+ 		ret = relink_system_alloc(fs, removed_slot, opts.num_slots,
+ 					  INODE_ALLOC_SYSTEM_INODE);
+ 		if (ret)
+ 			goto bail;
+ 
++		test_corrupt(RS_AFTER_RELINK_INODE_ALLOC);
++
+ 		/* Truncate the orphan dir to release its clusters
+ 		 * to the global bitmap.
+ 		 */
+@@ -555,11 +575,15 @@ errcode_t remove_slots(ocfs2_filesys *fs
+ 		if (ret)
+ 			goto bail;
+ 
++		test_corrupt(RS_AFTER_TRUNCATE_ORPHAN);
++
+ 		/* empty the content of journal and truncate its clusters. */
+ 		ret = empty_and_truncate_journal(fs, removed_slot);
+ 		if (ret)
+ 			goto bail;
+ 
++		test_corrupt(RS_AFTER_TRUNCATE_JOURNAL);
++
+ 		/* Now, we decrease the max_slots first and then remove the
+ 		 * slots for the reason that:
+ 		 *
+@@ -581,6 +605,8 @@ errcode_t remove_slots(ocfs2_filesys *fs
+ 		if (ret)
+ 			goto bail;
+ 
++		test_corrupt(RS_AFTER_WRITE_SUPER);
++
+ 		/* The extra system dir entries should be removed. */
+ 		ret = remove_slot_entry(fs, removed_slot);
+ 		if (ret)
+@@ -593,6 +619,8 @@ errcode_t remove_slots(ocfs2_filesys *fs
+ 		if (ret)
+ 			goto bail;
+ 
++		test_corrupt(RS_AFTER_REMOVE_ONE_SLOT);
++
+ 		removed_slot--;
+ 	}
+ 
+diff -urNp ocfs2-tools/tunefs.ocfs2/tunefs.c corrupt.ocfs2-tools/tunefs.ocfs2/tunefs.c
+--- ocfs2-tools/tunefs.ocfs2/tunefs.c	2007-06-19 09:48:58.000000000 -0400
++++ corrupt.ocfs2-tools/tunefs.ocfs2/tunefs.c	2007-07-09 10:13:27.000000000 -0400
+@@ -34,6 +34,7 @@ static void usage(const char *progname)
+ {
+ 	fprintf(stderr, "usage: %s [-J journal-options] [-L volume-label]\n"
+ 			"\t\t[-M mount-type] [-N number-of-node-slots] [-Q query-fmt]\n"
++			"\t\t[--corrupt place]\n"
+ 			"\t\t[-qSUvV] [--backup-super] device [blocks-count]\n",
+ 			progname);
+ 	exit(0);
+@@ -195,6 +196,7 @@ static void get_options(int argc, char *
+ 		{ "uuid-reset", 0, 0, 'U'},
+ 		{ "mount", 1, 0, 'M' },
+ 		{ "backup-super", 0, 0, BACKUP_SUPER_OPTION },
++		{ "corrupt", 1, 0, CORRUPT_OPTION },
+ 		{ 0, 0, 0, 0}
+ 	};
+ 
+@@ -293,6 +295,10 @@ static void get_options(int argc, char *
+ 			opts.backup_super = 1;
+ 			break;
+ 
++		case CORRUPT_OPTION:
++			opts.corrupt_place = strtol(optarg, &dummy, 0);
++			break;
++
+ 		default:
+ 			usage(opts.progname);
+ 			break;
+diff -urNp ocfs2-tools/tunefs.ocfs2/tunefs.h corrupt.ocfs2-tools/tunefs.ocfs2/tunefs.h
+--- ocfs2-tools/tunefs.ocfs2/tunefs.h	2007-06-14 15:00:12.000000000 -0400
++++ corrupt.ocfs2-tools/tunefs.ocfs2/tunefs.h	2007-07-09 10:26:37.000000000 -0400
+@@ -70,6 +70,7 @@
+ 
+ enum {
+ 	BACKUP_SUPER_OPTION = CHAR_MAX + 1,
++	CORRUPT_OPTION
+ };
+ 
+ typedef struct _ocfs2_tune_opts {
+@@ -86,6 +87,7 @@ typedef struct _ocfs2_tune_opts {
+ 	int quiet;
+ 	int prompt;
+ 	int backup_super;
++	int corrupt_place;
+ 	time_t tune_time;
+ 	int fd;
+ } ocfs2_tune_opts;
+@@ -94,3 +96,17 @@ void print_query(char *queryfmt);
+ 
+ errcode_t remove_slots(ocfs2_filesys *fs);
+ errcode_t remove_slot_check(ocfs2_filesys *fs);
++
++enum corrupt_place {
++	RS_AFTER_RELINK_EXTENT_ALLOC = 1,
++	RS_AFTER_RELINK_INODE_ALLOC,
++	RS_AFTER_TRUNCATE_ORPHAN,
++	RS_AFTER_TRUNCATE_JOURNAL,
++	RS_AFTER_WRITE_SUPER,
++	RS_AFTER_REMOVE_ONE_SLOT,
++	RS_AFTER_MOVE_SOME_REC,
++	RS_AFTER_CHANGE_SUB_ALLOC,
++	RS_AFTER_LINK_GROUP,
++	RS_AFTER_MOVE_ONE_GROUP,
++	RS_AFTER_EMPTY_JOURNAL
++};
