@@ -161,7 +161,7 @@ for z in range(options.count):
 	logfile, 
 	0, 
 	'')
-	o2tf.lamexec(DEBUGON, options.procs, str('%s %s %s %s %s' %
+	o2tf.lamexec(DEBUGON, options.procs, config.WAIT, str('%s %s %s %s %s' %
 		(cmd, 
 		options.filename, 
 		options.count, 
