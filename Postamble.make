@@ -166,7 +166,7 @@ $(CLEAN_SUBDIRS):
 	$(MAKE) -C $(subst -clean,,$@) clean
 
 clean: clean-subdirs $(CLEAN_RULES)
-	rm -f *.o *.p .*.d core $(BIN_PROGRAMS) $(SBIN_PROGRAMS) $(UNINST_PROGRAMS) $(LIBRARIES) $(UNINST_LIBRARIES) $(CLEAN_FILES) stamp-md5
+	rm -f *.o *.p .*.d *.pyc core $(BIN_PROGRAMS) $(SBIN_PROGRAMS) $(UNINST_PROGRAMS) $(LIBRARIES) $(UNINST_LIBRARIES) $(CLEAN_FILES) stamp-md5
 
 
 DIST_SUBDIRS = $(addsuffix -dist,$(SUBDIRS))
