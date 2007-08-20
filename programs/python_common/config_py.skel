@@ -46,3 +46,7 @@ MPIRUN = MPIDIR + '/mpirun'
 LAMEXEC = MPIDIR + '/lamexec'
 
 NPROC = 1
+
+NOWAIT = '-nw'
+
+WAIT = '-w'

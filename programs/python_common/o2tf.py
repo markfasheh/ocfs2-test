@@ -2,7 +2,7 @@
 # o2tf - OCFS2 Tests Functions.
 #
 import os, sys, signal, string, popen2, socket, time, pdb, shutil, platform
-import config, stat
+import config, stat, os.path
 #from log import log
 # Set time executable to use.
 uname = os.uname()
@@ -340,7 +340,7 @@ def mpi_run(DEBUGON, nproc, cmd, nodes, logfile):
 #
 # lamexec is used by :
 #   - 
-def lamexec(DEBUGON, nproc, cmd, nodes, logfile):
+def lamexec(DEBUGON, nproc, wait, cmd, nodes, logfile):
 	'Execute commands in parallel using LAM/MPI.'
 	from os import access,F_OK
 	found = 0
@@ -372,8 +372,8 @@ def lamexec(DEBUGON, nproc, cmd, nodes, logfile):
 			'/bin/bash', 
 			['bash', 
 			'-xc', 
-			config.LAMEXEC + ' -np %s -w n0-%d %s' % \
-			( nproc, nodelen - 1, cmd)])
+			config.LAMEXEC + ' -np %s %s n0-%d %s' % \
+			( nproc, wait, nodelen - 1, cmd)])
 		os.waitpid(pid,0)
 	except os.error:
 		pass
@@ -387,3 +387,41 @@ def lrand(DEBUGON, max):
 	import time, random
 	random.seed(time.time())
 	return(random.randint(1,max))
+#
+# GetOcfs2Cluster is used by:
+#
+def GetOcfs2Cluster():
+	""" Find and return the OCFS2 cluster name"""
+	if (os.path.isdir('/config/cluster')):
+		out = os.popen('ls /config/cluster')
+		CLUSTER = string.strip(out.read(),'\n')
+		return(CLUSTER)
+#
+# GetOcfs2NIC is used by:
+#
+def GetOcfs2NIC(DEBUGON, Cluster):
+	""" Find and return the NIC used by OCFS2"""
+	hostname = str(socket.gethostname())
+	nodedir=os.path.join('/config/cluster', Cluster, 'node', hostname)
+	if (os.path.isdir(nodedir)):
+		os.chdir(nodedir)
+		from os import access,F_OK
+   	if os.access('ipv4_address',F_OK) == 1:
+			fd = open('ipv4_address','r',0)
+			IPAddress=string.strip(fd.read(), '\n')
+			if DEBUGON:
+				print 'GetOcfs2NIC: IPAddress = %s' % IPAddress
+			fd.close()
+			out = os.popen('/sbin/ifconfig | awk \'/^eth/{eth=$1}/inet addr:'+
+				IPAddress+'/{print eth;exit}\'')
+			NIC=string.strip(out.read(), '\n')
+			out.close()
+			if not NIC:
+				out = os.popen('/sbin/ifconfig | awk \'/^bond/{eth=$1}/inet addr:'+
+					IPAddress+'/{print eth;exit}\'')
+				NIC=string.strip(out.read(), '\n')
+				out.close()
+
+			if DEBUGON:
+				print 'GetOcfs2NIC: NIC = %s' % NIC
+			return(NIC)
