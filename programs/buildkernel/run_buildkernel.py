@@ -9,14 +9,14 @@ logfile = config.LOGFILE
 def Initialize():
 	'Initialize the directories (remove and extract)'
 #
-	o2tf.lamexec(DEBUGON, nproc, str('%s -c -d %s -l %s' % \
+	o2tf.lamexec(DEBUGON, nproc, config.WAIT, str('%s -c -d %s -l %s' % \
 			(buildcmd, 
 			options.dirlist, 
 			options.logfile) ),
 			options.nodelist, 
 			options.logfile )
 #
-	o2tf.lamexec(DEBUGON, nproc, str('%s -e -d %s -l %s -t %s' % \
+	o2tf.lamexec(DEBUGON, nproc, config.WAIT, str('%s -e -d %s -l %s -t %s' % \
 			(buildcmd, 
 			options.dirlist, 
 			options.logfile,
@@ -131,7 +131,7 @@ for i in range(options.count):
 	if options.initialize or i == 0:
 		Initialize()
 #
-	o2tf.lamexec(DEBUGON, nproc, str('%s -d %s -l %s -n %s' % \
+	o2tf.lamexec(DEBUGON, nproc, config.WAIT, str('%s -d %s -l %s -n %s' % \
 			(buildcmd, 
 			options.dirlist, 
 			options.logfile, 
