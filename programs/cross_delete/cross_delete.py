@@ -289,7 +289,7 @@ for y in range(count):
 		cmdline = os.path.join(config.BINDIR, 'crdel_gen_files.py -D')
 	else:
 		cmdline = os.path.join(config.BINDIR, 'crdel_gen_files.py')
-	o2tf.lamexec( DEBUGON, nproc, str('%s -s %s -l %s -t %s' % \
+	o2tf.lamexec( DEBUGON, nproc, config.WAIT, str('%s -s %s -l %s -t %s' % \
 		(cmdline, stagedir,
 		options.logfile,
 		tarfile) ),
@@ -299,7 +299,7 @@ for y in range(count):
 		cmdline = os.path.join(config.BINDIR, 'crdel_del_files.py -D')
 	else:
 		cmdline = os.path.join(config.BINDIR, 'crdel_del_files.py')
-	o2tf.lamexec( DEBUGON, nproc, str('%s -s %s -l %s ' % \
+	o2tf.lamexec( DEBUGON, nproc, config.WAIT, str('%s -s %s -l %s ' % \
 		(cmdline, stagedir, options.logfile) ),
 		','.join(nodelist),
 		logfile)
