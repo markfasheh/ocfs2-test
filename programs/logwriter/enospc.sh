@@ -3,12 +3,12 @@
 # enospc.sh <outdir> <DEVICE>
 #
 if [ `dirname ${0}` == '.' ]; then
-   if [ -f config.sh ]; then
-      . ./config.sh;
+	if [ -f config.sh ]; then
+		. ./config.sh;
 	fi;
 else
-   if [ -f `dirname ${0}`/config.sh ]; then
-   . `dirname ${0}`/config.sh
+	if [ -f `dirname ${0}`/config.sh ]; then
+		. `dirname ${0}`/config.sh
 	fi;
 fi;
 
@@ -21,7 +21,7 @@ fi
 MOUNT_DIR="/enospc_test"
 OUT=$1/enospc_test.log
 DEVICE=$2
-PRG=enospc_test
+PRG=${BINDIR}/enospc_test
 
 echo starting test at $DATE > $OUT
 
@@ -37,6 +37,6 @@ fi
 
 echo mounting $DEVICE ... >> $OUT
 mount -t ocfs2 -o datavolume $DEVICE $MOUNT_DIR
-./$PRG $MOUNT_DIR
+${PRG} $MOUNT_DIR
 umount $MOUNT_DIR
 rmdir $MOUNT_DIR

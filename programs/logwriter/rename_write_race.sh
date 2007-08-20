@@ -24,10 +24,18 @@
 #
 # Author: 	Sunil Mushran (sunil.mushran@oracle.com)
 # 
-
+if [ `dirname ${0}` == '.' ]; then
+	if [ -f config.sh ]; then
+		. ./config.sh;
+	fi;
+else
+	if [ -f `dirname ${0}`/config.sh ]; then
+		. `dirname ${0}`/config.sh
+	fi;
+fi;
 
 FILE=_renametest_
-APP=./logwriter
+APP=${BINDIR}/logwriter
 
 ${APP} ${FILE} 1 1000000 >/dev/null 2>&1 &
 
