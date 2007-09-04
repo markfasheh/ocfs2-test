@@ -363,6 +363,13 @@ int main(int argc, char *argv[])
 
         printf("%s: rank: %d, nodes: %d, dlm: %s, dom: %s, lock: %s, iter: %llu\n", hostname, rank, num_procs, dlmfs_path, domain, lockid, (unsigned long long) max_iter);
 
+	
+	if (access(dlmfs_path, W_OK) < 0) {
+		sleep(2);
+		rprintf(rank, "%s has no write permission.\n", dlmfs_path);
+		return EACCES;
+		}
+
 	error = setup_signals();
 	if (error)
 		rprintf(rank, "setup_signals failed\n");
