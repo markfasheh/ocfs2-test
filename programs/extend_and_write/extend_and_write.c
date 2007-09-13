@@ -23,7 +23,7 @@
  *              This test has no cluster relevance.
  *
  * Author     : Mark Fasheh
- * 
+ *
  */
 
 #include <unistd.h>
@@ -40,8 +40,8 @@
 
 #define PROGNAME "extend_and_write"
 #define PRINTERR(err)                                                         \
-        printf("[%d] Error %d (Line %d, Function \"%s\"): \"%s\"\n",	      \
-               getpid(), err, __LINE__, __FUNCTION__, strerror(err))
+	printf("[%d] Error %d (Line %d, Function \"%s\"): \"%s\"\n",	      \
+		getpid(), err, __LINE__, __FUNCTION__, strerror(err))
 
 #define SZ 1024
 #define NUMWRITES 10240
@@ -50,18 +50,18 @@ int count;
 
 static void Usage()
 {
-     printf("Usage: %s -h -f <filename> [-s <extend size>]" 
-	    " [-n <numwrites>]\n", PROGNAME);
-     printf("will create and extend a file, n times.\n\n"
-            "<extend size> Size of the extend (Default=1024)\n"
-            "<numwrites> Number of writes to be performed (Default=10240).\n");
-     exit(1);
+	printf("\nUsage: %s -h -f <filename> [-s <extend size>]"
+		" [-n <numwrites>]\n", PROGNAME);
+	printf("will create and extend a file, n times.\n\n"
+		"<extend size> Size of the extend (Default=1024)\n"
+		"<numwrites> Number of writes to be performed "
+		"(Default=10240).\n");
+	exit(1);
 }
 int main(int argc, char **argv)
 {
 	int status = 0;
 	int fd;
-	char buffer[SZ];
 	char filename[256] = "/tmp/extend_and_write.txt";
 	int off_t = SZ;
 	int loops = NUMWRITES;
@@ -69,60 +69,62 @@ int main(int argc, char **argv)
 //	off_t len = SZ;
 	int i, c;
 
+	if (argc == 1) {
+		Usage();
+	}
 	opterr = 0;
 	count = argc;
-	while ((c = getopt(argc, argv, ":h:f:s:n:H:-:")) != EOF)
-	{
-		switch (c)
-		{
-		   case 'h':
+	while ((c = getopt(argc, argv, ":h:f:s:n:H:-:")) != EOF) {
+	switch (c) {
+		case 'h':
 			Usage();
 			break;
-		   case 'H':
+		case 'H':
 			Usage();
 			break;
-	   	   case '-':
+		case '-':
 			if (!strcmp(optarg, "help"))
-			   Usage();
-			else
-			{
-			   fprintf(stderr, "%s: Invalid option: \'--%s\'\n",
-			   PROGNAME, optarg);
-		           return -EINVAL;
+				Usage();
+			else {
+				fprintf(stderr, "%s: Invalid option: "
+					"\'--%s\'\n", PROGNAME, optarg);
+				return -EINVAL;
 			}
-                   case 'f':
+		case 'f':
 			snprintf(filename,255,"%s",optarg);
-                        if ((*filename == '-')) {
-                           fprintf(stderr, "%s: Invalid file name: %s\n",
-                                   PROGNAME, optarg);
-                           return -EINVAL;
-                        }
-                        break;
-                   case 'n':
-                        loops = atoi(optarg);
-                        if (!loops) {
-                           fprintf(stderr, "%s: Invalid numwrites: %s\n",
-                                   PROGNAME, optarg);
-                           return -EINVAL;
-                        }
-                        break;
-                   case 's':
-                        off_t = atoi(optarg);
-                        if (!off_t) {
-                           fprintf(stderr, "%s: Invalid extend size: %s\n",
-                                   PROGNAME, optarg);
-                           return -EINVAL;
-                        }
-                        break;
-		   default:
+			if ((*filename == '-')) {
+				fprintf(stderr, "%s: Invalid file name: %s\n",
+					PROGNAME, optarg);
+				return -EINVAL;
+			}
+			break;
+		case 'n':
+			loops = atoi(optarg);
+			if (!loops) {
+				fprintf(stderr, "%s: Invalid numwrites: %s\n",
+					PROGNAME, optarg);
+				return -EINVAL;
+			}
+			break;
+		case 's':
+			off_t = atoi(optarg);
+			if (!off_t) {
+				fprintf(stderr, "%s: Invalid extend size: %s\n",
+					PROGNAME, optarg);
+				return -EINVAL;
+			}
+			break;
+		default:
 			Usage();
 			break;
 		}
 	}
 
-	printf("file will be %d bytes after this run\n", 2 * off_t * loops);
-	fd = open(filename, O_CREAT|O_TRUNC|O_RDWR|O_APPEND, 
-		  S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
+	char buffer[off_t];
+	printf("%s: File will be %d bytes after this run\n",
+		PROGNAME, (2 * off_t * loops));
+	fd = open(filename, O_CREAT|O_TRUNC|O_RDWR|O_APPEND,
+		S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
 	if (fd == -1) {
 		status = errno;
 		PRINTERR(status);
@@ -133,6 +135,7 @@ int main(int argc, char **argv)
 	/* ok, the parent will do the writing, the child the extending */
 	/* actually, maybe at first they'll both write */
 	if (pid) {
+		printf("%s: Parent process starting.\n", PROGNAME);
 		memset(buffer, 'A', off_t);
 		for (i = 0; i < loops; i++) {
 			status = write(fd, buffer, off_t);
@@ -141,8 +144,9 @@ int main(int argc, char **argv)
 				goto bail;
 			}
 			if (status != off_t) {
-				printf("(%d) Short write! size = %d, i=%d\n",
-				       getpid(), status, i);
+				printf("%s: (%d) Short write! size = %d,"
+					" i=%d\n",
+					PROGNAME, getpid(), status, i);
 				status = 0;
 				goto bail;
 			}
@@ -152,8 +156,9 @@ int main(int argc, char **argv)
 #endif
 		}
 		waitpid(pid, NULL, 0);
-		printf("parent is exiting.\n");
+		printf("%s: Parent process exiting.\n", PROGNAME);
 	} else {
+		printf("%s: Child process starting.\n", PROGNAME);
 		memset(buffer, 'B', off_t);
 		for (i = 0; i < loops; i++) {
 			status = write(fd, buffer, off_t);
@@ -162,8 +167,9 @@ int main(int argc, char **argv)
 				goto bail;
 			}
 			if (status != off_t) {
-				printf("(%d) Short write! size = %d, i=%d\n",
-				       getpid(), status, i);
+				printf("%s: (%d) Short write! size = %d, "
+					"i=%d\n",
+					PROGNAME, getpid(), status, i);
 				status = 0;
 				goto bail;
 			}
@@ -172,7 +178,7 @@ int main(int argc, char **argv)
 			fsync(fd);
 #endif
 		}
-		printf("child is exiting.\n");
+		printf("%s: Child process exiting.\n", PROGNAME);
 	}
 
 bail:
