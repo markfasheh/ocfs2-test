@@ -261,6 +261,11 @@ function normal_test()
 	$FSCK_BIN -f $DEVICE|sed -e '/slots/ d'>$FSCK_OUTPUT
 	diff $FSCK_OUTPUT $FSCK_OUTPUT_STANDARD
 	exit_if_bad $? "0" "fsck find errors after decrease slot to $slot_num." $LINENO
+
+	#check whether the Incompat flag will affect other operations.
+	echo "y"|$TUNEFS_BIN -M local $DEVICE
+	$DEBUGFS_BIN -R "stats" $DEVICE|grep "RemoveSlot"
+	exit_if_bad $? "1" "RemoveSlot Incompat flag exist in other operations."
 }
 
 ################################################################
