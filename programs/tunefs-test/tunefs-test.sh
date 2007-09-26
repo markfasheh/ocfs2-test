@@ -33,10 +33,8 @@ MOUNTED_BIN=`which mounted.ocfs2`
 TEE_BIN=`which tee`
 GAWK=`which gawk`
 GREP=`which grep`
+STAT=`which stat`
 LOG_DIR=${O2TDIR}/log
-MKFSLOG=${LOG_DIR}/$$_mkfs.log
-FSCKLOG=${LOG_DIR}/$$_fsck.log
-TUNEFSLOG=${LOG_DIR}/$$_tunefs.log
 
 BLOCKDEV=`which blockdev`
 DEVICE=""
@@ -250,6 +248,31 @@ Change_Volume_Label()
 	   test_fail;
 	   LogMsg "tunefs_test : Label change failed. \c"
 	   LogMsg "Superblock Label (${SB_LABEL})"
+	else
+	   test_pass;
+	fi;
+}
+#
+# Test_Query - Test query option
+#
+Test_Query()
+{
+	LogMsg "tunefs_test : Testing query option"
+	(( ++NUM_OF_TESTS ))
+#	Set_Volume_For_Test ${BLKCNT1} --fs-feature-level=default
+	echo "y"| ${MKFS_BIN} -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -L ${LABEL1} -N ${NNODES1} \
+		-J size=${JOURNAL1} --fs-feature-level=default ${DEVICE} ${BLKCNT1} 2>&1 >> ${MKFSLOG}
+	CURRENT_TEST="Test Query";
+	QRY1="Blks=%B\nClus=%T\nSlot=%N\nRoot=%R\nSysd=%Y\nFclg=%P\n";
+	QRY2="Labl=%V\nUuid=%U\n";
+	QRY2="Comp=%M\nInco=%H\nROco=%O\n";
+	${TUNEFS_BIN} -q -Q "${QRY1}" ${DEVICE} 2>${LOG_DIR}/tunefsquery >>${TUNEFSLOG};
+	${TUNEFS_BIN} -q -Q "${QRY2}" ${DEVICE} 2>>${LOG_DIR}/tunefsquery >>${TUNEFSLOG};
+	${TUNEFS_BIN} -q -Q "${QRY3}" ${DEVICE} 2>>${LOG_DIR}/tunefsquery >>${TUNEFSLOG};
+	ERRLEN=`${STAT} --format="%s" ${LOG_DIR}/tunefsquery`;
+	if [ ${ERRLEN} -ne 0 ]; then
+	   test_fail;
+	   LogMsg "Tunefs query option failed.";
 	else
 	   test_pass;
 	fi;
@@ -538,6 +561,10 @@ do
 	shift
 done
 
+MKFSLOG=${LOG_DIR}/$$_mkfs.log
+FSCKLOG=${LOG_DIR}/$$_fsck.log
+TUNEFSLOG=${LOG_DIR}/$$_tunefs.log
+
 if [ ! -b "${DEVICE}" ]; then
 	LogMsg "invalid block device - ${DEVICE}" 
 	usage
@@ -567,6 +594,8 @@ LogMsg "\ntunefs_test: Starting test \c"
 LogMsg "(`date +%F-%H-%M-%S`)\n\n"
 
 check_executes
+
+Test_Query
 
 Change_Volume_Label
 
