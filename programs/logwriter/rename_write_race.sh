@@ -24,6 +24,11 @@
 #
 # Author: 	Sunil Mushran (sunil.mushran@oracle.com)
 # 
+Usage()
+{
+echo "Usage: ${0} <directory>"
+exit 1;
+}
 if [ `dirname ${0}` == '.' ]; then
 	if [ -f config.sh ]; then
 		. ./config.sh;
@@ -34,7 +39,15 @@ else
 	fi;
 fi;
 
-FILE=_renametest_
+if [ $# -ne 1 ; then
+	Usage;
+else
+	if [ ! -d ${1} -o ! -w ${1} ]; then
+		echo "${1} is not a valid directory or is not writable."
+		exit 1;
+	fi;
+fi;
+FILE=${1}/_renametest_
 APP=${BINDIR}/logwriter
 
 ${APP} ${FILE} 1 1000000 >/dev/null 2>&1 &
