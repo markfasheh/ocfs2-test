@@ -8,11 +8,11 @@
 #
 # Usage: exorcist3.pl <processes> <dirs> <files> <dirpref> <filepref> <filename>
 #
-# Example: exorcist3.pl 16 32 64 node1 /boot/vmlinux.gz
+# Example: exorcist3.pl 16 32 64 node1_dir node1_file /boot/vmlinux.gz
 #
 # Creates 32 dirs with 64 copies of /boot/vmlinux.gz in each and forks 
 # 16 processes to kill/recreate random files. The files and directories are
-# prefixed with the <prefix> to allow cluster execution.
+# prefixed with the <filepref> and <dirpref> to allow cluster execution.
 #
 
 sub holy_water { 
@@ -52,6 +52,7 @@ for ($k=0; $k < $procs ; $k++) {
   } 
 } 
 
-sleep(1000000000); 
+sleep(10); 
+print "Exorcist3.pl closing.\n"
 
 # EOF
