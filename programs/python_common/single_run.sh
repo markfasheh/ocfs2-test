@@ -194,7 +194,8 @@ fi;
 DIRECTORY=${1};		# ocfs2 test directory
 KERNELSRC=${2};		# gzipped kernel source tarfile
 RUNTIME=600		# 600 Seconds
-LOGFILE=${O2TDIR}/log/single_run_${BUILD}.log;
+DATE=`/bin/date +%F-%H-%M`
+LOGFILE=${O2TDIR}/log/single_run_${DATE}.log;
 NODE=`hostname -s`
 SUDO="/usr/bin/sudo -u root"
 DEBUGFS_BIN="/usr/bin/sudo -u root /sbin/debugfs.ocfs2"
@@ -205,7 +206,6 @@ ECHO="/bin/echo -e"
 AWK="/bin/awk"
 MV="/bin/mv"
 RM="/bin/rm"
-DATE=`/bin/date +%F-%H-%M`
 #
 # First check if the directory exists and is writable.
 #
