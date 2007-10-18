@@ -52,3 +52,30 @@ def:
 	@echo $(TOOLSARCH)
 
 include $(TOPDIR)/Postamble.make
+
+install: install-done
+
+
+install-done:
+	@echo
+	@echo "==========================================================================="
+	@echo
+	@echo " ocfs2-test now requires sudo setup."
+	@echo
+	@echo " Please make sure the user that will run ocfs2-test has the following sudo"
+	@echo " privileges granted without prompting for password on all nodes:"
+	@echo
+	@echo "		/sbin/fuser"
+	@echo "		/sbin/mkfs.ocfs2"
+	@echo "		/sbin/fsck.ocfs2"
+	@echo "		/sbin/tunefs.ocfs2"
+	@echo "		/sbin/debugfs.ocfs2"
+	@echo "		/sbin/mounted.ocfs2"
+	@echo "		/bin/mount"
+	@echo "		/bin/umount"
+	@echo "		/bin/chmod"
+	@echo "		/bin/chown"
+	@echo "		/bin/mkdir"
+	@echo
+	@echo " For security, enable the privileges only when tests are executed."
+	@echo "==========================================================================="

@@ -5,6 +5,7 @@ include $(TOPDIR)/Preamble.make
 SUBDIRS =			\
 	aio-stress		\
 	aio_direct		\
+	atime_quantum		\
 	backup_super		\
 	basic-dual-data		\
 	bonnie			\

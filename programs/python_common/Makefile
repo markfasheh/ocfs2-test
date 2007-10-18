@@ -8,9 +8,9 @@ include $(TOPDIR)/Preamble.make
 
 SUBDIRS = 
 
-DIST_FILES = config_py.skel config_shell.skel o2tf.py
+DIST_FILES = config_py.skel config_shell.skel o2tf.py single_run.sh
 
-BIN_EXTRA = config_py.skel config_shell.skel o2tf.py
+BIN_EXTRA = config_py.skel config_shell.skel o2tf.py single_run.sh
 
 post-install:
 include $(TOPDIR)/Postamble.make
