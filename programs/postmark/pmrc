@@ -1,0 +1,4 @@
+set transactions 1000000
+set location PATH
+run
+quit

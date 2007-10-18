@@ -27,7 +27,7 @@ SUBDIRS =			\
 	fsx			\
 	inline-data		\
 	iozone			\
-	kernel_build_parallel_find			\
+	kernel_build_parallel_find	\
 	lock_grab		\
 	logwriter		\
 	lvb_torture		\
@@ -37,6 +37,7 @@ SUBDIRS =			\
 	multi_node_mmap		\
 	open_delete		\
 	parallel_timing		\
+	postmark		\
 	python_common		\
 	quick_appending_writes	\
 	resize_test		\
@@ -45,7 +46,7 @@ SUBDIRS =			\
 	splice			\
 	truncate		\
 	ttest			\
-	tunefs-test			\
+	tunefs-test		\
 	untar_files		\
 	write_append_truncate	\
 	write_torture
