@@ -172,7 +172,7 @@ static errcode_t custom_extend_allocation(ocfs2_filesys *fs, uint64_t ino,
 {
 	errcode_t ret;
 	uint32_t n_clusters;
-	uint32_t i;
+	uint32_t i, offset = 0;
 	uint64_t blkno;
 	uint64_t tmpblk;
 
@@ -186,7 +186,8 @@ static errcode_t custom_extend_allocation(ocfs2_filesys *fs, uint64_t ino,
 		 * we insert each cluster in reverse. */
 		for(i = n_clusters; i; --i) {
 			tmpblk = blkno + ocfs2_clusters_to_blocks(fs, i - 1);
-		 	ret = ocfs2_insert_extent(fs, ino, tmpblk, 1);
+		 	ret = ocfs2_insert_extent(fs, ino, offset++,
+						  tmpblk, 1, 0);
 			if (ret) 
 				goto bail;	
 		}
