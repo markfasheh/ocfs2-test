@@ -443,7 +443,31 @@ int main(int argc, char **argv)
 	if (ret)
 		return ret;
 
-	printf("Test  6: Mmap reads\n");
+	printf("Test  6: Fsync\n");
+	close(fd);
+	fd = prep_file(max_inline_size);
+	if (fd < 0)
+		return fd;
+	ret = fsync(fd);
+	if (ret)
+		return ret;
+	ret = verify_pattern_fd(fd, max_inline_size);
+	if (ret)
+		return ret;
+
+	printf("Test  7: Fdatasync\n");
+	close(fd);
+	fd = prep_file(max_inline_size);
+	if (fd < 0)
+		return fd;
+	ret = fdatasync(fd);
+	if (ret)
+		return ret;
+	ret = verify_pattern_fd(fd, max_inline_size);
+	if (ret)
+		return ret;
+
+	printf("Test  8: Mmap reads\n");
 	close(fd);
         fd = prep_file(max_inline_size);
 	if (fd < 0)
@@ -452,7 +476,7 @@ int main(int argc, char **argv)
 	if (ret)
 		return ret;
 
-	printf("Test  7: Reserve space\n");
+	printf("Test  9: Reserve space\n");
 	ret = try_reserve(fd, 0, max_inline_size);
 	if (ret != ENOTTY) {
 		if (ret)
@@ -462,7 +486,7 @@ int main(int argc, char **argv)
 			return ret;
 	}
 
-	printf("Test  8: Punch hole\n");
+	printf("Test  10: Punch hole\n");
 	ret = try_punch_hole(fd, 10, 100);
 	if (ret != ENOTTY) {
 		if (ret)
@@ -472,7 +496,7 @@ int main(int argc, char **argv)
 			return ret;
 	}
 
-	printf("Test  9: Force expansion to extents via large write\n");
+	printf("Test  11: Force expansion to extents via large write\n");
 	close(fd);
 	fill_pattern(PATTERN_SZ);
 	fd = prep_file_no_fill(max_inline_size, 0);
@@ -486,7 +510,7 @@ int main(int argc, char **argv)
 	if (ret)
 		return ret;
 
-	printf("Test 10: Force expansion to extents via mmap write\n");
+	printf("Test 12: Force expansion to extents via mmap write\n");
 	close(fd);
 	fd = prep_file(max_inline_size);
 	if (fd < 0)
@@ -499,7 +523,7 @@ int main(int argc, char **argv)
 	if (ret)
 		return ret;
 
-	printf("Test 11: Force expansion to extents via large extend\n");
+	printf("Test 13: Force expansion to extents via large extend\n");
 	close(fd);
 	fd = prep_file(max_inline_size);
 	if (fd < 0)
@@ -513,7 +537,7 @@ int main(int argc, char **argv)
 	if (ret)
 		return 1;
 
-	printf("Test 12: Force expansion to extents via large reservation\n");
+	printf("Test 14: Force expansion to extents via large reservation\n");
 	close(fd);
 	fd = prep_file(max_inline_size);
 	if (fd < 0)
@@ -531,7 +555,7 @@ int main(int argc, char **argv)
 			return ret;
 	}
 
-	printf("Test 13: O_DIRECT read\n");
+	printf("Test 15: O_DIRECT read\n");
 	close(fd);
 	fd = prep_file(max_inline_size);
 	if (fd < 0)
@@ -548,7 +572,7 @@ int main(int argc, char **argv)
 	if (ret)
 		return 1;
 
-	printf("Test 14: O_DIRECT write\n");
+	printf("Test 16: O_DIRECT write\n");
 	close(fd);
 	fill_pattern(max_inline_size);
 	fd = prep_file_no_fill(max_inline_size, 1);
