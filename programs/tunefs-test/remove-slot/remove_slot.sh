@@ -185,7 +185,7 @@ function create_test_files()
 		# now I use dmesg log to find the mounted slot, I am not sure
 		# whether there is another place in the system for me to read
 		# the mounted slot.
-		mounted_slot=`dmesg|tail -n 1|sed -e 's/^.*slot \(.*\))/\1/'`
+		mounted_slot=`dmesg|tail -n 1|sed -e 's/^.*slot \(.*\)).*/\1/'`
 		[ $mounted_slot = $mount_slot ]
 		exit_if_bad $? "0" "we should mount $DEVICE in slot $mount_slot, not $mounted_slot" $LINENO
 
