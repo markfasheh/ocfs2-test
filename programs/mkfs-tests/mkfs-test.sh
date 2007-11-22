@@ -117,6 +117,122 @@ do_mkfs() {
     echo "" >> ${O}
 }
 
+do_mount() {
+	# mount the device on mntdir
+	echo -n "mount "
+	mount -t ocfs2 ${device} ${mntdir} 2>/dev/null
+	if [ $? -ne 0 ]
+	then
+		echo -n "FAILED. Check dmesg for errors." 2>&1
+		exit 1
+	else
+		echo "OK"
+	fi
+}
+
+do_umount() {
+	# umount the volume
+	echo -n "umount "
+	umount ${mntdir} 2>/dev/null
+	if [ $? -ne 0 ]
+	then
+		echo "FAILED. Check dmesg for errors." 2>&1
+		exit 1
+	else
+		echo "OK"
+	fi
+}
+
+do_consume() {
+	file_type=$1
+
+	# create 1M sized files
+	fillbsz=1048576
+
+	# find the free space
+	freespace=`df --block-size=${fillbsz} ${device} |
+		awk -v DEV=${device} 'BEGIN {dev=DEV;} // { if ($1 == dev) print $4; }'`
+
+	if [ $file_type -eq 0 ]
+	then
+		echo -n "create ${freespace} files "
+	else
+		freespace=$[${freespace}/2]
+		echo -n "create 2 large files "
+	fi
+
+	j=0
+	for((i=0;i<$freespace;i++))
+	do
+		if [ $[$i % 11] -eq 0 ]
+		then
+			if [ $j -eq 10 ]
+			then
+				echo -ne "\b\b\b\b\b\b\b\b\b\b          \b\b\b\b\b\b\b\b\b\b"
+				j=0
+			else
+				echo -n "."
+				j=$[$j+1]
+			fi
+		fi
+
+		if [ $file_type -eq 0 ]
+		then
+			dd if=/dev/zero of=${usedir}/file$i bs=${fillbsz} count=1 >/dev/null 2>&1
+		else
+			dd if=/dev/zero of=${usedir}/test_file1 bs=${fillbsz} count=1 seek=$i >/dev/null 2>&1
+			dd if=/dev/zero of=${usedir}/test_file2 bs=${fillbsz} count=1 seek=$i >/dev/null 2>&1
+		fi
+
+		if [ $? -ne 0 ]
+		then
+			i=0
+			echo
+			break;
+		fi
+	done
+	if [ $i -ne 0 ] ; then echo ; fi
+
+    return 0
+}
+
+do_consume_and_delete() {
+	file_type=$1
+
+	mntdir=/tmp/`${DATE} +%Y%m%d_%H%M%S`
+	echo "create mntdir ${mntdir}"
+	mkdir -p ${mntdir}
+
+	do_mount
+
+	# add files to fill up (not necessarily full)
+	usedir=${mntdir}/`${DATE} +%Y%m%d_%H%M%S`
+	mkdir -p ${usedir}
+
+	do_consume $file_type
+
+	do_umount
+
+	do_fsck ${OUT}
+
+	#delete all the files.
+	do_mount
+	
+	rm -rf ${usedir}
+
+	do_umount
+
+	do_fsck ${OUT}
+}
+
+do_bitmap_test() {
+	# do_consume_and_delete will consume the disks and free them to see whether
+	# it is OK. 0 is to create many small files and 1 is used to creat 2 very
+	# large files.
+	do_consume_and_delete 0
+	do_consume_and_delete 1
+}
+
 MKFS=`which mkfs.ocfs2`
 FSCK=`which fsck.ocfs2`
 DEBUGFS=`which debugfs.ocfs2`
@@ -291,6 +407,24 @@ fi
 do_fsck ${OUT}
 testnum=$[$testnum+1]
 
+### Test bitmap_cpg change
+TAG=mkfs_test_${testnum}
+OUT=${outdir}/${TAG}.log
+blocksz=4096
+clustsz=1048576
+group_bitmap_size=$[$[${blocksz}-64]*8]
+blkcount=$[${group_bitmap_size}/2*${clustsz}/${blocksz}]
+total_block=$[${partsz}/${blocksz}]
+if [ $blkcount -gt $total_block ];
+then
+	blkcount=$total_block
+fi
+${MKFS} -x -F -b ${blocksz} -C ${clustsz} -N 2 ${device} ${blkcount} >>${OUT} 2>&1
+
+#consume the whole volume and then delete all the files.
+do_bitmap_test
+
+testnum=$[$testnum+1]
 
 ### Test --no-backup-super option
 
