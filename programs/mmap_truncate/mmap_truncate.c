@@ -20,6 +20,7 @@ static unsigned int clustersize_bits = DEFAULT_CSIZE_BITS;
 static char *fname;
 static void *mapped;
 static unsigned int seconds = 300;
+static int die = 0;
 
 static void usage(void)
 {
@@ -81,7 +82,7 @@ static void signal_handler(int sig)
 {
 	if (sig == SIGALRM) {
 		printf("Alarm fired, exiting\n");
-		exit(0);
+		die = 1;
 	}
 	if (setup_sighandler(SIGBUS))
 		abort();
@@ -158,6 +159,9 @@ static void mmap_process(unsigned long file_size)
 	unsigned long offset = file_size - 1;
 
 	while (1) {
+		if (die)
+			return;
+
 		random_sleep(50);
 
 		memset(mapped + offset, 'a', 1);
@@ -170,6 +174,9 @@ static void truncating_process(int fd, unsigned long file_size,
 	int ret;
 
 	while (1) {
+		if (die)
+			return;
+
 		ret = truncate_file(fd, trunc_size);
 		if (ret)
 			abort();
@@ -215,9 +222,10 @@ int main(int argc, char *argv[])
 	printf("Running test against file \"%s\" with cluster size %u "
 	       "bytes for %u seconds.\n", fname, clustersize, seconds);
 
-	if (fork())
+	if (fork()) {
 		mmap_process(file_size);
-	else
+		kill(0, SIGINT);
+	} else
 		truncating_process(fd, file_size, trunc_size);
 
 	return 0;
