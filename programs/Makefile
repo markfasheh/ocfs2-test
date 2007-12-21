@@ -24,6 +24,7 @@ SUBDIRS =			\
 	extend_files		\
 	extendo			\
 	fill_verify_holes	\
+	flock_tests		\
 	fsck-tests		\
 	fsx			\
 	inline-data		\
