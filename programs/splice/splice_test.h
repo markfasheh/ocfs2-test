@@ -31,7 +31,7 @@
 #error unsupported arch
 #endif
 
-static inline int splice(int fdin, loff_t *off_in, int fdout,
+int splice(int fdin, loff_t *off_in, int fdout,
 			 loff_t *off_out, size_t len, unsigned int flags)
 {
 	return syscall(__NR_splice, fdin, off_in, fdout, off_out, len, flags);
