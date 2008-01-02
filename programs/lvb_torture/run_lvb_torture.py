@@ -20,12 +20,12 @@
 #
 # XXX: Future improvements:
 #	 
-# Program	  : run_lvb_torture.py
-# Description : Interface to run lvb_torture. Will validate parameters and
-#					 properly configure LAM/MPI and start it, before starting
-#					 the test.
-#					 This progran will run on each node.
-# Author		  : Marcos E. Matsunaga 
+# Program	: run_lvb_torture.py
+# Description 	: Interface to run lvb_torture. Will validate parameters and
+#		  properly configure LAM/MPI and start it, before starting
+#		  the test.
+#		  This progran will run on each node.
+# Author  	: Marcos E. Matsunaga 
 
 #
 import os, stat, sys, time, optparse, socket, string, o2tf, pdb, random, config
