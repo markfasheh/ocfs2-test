@@ -24,9 +24,10 @@
 #
 # Author: 	Sunil Mushran (sunil.mushran@oracle.com)
 # 
+ITER=100000	# Default number of iteractions
 Usage()
 {
-echo "Usage: ${0} <directory>"
+echo "Usage: ${0} -d <directory> -i <iteractions>"
 exit 1;
 }
 if [ `dirname ${0}` == '.' ]; then
@@ -38,19 +39,27 @@ else
 		. `dirname ${0}`/config.sh
 	fi;
 fi;
-
-if [ $# -ne 1 ; then
+while getopts "d:i:h?" args
+do
+	case "$args" in
+		d) DIRECTORY="$OPTARG";;
+		i) ITER="$OPTARG";;
+		h) USAGE="yes";;
+		?) USAGE="yes";;
+	esac
+done
+if [ -n "${USAGE}" ]; then
 	Usage;
-else
-	if [ ! -d ${1} -o ! -w ${1} ]; then
-		echo "${1} is not a valid directory or is not writable."
-		exit 1;
-	fi;
 fi;
-FILE=${1}/_renametest_
+
+if [ ! -d ${DIRECTORY} -o ! -w ${DIRECTORY} ]; then
+	echo "${DIRECTORY} is not a valid directory or is not writable."
+	exit 1;
+fi;
+FILE=${DIRECTORY}/_renametest_
 APP=${BINDIR}/logwriter
 
-${APP} ${FILE} 1 1000000 >/dev/null 2>&1 &
+${APP} ${FILE} 1 ${ITER} >/dev/null 2>&1 &
 
 while true
 do
