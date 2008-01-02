@@ -254,6 +254,8 @@ for y in range(nodelen):
 				logfile, 
 				0, 
 				'')
+	else:
+		nodefind = nodelist[y]
 
 #
 import os.path
