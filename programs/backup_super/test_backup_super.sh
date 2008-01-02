@@ -231,7 +231,7 @@ function test_fsck()
 	$MKFS_BIN -b $blocksize -C $clustersize -N 4  -J size=64M $DEVICE $blkcount
 	#corrupt the superblock
 	dd if=/dev/zero of=$DEVICE bs=$blocksize count=3
-	$FSCK_BIN $DEVICE	#This should failed.
+	$FSCK_BIN -fy $DEVICE	#This should failed.
 	exit_if_bad $? 8 "fsck.ocfs2" $LINENO
 
 	#recover the superblock
@@ -241,7 +241,7 @@ function test_fsck()
 	echo $cmd "is ok" >&3
 
 	#go on the normal process to see whether the recovery is sucess.
-	$FSCK_BIN -f $DEVICE
+	$FSCK_BIN -fy $DEVICE
 	exit_if_bad $? 0 "fsck.ocfs2" $LINENO
 }
 
@@ -315,7 +315,7 @@ function test_tunefs_add_backup()
 
 function check_vol()
 {
-	fsck_result=`$FSCK_BIN $DEVICE|grep label`
+	fsck_result=`$FSCK_BIN -fy $DEVICE|grep label`
 	label_name=`echo $fsck_result | awk '{print $2}'`
 
 	echo "label=$label_name, 1=$1"
@@ -345,7 +345,7 @@ function test_tunefs_refresh()
 	echo "y"|$TUNEFS_BIN -L $new_vol_name $DEVICE
 	#corrupt the superblock
 	dd if=/dev/zero of=$DEVICE bs=$blocksize count=3
-	cmd="$FSCK_BIN -f -r $last_backup_num $DEVICE"
+	cmd="$FSCK_BIN -fy -r $last_backup_num $DEVICE"
 	echo "y"|$cmd
 	exit_if_bad $? 0 $cmd $LINENO
 	echo $cmd " is ok" >&3
