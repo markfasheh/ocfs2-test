@@ -2,7 +2,7 @@ TOPDIR = ../..
 
 include $(TOPDIR)/Preamble.make
 
-SBIN_PROGRAMS = fsx
+BIN_PROGRAMS = fsx
 
 CFILES = fsx-linux.c
 
