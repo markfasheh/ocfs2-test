@@ -1,8 +1,22 @@
 #!/bin/bash
+PATH=$PATH:/sbin	# Added sbin to the path for ocfs2-tools
+USAGE=""
+OPTIND=1
+COUNT=10
+SIZE=1000000
+SUDO="`which sudo` -u root"
+DEBUGFS_BIN="`which sudo` -u root `which debugfs.ocfs2`"
+MKFS_BIN="`which sudo` -u root `which mkfs.ocfs2`"
+TUNEFS_BIN="`which sudo` -u root `which tunefs.ocfs2`"
+GREP=`which grep`
+DF=`which df`
+ECHO="`which echo` -e"
+AWK=`which awk`
 
 BINPATH="."
 LOGPATH="."
 MMAPOPT=
+UNWOPT=
 
 log_run() {
     echo "Run: $@"
@@ -16,7 +30,7 @@ run_fill() {
     logfile="$4"
 
     echo "Creating file..."
-    log_run "${BINPATH}/fill_holes" ${MMAPOPT} -f -o "${logfile}" -i "${iter}" \
+    log_run "${BINPATH}/fill_holes" ${MMAPOPT} ${UNWOPT} -f -o "${logfile}" -i "${iter}" \
 	    "${filename}" "${size}"
     sleep 10
     sudo /sbin/fuser -km ${MOUNTPOINT}
@@ -70,43 +84,38 @@ BLOCKSIZE_BITS=`${DEBUGFS_BIN} -R stats ${DEVICE} | grep Bits|\
 	${AWK} -F" " '{print $4}'`;
 LABEL=`${DEBUGFS_BIN} -R stats ${DEVICE} | grep Label:|\
 	${AWK} -F" " '{print $2}'`;
+if [ "X${LABEL}" == "X" ]; then
+	LABEL="testlabel";
+fi;
+UUID=`${DEBUGFS_BIN} -R stats ${DEVICE} | grep UUID|\
+	${AWK} -F" " '{print $2}'`;
 SLOTS=`${DEBUGFS_BIN} -R stats ${DEVICE} | grep Slots:|\
 	${AWK} -F" " '{print $4}'`;
 CLUSTERSIZE=`echo 2^${CLUSTERSIZE_BITS} |bc`;
 BLOCKSIZE=`echo 2^${BLOCKSIZE_BITS} |bc`;
 #
 }
-
-USAGE=""
-OPTIND=1
-COUNT=10
-SIZE=1000000
-SUDO="/usr/bin/sudo -u root"
-DEBUGFS_BIN="/usr/bin/sudo -u root /sbin/debugfs.ocfs2"
-MKFS_BIN="/usr/bin/sudo -u root /sbin/mkfs.ocfs2"
-GREP="/bin/grep"
-DF="/bin/df"
-ECHO="/bin/echo -e"
-AWK="/bin/awk"
 #
-while getopts "c:d:i:mb:l:s:h?" args
+while getopts "c:d:i:b:l:s:muh?" args
 do
   case "$args" in
     c) COUNT="$OPTARG";;
     d) DIRECTORY="$OPTARG";;
     i) ITER="$OPTARG";;
-    m) MMAPOPT="-m";;
     b) BINPATH="$OPTARG";;
     l) LOGPATH="$OPTARG";;
     s) SIZE="$OPTARG";;
+    m) MMAPOPT="-m";;
+    u) UNWOPT="-u";;
     h) USAGE="yes";;
     ?) USAGE="yes";;
   esac
 done
 
 if [ -n "${USAGE}" ]; then
-    echo "usage: burn-in.sh [ -b path-to-binaries ] [ -l path-for-logfiles ] \
-    	[ -c count ] [ -d  directory ] [ -i iteractions ] [ -s size ]";
+    echo "usage: burn-in.sh [ -m ] [ -u ] [ -b path-to-binaries ]  \
+    	[ -l path-for-logfiles ] [ -c count ] [ -d  directory ]  \
+	[ -i iteractions ] [ -s size ]";
     exit 0;
 fi
 
