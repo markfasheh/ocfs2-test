@@ -39,6 +39,7 @@
 #include <stddef.h>
 
 #include <ocfs2/ocfs2.h>
+#include <ocfs2/byteorder.h>
 
 
 char *progname = NULL;

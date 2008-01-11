@@ -62,6 +62,13 @@ if test "x$MPICC" = "x"; then
   AC_MSG_ERROR(mpicc is required)
 fi
 
+AC_CHECK_LIB(aio, io_setup, [
+  AC_CHECK_HEADER(libaio.h, :, [
+    AC_MSG_ERROR([Unable to find libaio header])
+  ])], [
+    AC_MSG_ERROR([Unable to find the libaio library])
+  ])
+
 COM_ERR_LIBS=
 PKG_CHECK_MODULES(COM_ERR, com_err,, [
   AC_CHECK_LIB(com_err, com_err, COM_ERR_LIBS=-lcom_err)

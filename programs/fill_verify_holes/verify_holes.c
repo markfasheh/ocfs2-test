@@ -11,6 +11,7 @@
 #include <assert.h>
 
 #include <ocfs2/ocfs2.h>
+#include <ocfs2/kernel-rbtree.h>
 
 #include "fill_holes.h"
 
