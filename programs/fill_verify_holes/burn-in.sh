@@ -3,6 +3,7 @@ PATH=$PATH:/sbin	# Added sbin to the path for ocfs2-tools
 USAGE=""
 OPTIND=1
 COUNT=10
+ITER=1000
 SIZE=1000000
 SUDO="`which sudo` -u root"
 DEBUGFS_BIN="`which sudo` -u root `which debugfs.ocfs2`"
