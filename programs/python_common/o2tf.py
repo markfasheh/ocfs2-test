@@ -57,13 +57,9 @@ def ClearDir(DEBUGON, logfile, dirl):
 	nodename = str(socket.gethostname())
 	if DEBUGON:
 		printlog('o2tf.ClearDir: logfile = (%s)' % logfile, 
-			logfile, 
-			0, 
-			'')
+			logfile, 0, '')
   		printlog('o2tf.ClearDir: dirlist = (%s)' % dirlist, 
-			logfile, 
-			0, 
-			'')
+			logfile, 0, '')
 #
 	if len(logfile) == 0:
 		logfile=str(os.getcwd()  + '/ClearDir.log')
@@ -74,16 +70,11 @@ def ClearDir(DEBUGON, logfile, dirl):
 		if os.access(wdir, F_OK) == 0:
 			if DEBUGON:
 				printlog('o2tf.ClearDir: Directory %s does \
-					not exists.' % wdir,
-					logfile, 
-					0, 
-					'')
+					not exists.' % wdir, logfile, 0, '')
 			continue
 		if DEBUGON:
 			printlog('o2tf.ClearDir: Removing directory %s.' % wdir,
-				logfile, 
-				0, 
-				'')
+				logfile, 0, '')
 		os.system('rm -fr '+ wdir)
 #
 # extract_tar is used by :
@@ -97,20 +88,11 @@ def extract_tar(DEBUGON, logfile, dirl, tarfile):
 	dirlen=len(dirlist)
 	if DEBUGON:
 		printlog('o2tf.extract_tar: logfile = (%s)' % \
-			logfile, 
-			logfile, 
-			0, 
-			'')
+			logfile, logfile, 0, '')
 		printlog('o2tf.extract_tar: dirlist = (%s)' % \
-			dirlist, 
-			logfile, 
-			0, 
-			'')
+			dirlist, logfile, 0, '')
 		printlog('o2tf.extract_tar: tarfile = (%s)' % \
-			tarfile, 
-			logfile, 
-			0, 
-			'')
+			tarfile, logfile, 0, '')
 #
 	if len(logfile) == 0:
 		logfile=str(os.getcwd()  + '/extract_tar.log')
@@ -120,23 +102,16 @@ def extract_tar(DEBUGON, logfile, dirl, tarfile):
 		wdir=dirlist[i] + '/' + nodename
 		if DEBUGON:
 			printlog('o2tf.extract_tar: wdir = %s' % wdir, 
-				logfile, 
-				0, 
-				'')
+				logfile, 0, '')
  		if os.access(wdir, F_OK) == 1:
 			if DEBUGON:
 				printlog('o2tf.extract_tar: Directory %s \
 					already exists.  Skipping...' % wdir, 
-					logfile, 
-					0, 
-					'')
+					logfile, 0, '')
 			continue
 		if DEBUGON:
 			printlog('o2tf.extract_tar: Creating directory %s.' \
-				% wdir,
-				logfile, 
-				0, 
-				'')
+				% wdir, logfile, 0, '')
 		os.mkdir(wdir)
 		os.chdir(wdir)
 		untar(DEBUGON, wdir, tarfile, logfile)
@@ -152,13 +127,9 @@ def CreateDir(DEBUGON, dirl, logfile):
 	ndir = len(dirlist)
 	if DEBUGON:
 		printlog('o2tf.CreateDir: dirlist = (%s)' % dirlist, 
-			logfile, 
-			0, 
-			'')
+			logfile, 0, '')
 		printlog('o2tf.CreateDir: dirlen = (%s)' % ndir, 
-			logfile, 
-			0, 
-			'')
+			logfile, 0, '')
 	from os import access,F_OK
 	for i in range(ndir):
 #
@@ -167,16 +138,11 @@ def CreateDir(DEBUGON, dirl, logfile):
 				printlog('o2tf.CreateDir: Directory %s does \
 					not exist. \
 					Creating it.' % \
-					dirlist[i], 
-					logfile, 
-					0, 
-					'')
+					dirlist[i], logfile, 0, '')
 			os.makedirs(dirlist[i],0755)
 		if DEBUGON:
 			printlog('o2tf.CreateDir: Ended.', 
-				logfile, 
-				0, 
-				'')
+				logfile, 0, '')
 
 #
 # untar is used by :
@@ -200,26 +166,25 @@ def untar(DEBUGON, destdir, tarfile, logfile):
 	if stat.S_ISREG(st.st_mode):
 		o2tf.printlog('o2tf.untar: (%s) is a regular file. Can\'t \
 			extract tarfile into a regular file.' % \
-			destdir, 
-			logfile, 
-			0, 
-			'')
+			destdir, logfile, 0, '')
 	else:
 		if DEBUGON:
 			printlog('o2tf.untar: Extracting tar file %s into %s \
 				 directory.' % \
-				(tarfile, destdir), 
-				logfile, 
-				0, 
-				'')
+				(tarfile, destdir), logfile, 0, '')
+		t1 = time.time()
 		os.system('cd %s; tar %s %s 2>&1 1>> %s; du -sh * 1>> %s' % \
 			(destdir, 
 			options + compress, 
 			tarfile, 
 			tarlog, 
 			logfile) )
+		t2 = time.time()
+		printlog('o2tf.untar: Extraction elapsed time = %s' % \
+			(t2 - t1), logfile, 0, '')
 		if DEBUGON:
-			printlog('o2tf.untar: Extraction ended.', logfile, 0, '')
+			printlog('o2tf.untar: Extraction ended.', 
+				logfile, 0, '')
 #
 # StartMPI is used by :
 #   - o2tf.py
@@ -228,9 +193,7 @@ def StartMPI(DEBUGON, nodes, logfile):
 	from os import access,F_OK
 	if os.access(config.LAMBOOT, F_OK) == 0:
 		printlog('o2tf.StartMPI: Lamboot not found', 
-			logfile, 
-			0, 
-			'')
+			logfile, 0, '')
 		sys.exit(1)
 	if os.access(config.LAMHOSTS, F_OK) == 1:
 		os.system('rm -f ' + config.LAMHOSTS)
@@ -245,9 +208,7 @@ def StartMPI(DEBUGON, nodes, logfile):
 		if DEBUGON:
 			printlog('o2tf.StartMPI: Trying to run %s with %s \
 				file.' % (config.RECON, config.LAMHOSTS), 
-				logfile, 
-				0, 
-				'')
+				logfile, 0, '')
 		os.system('%s -v %s' % (config.RECON, config.LAMHOSTS))
 	except os.error:
 		pass
@@ -256,9 +217,7 @@ def StartMPI(DEBUGON, nodes, logfile):
 		if DEBUGON:
 			printlog('o2tf.StartMPI: Trying to run %s with %s \
 				file.' % (config.LAMBOOT, config.LAMHOSTS),
-				logfile,
-				0,
-				'')
+				logfile, 0, '')
 		os.system('%s -v %s' % (config.LAMBOOT, config.LAMHOSTS))
 	except os.error:
 		pass
@@ -277,25 +236,15 @@ def mpi_runparts(DEBUGON, nproc, cmd, nodes, logfile):
 		if DEBUGON:
 			printlog('o2tf.mpi_runparts: MPIRUN = %s' % \
 			config.MPIRUN, 
-			logfile, 
-			0, 
-			'')
+			logfile, 0, '')
 			printlog('o2tf.mpi_runparts: nproc = %s' % nproc, 
-			logfile, 
-			0, 
-			'')
+			logfile, 0, '')
 			printlog('o2tf.mpi_runparts: nodelen = %d' % nodelen, 
-			logfile, 
-			0, 
-			'')
+			logfile, 0, '')
 			printlog('o2tf.mpi_runparts: MPIRUNPARTS = %s' % config.MPIRUNPARTS, 
-			logfile, 
-			0, 
-			'')
+			logfile, 0, '')
 			printlog('o2tf.mpi_runparts: cmd = %s' % cmd, 
-			logfile, 
-			0, 
-			'')
+			logfile, 0, '')
 		pid = os.spawnv(os.P_NOWAIT, 
 			'/bin/bash', 
 			['bash', 
@@ -315,30 +264,26 @@ def mpi_run(DEBUGON, nproc, cmd, nodes, logfile):
 	found = 0
 	uname = os.uname()
 	nodelen = len(string.split(nodes,','))
+	if nproc == 'C':
+		nprocopt='C'
+	else:
+		nprocopt='-np ' + nproc
 	try:
 		if DEBUGON:
 			printlog('o2tf.mpi_run: MPIRUN = %s' % config.MPIRUN, 
-				logfile, 
-				0, 
-				'')
+				logfile, 0, '')
 			printlog('o2tf.mpi_run: nproc = %s' % nproc, 
-				logfile, 
-				0, 
-				'')
+				logfile, 0, '')
 			printlog('o2tf.mpi_run: nodelen = %d' % nodelen, 
-				logfile, 
-				0, 
-				'')
+				logfile, 0, '')
 			printlog('o2tf.mpi_run: cmd = %s' % cmd, 
-				logfile, 
-				0, 
-				'')
+				logfile, 0, '')
 		pid = os.spawnv(os.P_NOWAIT, 
 			'/bin/bash', 
 			['bash', 
 			'-xc', 
-			config.MPIRUN + ' -sigs -ger -w n0-%d %s' % \
-			( nodelen - 1, cmd)])
+			config.MPIRUN + ' %s -sigs -ger -w n0-%d %s' % \
+			( nprocopt, nodelen - 1, cmd)])
 		os.waitpid(pid,0)
 	except os.error:
 		pass
@@ -354,25 +299,15 @@ def lamexec(DEBUGON, nproc, wait, cmd, nodes, logfile):
 	try:
 		if DEBUGON:
 			printlog('o2tf.lamexec: LAMEXEC = %s' % config.LAMEXEC, 
-				logfile, 
-				0, 
-				'')
+				logfile, 0, '')
 			printlog('o2tf.lamexec: nproc = %s' % nproc, 
-				logfile, 
-				0, 
-				'')
+				logfile, 0, '')
 			printlog('o2tf.lamexec: cmd = %s' % cmd, 
-				logfile, 
-				0, 
-				'')
+				logfile, 0, '')
 			printlog('o2tf.lamexec: nodelen = %d' % nodelen, 
-				logfile, 
-				0, 
-				'')
+				logfile, 0, '')
 			printlog('o2tf.lamexec: nodes = %s' % nodes, 
-				logfile, 
-				0, 
-				'')
+				logfile, 0, '')
 		pid = os.spawnv(os.P_NOWAIT, 
 			'/bin/bash', 
 			['bash', 
@@ -452,9 +387,7 @@ def FindMountPoint(DEBUGON, logfile, filedir):
 	        linelist.remove('')
 	if DEBUGON:
                 printlog('o2tf.FindMountPoint:  linelist %s)' % linelist,
-                        logfile, 
-                        0,      
-                        '')     
+                        logfile, 0,      '')     
         return linelist[0],linelist[5]
 #
 # GetLabel is used by:
@@ -467,16 +400,12 @@ def GetLabel(DEBUGON, logfile, devname):
 	linelist = line.split(" ")
 	if DEBUGON:
                 printlog('o2tf.GetLabel:  linelist %s)' % linelist,
-                        logfile, 
-                        0,      
-                        '')     
+                        logfile, 0,      '')     
         for i in range(linelist.count('')):
 	        linelist.remove('')
 	if DEBUGON:
                 printlog('o2tf.GetLabel:  linelist %s)' % linelist,
-                        logfile, 
-                        0,      
-                        '')     
+                        logfile, 0,      '')     
         return linelist[3]
 #
 # SudoUmount is used by:
@@ -489,13 +418,9 @@ def SudoUmount(DEBUGON, logfile, mountpoint):
                 return
         else:
                 printlog('o2tf.SudoUmount:  Umount failed (RC=%s)' % status[0],
-                        logfile, 
-                        0,      
-                        '')     
+                        logfile, 0,      '')     
                 printlog('o2tf.SudoUmount:  %s' % status[1],
-                        logfile, 
-                        0,      
-                        '')     
+                        logfile, 0,      '')     
 #
 # SudoMount is used by:
 #
@@ -508,10 +433,6 @@ def SudoMount(DEBUGON, logfile, mountpoint, label):
                 return
         else:
                 printlog('o2tf.SudoMount:  Mount failed (RC=%s)' % status[0],
-                        logfile, 
-                        0,      
-                        '')     
+                        logfile, 0, '')     
                 printlog('o2tf.SudoMount:  %s' % status[1],
-                        logfile, 
-                        0,      
-                        '')     
+                        logfile, 0, '')     
