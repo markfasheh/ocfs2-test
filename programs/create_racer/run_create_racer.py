@@ -20,12 +20,12 @@
 #
 # XXX: Future improvements:
 #	 
-# Program	  : run_create_racer.py
-# Description : Interface to run create_racer. Will validate parameters and
-#					 properly configure LAM/MPI and start it, before starting
-#					 the test.
-#					 This progran will run on each node.
-# Author		  : Marcos E. Matsunaga 
+# Program	: run_create_racer.py
+# Description 	: Interface to run create_racer. Will validate parameters and
+#		properly configure LAM/MPI and start it, before starting
+#		the test.
+#		This progran will run on each node.
+# Author	: Marcos E. Matsunaga 
 
 #
 import os, stat, sys, time, optparse, socket, string, o2tf, pdb, random, config
@@ -85,9 +85,7 @@ if __name__=='__main__':
 	(options, args) = parser.parse_args()
 	if len(args) != 0:
 		o2tf.printlog('args left %s' % len(args), 
-			  logfile, 
-		0, 
-		'')
+			logfile, 0, '')
 		parser.error('incorrect number of arguments')
 #
 	if options.iteractions:
@@ -103,24 +101,22 @@ if __name__=='__main__':
 			nodelist = nodelist.add(options.nodelist)
 		else:
 			nodelist = options.nodelist.split(',')
+	else:
+		parser.error('Invalid node list.')
 
 #
 	if options.path:
 		path = options.path
+	else:
+		parser.error('Invalid path.')
 #
 if DEBUGON:
-	o2tf.printlog('run_create_racer: main - current directory %s' % os.getcwd(),
-		logfile, 
-		0, 
-		'')
+	o2tf.printlog('run_create_racer: main - current directory %s' % 
+		os.getcwd(), logfile, 0, '')
 	o2tf.printlog('run_create_racer: main - cmd = %s' % cmd,
-		logfile, 
-		0, 
-		'')
-	o2tf.printlog('run_create_racer: main - blocksize = %s' % options.blocksize,
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
+	o2tf.printlog('run_create_racer: main - blocksize = %s' % 
+		options.blocksize, logfile, 0, '')
 #
 o2tf.StartMPI(DEBUGON, options.nodelist, logfile)
 #
@@ -131,3 +127,9 @@ o2tf.mpi_run(DEBUGON, procs,
 	options.logfile)), 
 	options.nodelist, 
 	options.logfile)
+#
+o2tf.printlog('run_create_racer: main - execution successful. Cleaning up',
+	logfile, 0, '')
+for i in range(options.iteractions):
+	os.system('rm -f %s/%s:%s' % (options.path, 'create_racer', 
+		str(i).zfill(4)))
