@@ -83,12 +83,6 @@ if __name__=='__main__':
 			type='string', 
 			help='List of nodes to be used by the test.')
 #
-	parser.add_option('-p', 
-			'--procs', 
-			dest='nproc',
-			type='int', 
-			help='Number of processes started on each node.')
-#
 	(options, args) = parser.parse_args()
 	if len(args) != 0:
 		o2tf.printlog('args left %s' % len(args), logfile, 0, '')
@@ -96,11 +90,10 @@ if __name__=='__main__':
 	if options.logfile:
 		logfile = options.logfile
 	count = options.count
-	nproc = options.nproc
 	filename = options.filename
-	nodelist = options.nodelist
+	nodelist = options.nodelist.split(',')
 	if options.nodelist:
-		numnodes = len(options.nodelist)
+		numnodes = len(nodelist)
 
 #
 if numnodes <= 2:
@@ -115,7 +108,7 @@ if DEBUGON:
 	o2tf.printlog('command = %s' % command, 
 	logfile, 0, '')
 o2tf.mpi_run(DEBUGON, 
-	options.nproc, 
+	'C', 
 	str('%s -i %s %s' % 
 	(command, 
 	options.count, 

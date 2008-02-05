@@ -127,8 +127,13 @@ open_after:
 
 	ret = unlink(filename);
 	if ( ret ) {
-		abort_printf("Error %d deleteing file \"%s\": %s\n",
+		printf("%s (rank %d): ", hostname, rank);
+		printf("Error %d deleteing file \"%s\": %s\n",
 			     ret, filename, strerror(ret));
+	} else{
+		printf("%s (rank %d): ", hostname, rank);
+		printf("Successfully deleted file \"%s\" (%d)\n",
+			     filename, ret);
 	}
 	ret = MPI_Barrier(MPI_COMM_WORLD);
 	if (ret != MPI_SUCCESS)
@@ -169,6 +174,9 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
+	strcat(filename, "_");
+	strcat(filename, hostname);
+
 	ret = MPI_Comm_rank(MPI_COMM_WORLD, &rank);
         if (ret != MPI_SUCCESS)
 		abort_printf("MPI_Comm_rank failed: %d\n", ret);
@@ -177,8 +185,8 @@ int main(int argc, char *argv[])
 	if (ret != MPI_SUCCESS)
 		abort_printf("MPI_Comm_size failed: %d\n", ret);
 
-	if (num_procs > 20 || num_procs < 2)
-		abort_printf("Process count should be between 2 and 20\n");
+	if (num_procs > 60 || num_procs < 2)
+		abort_printf("Process count should be between 2 and 60\n");
 
         printf("%s: rank: %d, procs: %d, filename \"%s\"\n",
 	       hostname, rank, num_procs, filename);
