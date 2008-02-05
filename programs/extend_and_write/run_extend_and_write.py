@@ -41,6 +41,7 @@ size = 1024
 numwrites = 10240
 cmd = config.BINDIR+'/extend_and_write'
 cmd_verify = config.BINDIR+'/verify'
+param = 0
 #
 Usage = '\n	 %prog [-f | --filename <filename>] \
 [-l | --logfile <logfile>] \
@@ -83,54 +84,51 @@ if __name__=='__main__':
 	(options, args) = parser.parse_args()
 	if len(args) != 0:
 		o2tf.printlog('args left %s' % len(args), 
-			logfile, 
-		0, 
-		'')
+			logfile, 0, '')
 		parser.error('incorrect number of arguments')
 #
 	if options.filename:
+		param = 1
 		filename = options.filename
 #
 	if options.size:
+		param = 1
 		size = options.size
 #
 	if options.numwrites:
+		param = 1
 		numwrites = options.numwrites
 #
 	if options.logfile:
+		param = 1
 		logfile = options.logfile
 #
 #
 from os import access, W_OK
+#
+if not param:
+	o2tf.printlog('%s: main - Test will use all default parameters' % 
+		pgm, logfile, 0, '')
 
 if DEBUGON:
 	o2tf.printlog('%s: main - filename = %s' % (pgm, filename),
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
 	o2tf.printlog('%s: main - logfile = %s' % (pgm, logfile),
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
 	o2tf.printlog('%s: main - numwrites = %s' % (pgm, numwrites),
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
 	o2tf.printlog('%s: main - size = %s' % (pgm, size),
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
 	o2tf.printlog('%s: main - cmdline = %s -f %s -n %s -s %s 2>&1|tee -a '
-			'%s' % (pgm, cmd, filename, numwrites, size, logfile),
-		logfile, 
-		0, 
-		'')
+		'%s' % (pgm, cmd, filename, numwrites, size, logfile),
+		logfile, 0, '')
 #
 os.system(str('%s -f %s -n %s -s %s 2>&1|tee -a %s' % (cmd, 
 	filename, 
 	numwrites, 
 	size, 
 	options.logfile)))
+#
 os.system(str('%s -f %s -n %s -s %s 2>&1|tee -a %s' % (cmd_verify, 
 	filename, 
 	numwrites, 
