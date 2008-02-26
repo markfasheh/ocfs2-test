@@ -11,9 +11,9 @@ class RunAlarm(Exception):
 	pass
 #
 # printlog is used by :
-#   - o2tf.py
-#   - run_buildkernel.py
-#   - buildkernel.py
+#	- o2tf.py
+#	- run_buildkernel.py
+#	- buildkernel.py
 def printlog(message, logfile, prflag=0, prsep=''):
 	'print message to the logfile.'
 	'takes 4 parameters: message, logfilename, prflag and prsep'
@@ -33,7 +33,6 @@ def printlog(message, logfile, prflag=0, prsep=''):
 	from os import access,F_OK
 	if os.access(logfile,F_OK) == 0:
 		os.system('touch ' + logfile)
-   
 #
 	fd = open(logfile, 'a+', 0)
 #
@@ -56,9 +55,9 @@ def ClearDir(DEBUGON, logfile, dirl):
 	dirlen=len(dirlist)
 	nodename = str(socket.gethostname())
 	if DEBUGON:
-		printlog('o2tf.ClearDir: logfile = (%s)' % logfile, 
+		printlog('o2tf.ClearDir: logfile = (%s)' % logfile,
 			logfile, 0, '')
-  		printlog('o2tf.ClearDir: dirlist = (%s)' % dirlist, 
+		printlog('o2tf.ClearDir: dirlist = (%s)' % dirlist,
 			logfile, 0, '')
 #
 	if len(logfile) == 0:
@@ -70,7 +69,8 @@ def ClearDir(DEBUGON, logfile, dirl):
 		if os.access(wdir, F_OK) == 0:
 			if DEBUGON:
 				printlog('o2tf.ClearDir: Directory %s does \
-					not exists.' % wdir, logfile, 0, '')
+					not exists.' % wdir,
+					logfile, 0, '')
 			continue
 		if DEBUGON:
 			printlog('o2tf.ClearDir: Removing directory %s.' % wdir,
@@ -81,8 +81,8 @@ def ClearDir(DEBUGON, logfile, dirl):
 #   - o2tf.py
 #   - buildkernel.py
 def extract_tar(DEBUGON, logfile, dirl, tarfile):
-	'Extract the kernel source tarfile into each one of the node directories, \
-	if they do not exist'
+	'Extract the kernel source tarfile into each one of the node \
+	directories, if they do not exist'
 	nodename = str(socket.gethostname())
 	dirlist=dirl.split(',')
 	dirlen=len(dirlist)
@@ -106,7 +106,7 @@ def extract_tar(DEBUGON, logfile, dirl, tarfile):
  		if os.access(wdir, F_OK) == 1:
 			if DEBUGON:
 				printlog('o2tf.extract_tar: Directory %s \
-					already exists.  Skipping...' % wdir, 
+					already exists.  Skipping...' % wdir,
 					logfile, 0, '')
 			continue
 		if DEBUGON:
@@ -126,9 +126,9 @@ def CreateDir(DEBUGON, dirl, logfile):
 	dirlist = string.split(dirl,',')
 	ndir = len(dirlist)
 	if DEBUGON:
-		printlog('o2tf.CreateDir: dirlist = (%s)' % dirlist, 
+		printlog('o2tf.CreateDir: dirlist = (%s)' % dirlist,
 			logfile, 0, '')
-		printlog('o2tf.CreateDir: dirlen = (%s)' % ndir, 
+		printlog('o2tf.CreateDir: dirlen = (%s)' % ndir,
 			logfile, 0, '')
 	from os import access,F_OK
 	for i in range(ndir):
@@ -136,12 +136,11 @@ def CreateDir(DEBUGON, dirl, logfile):
 		if os.access(dirlist[i],F_OK) == 0:
 			if DEBUGON:
 				printlog('o2tf.CreateDir: Directory %s does \
-					not exist. \
-					Creating it.' % \
+					not exist. Creating it.' % \
 					dirlist[i], logfile, 0, '')
 			os.makedirs(dirlist[i],0755)
 		if DEBUGON:
-			printlog('o2tf.CreateDir: Ended.', 
+			printlog('o2tf.CreateDir: Ended.',
 				logfile, 0, '')
 
 #
@@ -158,10 +157,7 @@ def untar(DEBUGON, destdir, tarfile, logfile):
 	pid = os.getpid()
 	tarlog = dirlog+'/tar_'+nodename+'_'+str(pid)+'.log'
 	options = 'xvf'
-#    if zipfile.is_zipfile(tarfile): #for now, it is always compressed
 	compress = 'z'
-#    else:
-#       compress = ''
 	st = os.stat(destdir)
 	if stat.S_ISREG(st.st_mode):
 		o2tf.printlog('o2tf.untar: (%s) is a regular file. Can\'t \
@@ -170,15 +166,12 @@ def untar(DEBUGON, destdir, tarfile, logfile):
 	else:
 		if DEBUGON:
 			printlog('o2tf.untar: Extracting tar file %s into %s \
-				 directory.' % \
-				(tarfile, destdir), logfile, 0, '')
+				directory.' %  (tarfile, destdir),
+				logfile, 0, '')
 		t1 = time.time()
 		os.system('cd %s; tar %s %s 2>&1 1>> %s; du -sh * 1>> %s' % \
-			(destdir, 
-			options + compress, 
-			tarfile, 
-			tarlog, 
-			logfile) )
+			(destdir, options + compress, tarfile, tarlog,
+				logfile))
 		t2 = time.time()
 		printlog('o2tf.untar: Extraction elapsed time = %s' % \
 			(t2 - t1), logfile, 0, '')
@@ -235,20 +228,17 @@ def mpi_runparts(DEBUGON, nproc, cmd, nodes, logfile):
 	try:
 		if DEBUGON:
 			printlog('o2tf.mpi_runparts: MPIRUN = %s' % \
-			config.MPIRUN, 
-			logfile, 0, '')
-			printlog('o2tf.mpi_runparts: nproc = %s' % nproc, 
-			logfile, 0, '')
-			printlog('o2tf.mpi_runparts: nodelen = %d' % nodelen, 
-			logfile, 0, '')
-			printlog('o2tf.mpi_runparts: MPIRUNPARTS = %s' % config.MPIRUNPARTS, 
-			logfile, 0, '')
-			printlog('o2tf.mpi_runparts: cmd = %s' % cmd, 
-			logfile, 0, '')
-		pid = os.spawnv(os.P_NOWAIT, 
-			'/bin/bash', 
-			['bash', 
-			'-xc', 
+				config.MPIRUN, logfile, 0, '')
+			printlog('o2tf.mpi_runparts: nproc = %s' % nproc,
+				logfile, 0, '')
+			printlog('o2tf.mpi_runparts: nodelen = %d' % nodelen,
+				logfile, 0, '')
+			printlog('o2tf.mpi_runparts: MPIRUNPARTS = %s' % \
+				config.MPIRUNPARTS, logfile, 0, '')
+			printlog('o2tf.mpi_runparts: cmd = %s' % cmd,
+				logfile, 0, '')
+		pid = os.spawnv(os.P_NOWAIT,
+			'/bin/bash', ['bash', '-xc',
 			config.MPIRUN + ' -sigs -ger -w n0-%d %s %s' % \
 			( nodelen - 1, config.MPIRUNPARTS, cmd)])
 		os.waitpid(pid,0)
@@ -270,18 +260,16 @@ def mpi_run(DEBUGON, nproc, cmd, nodes, logfile):
 		nprocopt='-np ' + nproc
 	try:
 		if DEBUGON:
-			printlog('o2tf.mpi_run: MPIRUN = %s' % config.MPIRUN, 
+			printlog('o2tf.mpi_run: MPIRUN = %s' % config.MPIRUN,
 				logfile, 0, '')
-			printlog('o2tf.mpi_run: nproc = %s' % nproc, 
+			printlog('o2tf.mpi_run: nproc = %s' % nproc,
 				logfile, 0, '')
-			printlog('o2tf.mpi_run: nodelen = %d' % nodelen, 
+			printlog('o2tf.mpi_run: nodelen = %d' % nodelen,
 				logfile, 0, '')
-			printlog('o2tf.mpi_run: cmd = %s' % cmd, 
+			printlog('o2tf.mpi_run: cmd = %s' % cmd,
 				logfile, 0, '')
-		pid = os.spawnv(os.P_NOWAIT, 
-			'/bin/bash', 
-			['bash', 
-			'-xc', 
+		pid = os.spawnv(os.P_NOWAIT,
+			'/bin/bash', ['bash', '-xc',
 			config.MPIRUN + ' %s -sigs -ger -w n0-%d %s' % \
 			( nprocopt, nodelen - 1, cmd)])
 		os.waitpid(pid,0)
@@ -298,21 +286,19 @@ def lamexec(DEBUGON, nproc, wait, cmd, nodes, logfile):
 	nodelen = len(string.split(nodes,','))
 	try:
 		if DEBUGON:
-			printlog('o2tf.lamexec: LAMEXEC = %s' % config.LAMEXEC, 
+			printlog('o2tf.lamexec: LAMEXEC = %s' % config.LAMEXEC,
 				logfile, 0, '')
-			printlog('o2tf.lamexec: nproc = %s' % nproc, 
+			printlog('o2tf.lamexec: nproc = %s' % nproc,
 				logfile, 0, '')
-			printlog('o2tf.lamexec: cmd = %s' % cmd, 
+			printlog('o2tf.lamexec: cmd = %s' % cmd,
 				logfile, 0, '')
-			printlog('o2tf.lamexec: nodelen = %d' % nodelen, 
+			printlog('o2tf.lamexec: nodelen = %d' % nodelen,
 				logfile, 0, '')
-			printlog('o2tf.lamexec: nodes = %s' % nodes, 
+			printlog('o2tf.lamexec: nodes = %s' % nodes,
 				logfile, 0, '')
-		pid = os.spawnv(os.P_NOWAIT, 
-			'/bin/bash', 
-			['bash', 
-			'-xc', 
-			config.LAMEXEC + ' -np %s %s n0-%d %s' % \
+		pid = os.spawnv(os.P_NOWAIT,
+			'/bin/bash', ['bash', '-xc',
+			config.LAMEXEC + ' -pty -np %s %s n0-%d %s' % \
 			( nproc, wait, nodelen - 1, cmd)])
 		os.waitpid(pid,0)
 	except os.error:
@@ -353,11 +339,11 @@ def GetOcfs2NIC(DEBUGON, Cluster):
 	if (os.path.isdir(nodedir)):
 		os.chdir(nodedir)
 		from os import access,F_OK
-   	if os.access('ipv4_address',F_OK) == 1:
+	if os.access('ipv4_address',F_OK) == 1:
 			fd = open('ipv4_address','r',0)
 			IPAddress=string.strip(fd.read(), '\n')
 			if DEBUGON:
-				print 'GetOcfs2NIC: IPAddress = %s' %  \
+				print 'GetOcfs2NIC: IPAddress = %s' % \
 					IPAddress
 			fd.close()
 			out = os.popen('/sbin/ifconfig | awk \' \
@@ -376,63 +362,77 @@ def GetOcfs2NIC(DEBUGON, Cluster):
 				print 'GetOcfs2NIC: NIC = %s' % NIC
 			return(NIC)
 #
+# CheckMounted is used by:
+#
+def CheckMounted(DEBUGON, logfile, keyword):
+	'''Check if a partition is mounted based on device or label'''
+	from commands import getoutput 
+	count = getoutput('df -k |grep -v Filesystem| grep %s|wc -l' % keyword)
+	if DEBUGON:
+		printlog('o2tf.CheckMounted:  count %s)' % count,
+			logfile, 0, '')
+	if int(count) == 0:
+		return False
+	else:
+		return True
+#
 # FindMountPoint is used by:
 #
 def FindMountPoint(DEBUGON, logfile, filedir):
 	'''Find and return mountpoint/device based on file/directory'''
-        from commands import getoutput 
-        line = getoutput('df -k %s|grep -v Filesystem' % filedir)  
-        linelist = line.split(" ")
-        for i in range(linelist.count('')):
-	        linelist.remove('')
+	from commands import getoutput 
+	line = getoutput('df -k %s|grep -v Filesystem' % filedir)
+	linelist = line.split(" ")
+	for i in range(linelist.count('')):
+		linelist.remove('')
 	if DEBUGON:
-                printlog('o2tf.FindMountPoint:  linelist %s)' % linelist,
-                        logfile, 0,      '')     
-        return linelist[0],linelist[5]
+		printlog('o2tf.FindMountPoint:  linelist %s)' % linelist,
+			logfile, 0, '')
+	return linelist[0],linelist[5]
 #
 # GetLabel is used by:
 #
 def GetLabel(DEBUGON, logfile, devname):
 	'''Find and return device Label based on devicename'''
-        from commands import getoutput 
+	from commands import getoutput 
 	line = getoutput('sudo /sbin/mounted.ocfs2 -d %s|grep -v UUID' % \
 		devname)
 	linelist = line.split(" ")
 	if DEBUGON:
-                printlog('o2tf.GetLabel:  linelist %s)' % linelist,
-                        logfile, 0,      '')     
-        for i in range(linelist.count('')):
-	        linelist.remove('')
+		printlog('o2tf.GetLabel:  linelist %s)' % linelist,
+			logfile, 0, '')     
+	for i in range(linelist.count('')):
+		linelist.remove('')
 	if DEBUGON:
-                printlog('o2tf.GetLabel:  linelist %s)' % linelist,
-                        logfile, 0,      '')     
-        return linelist[3]
+		printlog('o2tf.GetLabel:  linelist %s)' % linelist,
+			logfile, 0, '')
+	return linelist[3]
 #
 # SudoUmount is used by:
 #
 def SudoUmount(DEBUGON, logfile, mountpoint):
-        '''Find and return device Label based on devicename'''
-        from commands import getstatusoutput
-        status = getstatusoutput('sudo umount %s' % mountpoint)
-        if status[0] == 0:
-                return
-        else:
-                printlog('o2tf.SudoUmount:  Umount failed (RC=%s)' % status[0],
-                        logfile, 0,      '')     
-                printlog('o2tf.SudoUmount:  %s' % status[1],
-                        logfile, 0,      '')     
+	'''Find and return device Label based on devicename'''
+	from commands import getstatusoutput
+	status = getstatusoutput('sudo umount %s' % mountpoint)
+	if status[0] == 0:
+		return
+	else:
+		printlog('o2tf.SudoUmount:  Umount failed (RC=%s)' % status[0],
+			logfile, 0, '')
+		printlog('o2tf.SudoUmount:  %s' % status[1],
+			logfile, 0,'')
 #
 # SudoMount is used by:
 #
 def SudoMount(DEBUGON, logfile, mountpoint, label):
-        '''Find and return device Label based on devicename'''
-        from commands import getstatusoutput
-        status = getstatusoutput('sudo mount LABEL=%s %s' % (label,
+	'''Find and return device Label based on devicename'''
+	from commands import getstatusoutput
+	status = getstatusoutput('sudo mount LABEL=%s %s' % (label,
 		mountpoint))
-        if status[0] == 0:
-                return
-        else:
-                printlog('o2tf.SudoMount:  Mount failed (RC=%s)' % status[0],
-                        logfile, 0, '')     
-                printlog('o2tf.SudoMount:  %s' % status[1],
-                        logfile, 0, '')     
+	if status[0] == 0:
+		return
+	else:
+		printlog('o2tf.SudoMount:  Mount failed (RC=%s)' % status[0],
+			logfile, 0, '')
+		printlog('o2tf.SudoMount:  %s' % status[1],
+			logfile, 0, '')
