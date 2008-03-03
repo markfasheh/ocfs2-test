@@ -1,19 +1,23 @@
 #!/bin/sh
 #
-# resize_test -c -o <outdir> -d <device> -i <iters>
+# resize_test -c -o <outdir> -d <device> -i <iters> -l <label> -m <mntdir> -n <nodelist>
 #
 # Requires the device to be formatted with enough space
 # left over to extend the device in <iters> chunks of
 # blocks, where each chunk has to be greater than a cluster
 #
 
+PATH=$PATH:/sbin        # Add /sbin to the path for ocfs2 tools
 
 usage() {
-    echo "usage: resize_test.sh -c -o <outdir> -d <device> -i <iters>"
+    echo "usage: resize_test.sh -c -o <outdir> -d <device> -i <iters> -l <label> -m <mntdir> -n <nodelist>"
     echo "       -i number of resize iterations"
     echo "       -o output directory for the logs"
     echo "       -d device"
     echo "       -c consume space after resize"
+	echo "       -l volume label for remote mount and umount"
+	echo "       -m mount dir for moutn and umount"
+	echo "       -n node list for mount and umount"
     exit 1;
 }
 
@@ -34,6 +38,8 @@ get_stats() {
 
     #in blocks
     numclst=$[${num3} * ${clustsz}/${blocksz}]
+
+	bpc=$[${clustsz}/${blocksz}]
 }
 
 get_partsz() {
@@ -56,10 +62,10 @@ get_partsz() {
     return 0
 }
 
-do_consume() {
-    # mount the device on mntdir
+do_mount() {
+    # mount the device
     echo -n "mount "
-    mount -t ocfs2 ${device} ${mntdir} 2>/dev/null
+    $REMOTE_MOUNT -m ${mntdir} -l ${label} -n ${nodelist} >/dev/null 2>&1
     if [ $? -ne 0 ]
     then
         echo -n "FAILED. Check dmesg for errors." 2>&1
@@ -67,6 +73,24 @@ do_consume() {
     else
         echo "OK"
     fi
+
+}
+
+do_umount() {
+    # umount the volume
+    echo -n "umount "
+    $REMOTE_UMOUNT -m ${mntdir} -n ${nodelist} >/dev/null 2>&1
+    if [ $? -ne 0 ]
+    then
+        echo "FAILED. Check dmesg for errors." 2>&1
+        exit 1
+    else
+        echo "OK"
+    fi
+}
+
+do_consume() {
+    do_mount
 
     # create 1M sized files
     fillbsz=1048576
@@ -77,7 +101,7 @@ do_consume() {
 
     # add files to fill up (not necessarily full)
     usedir=${mntdir}/`${DATE} +%Y%m%d_%H%M%S`
-    mkdir -p ${usedir}
+    ${MKDIR} -p ${usedir}
     echo -n "create ${freespace} files "
     j=0
     for i in `seq ${freespace}`
@@ -93,7 +117,7 @@ do_consume() {
                 j=$[$j+1]
             fi
         fi
-        dd if=/dev/zero of=${usedir}/file$i bs=${fillbsz} count=1 >/dev/null 2>&1
+        ${DD} if=/dev/zero of=${usedir}/file$i bs=${fillbsz} count=1 >/dev/null 2>&1
         if [ $? -ne 0 ]
         then
             i=0
@@ -103,16 +127,8 @@ do_consume() {
     done
     if [ $i -ne 0 ] ; then echo ; fi
 
-    # umount the volume
-    echo -n "umount "
-    umount ${mntdir} 2>/dev/null
-    if [ $? -ne 0 ]
-    then
-        echo "FAILED. Check dmesg for errors." 2>&1
-        exit 1
-    else
-        echo "OK"
-    fi
+    do_umount
+
     return 0
 }
 
@@ -172,7 +188,7 @@ do_tunefs() {
          return 1
     fi
 
-    ${GREP} "Wrote Superblock" ${out} >/dev/null 2>&1
+    ${GREP} "Resized volume" ${out} >/dev/null 2>&1
     if [ $? -ne 0 ] ;
     then
         echo "FAILED. Errors in ${out}"
@@ -182,24 +198,188 @@ do_tunefs() {
     return 0
 }
 
-TUNEFS=`which tunefs.ocfs2`
-MKFS=`which mkfs.ocfs2`
-FSCK=`which fsck.ocfs2`
-DEBUGFS=`which debugfs.ocfs2`
+normal_resize_test() {
+	online=$1
+
+	incblk=$[$[${partsz}-${numclst}]/${iters}]
+	if [ ${incblk} -lt $[${clustsz}/${blocksz}] ]
+	then
+		echo "error: reduce number of iterations"
+		exit 1
+	fi
+
+	blocks=${numclst}
+
+	echo "resize ${device} from ${numclst} to ${partsz} blocks in ${incblk} block chunks"
+
+	alldone=0
+	while [ 1 ]
+	do
+		YMD=`${DATE} +%Y%m%d_%H%M%S`
+		tuneout=${outdir}/${YMD}.tune
+		fsckout=${outdir}/${YMD}.fsck
+		dbgout=${outdir}/${YMD}.dbg
+
+		blocks=$[${blocks}+${incblk}]
+		if [ ${blocks} -gt ${partsz} ]
+		then
+			blocks=0
+		fi
+
+		if [ $online -eq 1 ]
+		then
+			do_mount
+		fi
+
+		do_tunefs ${tuneout} ${blocks}
+		all_done=$?
+		sync
+
+		if [ $online -eq 1 ]
+		then
+			do_umount
+		fi
+
+		do_debugfs ${dbgout}
+
+		if [ ${blocks} -ne 0 ]
+		then 
+			desired_clusters=$[${blocks}/${bpc}]
+			clusters=`${GREP} "Clusters:" ${dbgout}|awk '{print $4}'`
+			if [ ${desired_clusters} -ne ${clusters} ]
+			then
+				echo "Resize failed, the desired new clusters should be ${desired_clusters}"
+				exit 1
+			fi
+		fi
+
+		do_fsck ${fsckout}
+
+		if [ $alldone -eq 1 ] || [ ${blocks} -eq 0 ] || [ ${blocks} -eq ${partsz} ]
+		then
+			break;
+		fi
+
+		if [ ${consume} -eq 1 ]
+		then
+			do_consume
+			do_debugfs ${dbgout}.2
+		fi
+	done
+}
+
+do_backup_test() {
+	start=$1
+	end=$2
+
+	YMD=`${DATE} +%Y%m%d_%H%M%S`
+	tuneout=${outdir}/${YMD}.tune
+	fsckout=${outdir}/${YMD}.fsck
+	dbgout=${outdir}/${YMD}.dbg
+
+	echo "y"|${MKFS} -b ${blocksz} -C ${clustsz} -N 4 -L ${label} --fs-features=backup-super ${device} ${start} >/dev/null
+
+	# empty the backup at first.
+	${DD} if=/dev/zero of=${device} bs=${blocksz} count=1 seek=${backup_blkno} >/dev/null 2>&1
+
+	${FSCK} -r 1 -y ${device} >${fsckout} 2>&1
+	${GREP} "Bad magic number" ${fsckout} >/dev/null 2>&1
+	if [ $? -ne 0 ] ;
+	then
+		echo "Corrupt backup super block failed. Errors in ${fsckout}"
+		exit 1
+	fi
+	
+	do_mount
+	do_tunefs ${tuneout} ${end}
+	do_umount
+	do_fsck ${fsckout}
+
+	# empty the super block.
+	${DD} if=/dev/zero of=${device} bs=${blocksz} count=1 seek=2 >/dev/null 2>&1
+
+	${DEBUGFS} -R "stats" ${device} >${dbgout} 2>&1
+	${GREP} "Bad magic number" ${dbgout} >/dev/null 2>&1
+	if [ $? -ne 0 ] ;
+	then
+		echo "Corrupt super block failed. Errors in ${dbgout}"
+		exit 1
+	fi
+
+	# recover from it.
+	${FSCK} -r 1 -y ${device} >${fsckout}
+	${GREP} "RECOVER_BACKUP_SUPERBLOCK" ${fsckout} >/dev/null 2>&1
+	if [ $? -ne 0 ] ;
+	then
+		echo "Recover backup super block failed. Errors in ${fsckout}"
+		exit 1
+	fi
+}
+
+online_boundary_test() {
+	group_bitmap_size=$[$[${blocksz}-64]*8]
+
+	YMD=`${DATE} +%Y%m%d_%H%M%S`
+	tuneout=${outdir}/${YMD}.tune
+	fsckout=${outdir}/${YMD}.fsck
+	dbgout=${outdir}/${YMD}.dbg
+
+	# normal backup super block test,
+	start=$[${backup_blkno}/2]
+	end=$partsz
+	do_backup_test $start $end
+
+	# test when the last group descriptor contains the backup superblocks.
+	start=$[${backup_blkno}-1]
+	end=$[${backup_blkno}*2]
+	do_backup_test $start $end
+
+	# resize from only one group descriptor to many.
+	start=$[${group_bitmap_size}*${bpc}-1]
+
+	if [ ${start} -gt ${partsz} ]
+	then
+		echo "volume size is too small or cluster size is too large."
+		echo "Using cs=${clustsz}, there is only one group for the volume."
+		echo "Skip online_boundary_test."
+		return
+	fi
+	echo "y"|${MKFS} -b ${blocksz} -C ${clustsz} -N 4 -L ${label} ${device} ${start} >/dev/null
+
+	do_mount
+	do_tunefs ${tuneout} ${partsz}
+	do_umount
+	do_fsck ${fsckout}
+
+}
+
+TUNEFS="`which sudo` -u root `which tunefs.ocfs2`"
+MKFS="`which sudo` -u root `which mkfs.ocfs2`"
+FSCK="`which sudo` -u root `which fsck.ocfs2`"
+DEBUGFS="`which sudo` -u root `which debugfs.ocfs2`"
+DD="`which sudo` -u root `which dd`"
+MKDIR="`which sudo` -u root `which mkdir`"
 GREP=`which grep`
 DATE=`which date`
+REMOTE_MOUNT=`which remote_mount.py`
+REMOTE_UMOUNT=`which remote_umount.py`
 
 outdir=
 device=
+nodelist=
+label=
 iters=0
 consume=0
 OPTIND=1
-while getopts "d:i:o:c" args
+while getopts "d:i:o:l:m:n:c" args
 do
   case "$args" in
     o) outdir="$OPTARG";;
     d) device="$OPTARG";;
     i) iters="$OPTARG";;
+    m) mntdir="$OPTARG";;
+    n) nodelist="$OPTARG";;
+    l) label="$OPTARG";;
     c) consume=1;
   esac
 done
@@ -223,71 +403,26 @@ then
 fi
 
 echo "create logdir ${outdir}"
-mkdir -p ${outdir}
-
-if [ ${consume} -eq 1 ]
-then
-    mntdir=/tmp/`${DATE} +%Y%m%d_%H%M%S`
-    echo "create mntdir ${mntdir}"
-    mkdir -p ${mntdir}
-fi
+${MKDIR} -p ${outdir}
 
 blocksz=0
 clustsz=0
 numclst=0
+bpc=0
 get_stats
+backup_offset=1073741824	#1G offset
+backup_blkno=$[${backup_offset}/${blocksz}]
 
 partsz=0
 get_partsz
 
-incblk=$[$[${partsz}-${numclst}]/${iters}]
-if [ ${incblk} -lt $[${clustsz}/${blocksz}] ]
-then
-    echo "error: reduce number of iterations"
-    exit 1
-fi
+do_umount
+normal_resize_test 0
 
-blocks=${numclst}
+online_boundary_test
 
-echo "resize ${device} from ${numclst} to ${partsz} blocks in ${incblk} block chunks"
-
-alldone=0
-while [ 1 ]
-do
-    YMD=`${DATE} +%Y%m%d_%H%M%S`
-    tuneout=${outdir}/${YMD}.tune
-    fsckout=${outdir}/${YMD}.fsck
-    dbgout=${outdir}/${YMD}.dbg
-
-    blocks=$[${blocks}+${incblk}]
-    if [ ${blocks} -gt ${partsz} ]
-    then
-        blocks=0
-    fi
-
-    do_tunefs ${tuneout} ${blocks}
-    all_done=$?
-
-    do_debugfs ${dbgout}
-
-    do_fsck ${fsckout}
-
-    if [ $alldone -eq 1 ] || [ ${blocks} -eq 0 ] || [ ${blocks} -eq ${partsz} ]
-    then
-        break;
-    fi
-
-    if [ ${consume} -eq 1 ]
-    then
-        do_consume
-        do_debugfs ${dbgout}.2
-    fi
-done
-
-if [ ! -z ${mntdir} ]
-then
-    rmdir ${mntdir} 2>/dev/null 2>&1
-fi
+echo "y"|${MKFS} -b ${blocksz} -C ${clustsz} -N 4 -L ${label} ${device} ${numclst} >/dev/null
+normal_resize_test 1
 
 echo "resize test successful"
 
