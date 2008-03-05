@@ -42,7 +42,7 @@ lhostname = str(socket.gethostname())
 logfile = config.LOGFILE
 iteractions = 10000
 path = ''
-procs = 1
+procs = 2
 dlmfs = '/dlm'
 cmd = config.BINDIR+'/lvb_torture'
 #
@@ -123,8 +123,10 @@ if __name__=='__main__':
 		nodelen = len(options.nodelist)
 		if nodelen == 1:
 			nodelist = nodelist.add(options.nodelist)
+			procs=1
 		else:
 			nodelist = options.nodelist.split(',')
+			procs=len(nodelist)
 	else:
 		parser.error('Please specify list of nodes to run the test.')
 
