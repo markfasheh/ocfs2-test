@@ -73,8 +73,8 @@ def ClearDir(DEBUGON, logfile, dirl):
 					logfile, 0, '')
 			continue
 		if DEBUGON:
-			printlog('o2tf.ClearDir: Removing directory %s.' % wdir,
-				logfile, 0, '')
+			printlog('o2tf.ClearDir: Removing directory %s.' % \
+				wdir, logfile, 0, '')
 		os.system('rm -fr '+ wdir)
 #
 # extract_tar is used by :
@@ -103,7 +103,7 @@ def extract_tar(DEBUGON, logfile, dirl, tarfile):
 		if DEBUGON:
 			printlog('o2tf.extract_tar: wdir = %s' % wdir, 
 				logfile, 0, '')
- 		if os.access(wdir, F_OK) == 1:
+		if os.access(wdir, F_OK) == 1:
 			if DEBUGON:
 				printlog('o2tf.extract_tar: Directory %s \
 					already exists.  Skipping...' % wdir,
@@ -257,7 +257,7 @@ def mpi_run(DEBUGON, nproc, cmd, nodes, logfile):
 	if nproc == 'C':
 		nprocopt='C'
 	else:
-		nprocopt='-np ' + nproc
+		nprocopt='-np ' + str(nproc)
 	try:
 		if DEBUGON:
 			printlog('o2tf.mpi_run: MPIRUN = %s' % config.MPIRUN,

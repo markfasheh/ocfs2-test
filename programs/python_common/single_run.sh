@@ -1,5 +1,21 @@
 #!/bin/bash
 #
+PATH=$PATH:/sbin	# Add /sbin to the path for ocfs2 tools
+RUNTIME=600		# 600 Seconds
+USERNAME=`/usr/bin/whoami`
+DATE=`/bin/date +%F-%H-%M`
+NODE=`hostname`
+SUDO="`which sudo` -u root"
+DEBUGFS_BIN="`which sudo` -u root `which debugfs.ocfs2`"
+TUNEFS_BIN="`which sudo` -u root `which tunefs.ocfs2`"
+MKFS_BIN="`which sudo` -u root `which mkfs.ocfs2`"
+GREP=`which grep`
+CUT=`which cut`
+DF=`which df`
+ECHO="`which echo` -e"
+AWK=`which awk`
+MV=`which mv`
+RM=`which rm`
 Usage()
 {
 ${ECHO} "Usage: ${0} <directory> <kernel source tarfile>\n";
@@ -24,6 +40,7 @@ ${ECHO} "Runtime ${DIFF} seconds.\n" >> ${LOGFILE};
 #
 LogMsg()
 {
+${ECHO} `date` >> ${LOGFILE};
 ${ECHO} "${1}\c" >> ${LOGFILE};
 i=${#1};
 while (( i < 60 ))
@@ -45,13 +62,15 @@ if [ ${MOUNTPOINT} == "/" -o  ${MOUNTPOINT} == "" ]; then
 	${ECHO} "Aborting....\n"
 	exit 1;
 fi;
+UUID=`${TUNEFS_BIN} -q -Q "uuid=%U\n" ${DEVICE}|${CUT} -f2 -d"="`
+LABEL=`${TUNEFS_BIN} -q -Q "label=%V\n" ${DEVICE}|${CUT} -f2 -d"="`
+if [ "X${LABEL}" == "X" ]; then
+	LABEL="testlabel";
+fi;
+SLOTS=`${TUNEFS_BIN} -q -Q "slots=%N\n" ${DEVICE}|${CUT} -f2 -d"="`
 CLUSTERSIZE_BITS=`${DEBUGFS_BIN} -R stats ${DEVICE} | grep Bits|\
 	${AWK} -F" " '{print $8}'`;
 BLOCKSIZE_BITS=`${DEBUGFS_BIN} -R stats ${DEVICE} | grep Bits|\
-	${AWK} -F" " '{print $4}'`;
-LABEL=`${DEBUGFS_BIN} -R stats ${DEVICE} | grep Label:|\
-	${AWK} -F" " '{print $2}'`;
-SLOTS=`${DEBUGFS_BIN} -R stats ${DEVICE} | grep Slots:|\
 	${AWK} -F" " '{print $4}'`;
 CLUSTERSIZE=`echo 2^${CLUSTERSIZE_BITS} |bc`;
 BLOCKSIZE=`echo 2^${BLOCKSIZE_BITS} |bc`;
@@ -118,6 +137,7 @@ done;
 #
 for((xx=1; xx<${LOOP}; xx++ ))
 do
+	START=$(date +%s)
 	LogMsg "enospc ${xx}";
 	${SUDO} ${BINDIR}/enospc.sh ${O2TDIR}/log ${DEVICE};
 	LogRC $?;
@@ -125,10 +145,11 @@ done;
 #
 ${MKFS_BIN} -x -C ${CLUSTERSIZE} -b ${BLOCKSIZE} -N ${SLOTS} -L ${LABEL} \
 	${DEVICE}
-${SUDO} mount LABEL=${LABEL} ${MOUNTPOINT}
+UUID=`${TUNEFS_BIN} -q -Q "uuid=%U\n" ${DEVICE}| ${CUT} -f2 -d"="`
+${SUDO} mount -t ocfs2 ${DEVICE} ${MOUNTPOINT}
 if [ $? -eq 0 ]; then
 	${SUDO} mkdir -p ${DIRECTORY}
-	${SUDO} chmod -R 1777 ${MOUNTPOINT}
+	${SUDO} chown ${USERNAME}  ${DIRECTORY}
 else
 	${ECHO} "Mount failed."
 	exit 1;
@@ -168,7 +189,7 @@ LogRC $?;
 run_mmaptruncate()
 {
 LogMsg "mmap_truncate";
-${BINDIR}/mmap_truncate -c ${CLUSTERSIZE_BITS} -s ${RUNTIME} \ 
+${BINDIR}/mmap_truncate -c ${CLUSTERSIZE_BITS} -s ${RUNTIME} \
 	${DIRECTORY}/logwriter.txt;
 LogRC $?;
 }
@@ -178,7 +199,7 @@ LogRC $?;
 run_renamewriterace()
 {
 LogMsg "rename_write_race.sh";
-${BINDIR}/rename_write_race.sh ${DIRECTORY};
+${BINDIR}/rename_write_race.sh -d ${DIRECTORY} -i 10000;
 LogRC $?;
 }
 #
@@ -186,26 +207,14 @@ LogRC $?;
 # MAIN
 #
 #
-. config.sh
+. ./config.sh
 #
 if [ $# -ne 2 ]; then
 	Usage;
 fi;
 DIRECTORY=${1};		# ocfs2 test directory
 KERNELSRC=${2};		# gzipped kernel source tarfile
-RUNTIME=600		# 600 Seconds
-DATE=`/bin/date +%F-%H-%M`
 LOGFILE=${O2TDIR}/log/single_run_${DATE}.log;
-NODE=`hostname -s`
-SUDO="/usr/bin/sudo -u root"
-DEBUGFS_BIN="/usr/bin/sudo -u root /sbin/debugfs.ocfs2"
-MKFS_BIN="/usr/bin/sudo -u root /sbin/mkfs.ocfs2"
-GREP="/bin/grep"
-DF="/bin/df"
-ECHO="/bin/echo -e"
-AWK="/bin/awk"
-MV="/bin/mv"
-RM="/bin/rm"
 #
 # First check if the directory exists and is writable.
 #
