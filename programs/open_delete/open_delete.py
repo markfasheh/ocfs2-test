@@ -21,11 +21,10 @@
 # XXX: Future improvements:
 #
 # Program	:	open_delete.py
-# Description	:	Interface to run open_delete. Will validate parameters and
-#			properly configure LAM/MPI and start it before starting
-#			the open_delete program.
-# Author	:	Marcos E. Matsunaga 
-# E-mail	:	Marcos.Matsunaga@oracle.com
+# Description	:	Interface to run open_delete. Will validate parameters
+#			and properly configure LAM/MPI and start it before
+#			starting the open_delete program.
+# Author	:	Marcos E. Matsunaga
 
 #
 import os, stat, sys, time, optparse, socket, string, o2tf, pdb, timing, config
@@ -62,7 +61,8 @@ if __name__=='__main__':
 			'--file', 
 			dest='filename',
 			type='string',
-			help='Fullpath filename that will be used during test.')
+			help='Fullpath filename that will be used during \
+				test.')
 #
 	parser.add_option('-i', 
 			'--interactions', 
@@ -93,12 +93,13 @@ if __name__=='__main__':
 	filename = options.filename
 	nodelist = options.nodelist.split(',')
 	if options.nodelist:
+		nodelist = options.nodelist.split(',')
 		numnodes = len(nodelist)
 
 #
-if numnodes <= 2:
-	o2tf.printlog('open_delete: Must provide at least 2 nodes to run the test.',
-		logfile, 0, '')
+if numnodes < 2:
+	o2tf.printlog('open_delete: Must provide at least 2 nodes to \
+		run the test.', logfile, 0, '')
 	parser.print_help()
 	sys.exit(1)
 #
