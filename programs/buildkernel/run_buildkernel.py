@@ -5,10 +5,60 @@ import os, sys, optparse, time, o2tf, pdb, config
 DEBUGON = os.getenv('DEBUG',0)
 #
 logfile = config.LOGFILE
+PID=os.getpid()
+#
+def CompSize(tarfile):
+	global logfile, DEBUGON
+	from os import access,F_OK
+	tmpfile='/tmp/src_%s.dat' % PID
+	if os.access(tarfile,F_OK) == 1:
+		os.system('tar tvfz %s > %s' % (tarfile, tmpfile))
+	fd=open(tmpfile, 'r', 0)
+	size=0
+	while True:
+		line = fd.readline()
+		if not line: break
+		linelist = line.split(" ")
+		for i in range(linelist.count('')):
+			linelist.remove('')
+		if DEBUGON:
+			o2tf.prinlog('size = %s, filesize = %s' % \
+				(size, linelist[2]), logfile, 0, '')
+		size = size + int(linelist[2])
+	return size
+#
+def CheckDirs(nodes, dirs):
+	'Check if the test directories at least exist'
+	global tarfile, DEBUGON
+	from commands import getoutput
+	nodesl = nodes.split(',')
+	dirl = dirs.split(',')
+	MinSize = CompSize(tarfile)
+	InitTrue = False
+	for x in range(len(dirl)):
+		if InitTrue:
+			break
+		for y in range(len(nodesl)):
+			workdir=os.path.join(dirl[x], nodesl[y])
+			size = getoutput('du -sb %s|cut -f1' % workdir)
+			if DEBUGON:
+				o2tf.prinlog('workdir (%s) - size (%s)' % \
+					(workdir, size), logfile, 0, '')
+			if MinSize > size:
+				InitTrue = True
+				break
+	if InitTrue:
+		o2tf.prinlog('At least one directory seems incomplete. \
+			Will initialize them all',
+			logfile, 0, '')
+		Initialize()
 #
 def Initialize():
+	global DEBUGON, logfile
 	'Initialize the directories (remove and extract)'
 #
+	o2tf.printlog('Cleaning up directories.', logfile, 0, '')
+	o2tf.StartMPI(DEBUGON, options.nodelist, logfile)
 	o2tf.lamexec(DEBUGON, nproc, config.WAIT, str('%s -c -d %s -l %s' % \
 			(buildcmd, 
 			options.dirlist, 
@@ -16,6 +66,7 @@ def Initialize():
 			options.nodelist, 
 			options.logfile )
 #
+	o2tf.printlog('Extracting tar file into directories.', logfile, 0, '')
 	o2tf.lamexec(DEBUGON, nproc, config.WAIT, str('%s -e -d %s -l %s -t %s' % \
 			(buildcmd, 
 			options.dirlist, 
@@ -23,6 +74,7 @@ def Initialize():
 			tarfile) ),
 			options.nodelist, 
 			options.logfile )
+	o2tf.printlog('Directories initialization completed.', logfile, 0, '')
 #
 Usage = 'Usage: %prog [-c|--count count] \
 [-d|--directorylist dirlist] \
@@ -118,19 +170,16 @@ if DEBUGON:
    o2tf.printlog('run_buildkernel: tarfile = (%s)' % tarfile, logfile, 0, '')
    o2tf.printlog('run_buildkernel: buildcmd = (%s)' % buildcmd, logfile, 0, '')
 #
-
-o2tf.StartMPI(DEBUGON, options.nodelist, logfile)
+if options.initialize and i == 0:
+	Initialize()
+else:
+	CheckDirs(options.nodelist, options.dirlist)
 #
 for i in range(options.count):
 	r = i+1
 	o2tf.printlog('run_buildkernel: Starting RUN# %s of %s' % (r, options.count),
-		logfile,
-		3,
-		'=')
-#
-	if options.initialize or i == 0:
-		Initialize()
-#
+		logfile, 3, '=')
+	o2tf.StartMPI(DEBUGON, options.nodelist, logfile)
 	o2tf.lamexec(DEBUGON, nproc, config.WAIT, str('%s -d %s -l %s -n %s' % \
 			(buildcmd, 
 			options.dirlist, 
@@ -139,6 +188,4 @@ for i in range(options.count):
 			options.nodelist, 
 			options.logfile )
 o2tf.printlog('run_buildkernel: Test completed successfully.',
-	logfile,
-	3,
-	'=')
+	logfile, 3, '=')
