@@ -22,6 +22,7 @@
 #include <sys/stat.h>
 #include <sys/vfs.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -43,7 +44,7 @@ unsigned long create_file(char *file_name, unsigned long file_size,
 {
 	struct stat fst;	
 	int ret = 0, fd, err;
-	unsigned long offset, fsz_bytes, bw;
+	int64_t offset, fsz_bytes, bw;
 
 	printf("now creating file %s, size %luMB\n", file_name, file_size/MB);
 	fd = open(file_name, O_CREAT, S_IRWXU|S_IRWXG);
@@ -62,7 +63,7 @@ unsigned long create_file(char *file_name, unsigned long file_size,
 	fsz_bytes = HDR_SIZE;
 	bw = pwrite(fd, hdr, fsz_bytes, 0);
 	if (bw < 1) {
-		printf("error %d, writing to file header, bytes written %lu\n", 
+		printf("error %d, writing to file header, bytes written %ld\n", 
 								errno, bw);
 		goto exit2;
 	}
@@ -77,7 +78,7 @@ unsigned long create_file(char *file_name, unsigned long file_size,
 			goto exit2;
 		}
 
-		printf("error %d, truncating file to size %lu, current size " 
+		printf("error %d, truncating file to size %ld, current size " 
 				"is %lu\n", err, fsz_bytes, fst.st_size);
 		goto exit2;
 	}
@@ -123,7 +124,7 @@ int main(int argc, char *argv[])
 	struct statfs fs_stat;
 	char *dirname, *file_name, *file_ext;
 	int file_name_len, start_fileno;
-	unsigned long numfiles, fill_size, vol_size, free_size, file_size;
+	unsigned long  numfiles, fill_size, vol_size, free_size, file_size;
 
 	int ret=0;
 	if ((argc != 2) || (strcmp(argv[1],"-h") == 0)) {
@@ -142,7 +143,7 @@ int main(int argc, char *argv[])
 
 	if ((fs_stat.f_type != OCFS2_SUPER_MAGIC) &&
 			(fs_stat.f_type != OCFS1_SUPER_MAGIC)) {
-		printf("not an OCFS2 filesystem (magic 0x%x)\n", 
+		printf("not an OCFS2 filesystem (magic 0x%ld)\n", 
 							fs_stat.f_type);
 		return 0;
 	}
