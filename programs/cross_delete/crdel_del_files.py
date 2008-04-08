@@ -107,7 +107,7 @@ for i in range(dirlen):
 		logfile,
 		0,
 		'')
-	os.system('rm -fr '+dirlist[i])
+	o2tf.Del(DEBUGON, logfile, dirlist[i], ','.join(dirlist))
 #
 # Remove the workfile after it is done.
 #
