@@ -139,7 +139,7 @@ for((xx=1; xx<${LOOP}; xx++ ))
 do
 	START=$(date +%s)
 	LogMsg "enospc ${xx}";
-	${SUDO} ${BINDIR}/enospc.sh ${O2TDIR}/log ${DEVICE};
+	${BINDIR}/enospc.sh ${O2TDIR}/log ${DEVICE};
 	LogRC $?;
 done;
 #

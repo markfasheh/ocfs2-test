@@ -135,8 +135,8 @@ def CreateDir(DEBUGON, dirl, logfile):
 #
 		if os.access(dirlist[i],F_OK) == 0:
 			if DEBUGON:
-				printlog('o2tf.CreateDir: Directory %s does \
-					not exist. Creating it.' % \
+				printlog('o2tf.CreateDir: Directory '+
+					'%s does not exist. Creating it.' % \
 					dirlist[i], logfile, 0, '')
 			os.makedirs(dirlist[i],0755)
 		if DEBUGON:
@@ -385,6 +385,8 @@ def FindMountPoint(DEBUGON, logfile, filedir):
 	linelist = line.split(" ")
 	for i in range(linelist.count('')):
 		linelist.remove('')
+	if linelist[0] == 'df:':
+		return 1
 	if DEBUGON:
 		printlog('o2tf.FindMountPoint:  linelist %s)' % linelist,
 			logfile, 0, '')
@@ -436,3 +438,111 @@ def SudoMount(DEBUGON, logfile, mountpoint, label):
 			logfile, 0, '')
 		printlog('o2tf.SudoMount:  %s' % status[1],
 			logfile, 0, '')
+#
+def Del(DEBUGON, logfile, deldir, dirlist):
+	import config
+	ForbitMntPts = [ '/', '/usr', '/home', '*', '/var', '/opt', 
+		'/usr/local']
+	if not logfile:
+		logfile = config.logfile
+	if dirlist:
+		dirl = string.split(dirlist, ',')
+	# See if it is deleting everything, including under root.
+	if deldir == '*' or deldir == '/*':
+		printlog('o2tf.del - Cannot perform generic delete (* or /*)',
+			logfile, 0, '')
+		return
+	# Before proceeding, check if dir/file to be deleted exists
+	if not os.path.exists(deldir):
+		printlog('%s : file or directory not found.' %
+			deldir, logfile, 0, '')
+		printlog('Aborting.', logfile, 0, '')
+		return 1
+	# First check if the dirlist is valid
+		for i in range(len(dirl)):
+			if not os.path.exists(dirl[i]):
+				printlog('%s : file or directory not found.' %
+					dirl[i], logfile, 0, '')
+				printlog('Aborting.', logfile, 0, '')
+				return 1
+			if os.path.isfile(dirl[i]):
+				printlog('%s must be a direcftory' %
+					dirl[i], logfile, 0, '')
+				printlog('Aborting.', logfile, 0, '')
+				return 1
+			if not os.path.isabs(dirl[i]):
+				printlog('%s directory must be absolut path.' %
+					dirl[i], logfile, 0, '')
+				printlog('Aborting.', logfile, 0, '')
+				return 1
+
+	# Choose which list to be used. Allowed or forbid.
+	if dirlist:
+		if DEBUGON:
+			printlog('o2tf.Del - dirlist %s' % dirlist, logfile, 0, '')
+		AllowMntPt = BldAllowedMtPts(DEBUGON, logfile, dirlist)
+		if DEBUGON:
+			printlog('AllowMntPt %s' % AllowMntPt, logfile, 0, '')
+		mntpt = GetMntPt(DEBUGON, logfile, deldir)
+		if mntpt not in AllowMntPt:
+			printlog('o2tf.Del - Cannot delete dir %s' % deldir,
+				logfile, 0, '')
+			return 1
+	else:
+		mntpt = GetMntPt(DEBUGON, logfile, deldir)
+		if mntpt in ForbitMntPts:
+			printlog('o2tf.Del - Cannot delete file/dir in the \
+				forbid list (%s)' % ForbitMntPts,
+				logfile, 0, '')
+			return 1
+	if DEBUGON:
+		printlog('o2tf.Del - Deleting dir %s' % deldir,
+			logfile, 0, '')
+	os.system('rm -fr '+deldir)
+#
+def BldAllowedMtPts(DEBUGON, logfile, allowlist):
+	from os import access,F_OK
+	WorkingDirs = string.split(allowlist, ',')
+	if DEBUGON:
+		printlog('working lenght = %s' % len(WorkingDirs),
+			logfile, 0, '')
+	AllowMntPt=[None]*len(WorkingDirs)
+	if len(WorkingDirs) == 1:
+		AllowMntPt=AllowMntPt.append(GetMntPt(DEBUGON, logfile, 
+			allowlist))
+	else:
+		for i in range(len(WorkingDirs)):
+			if os.access(WorkingDirs[i],F_OK) == 0:
+				os.system('touch ' + logfile)
+			if DEBUGON:
+				printlog('workingdirs[%s] = (%s)' % 
+					(i, WorkingDirs[i]), logfile, 0, '')
+			AllowMntPt[i]=GetMntPt(DEBUGON, logfile, WorkingDirs[i])
+	if DEBUGON:
+		printlog('Allow Mount Points list (%s)' % AllowMntPt,
+			logfile, 0, '')
+	return AllowMntPt
+
+#
+def GetMntPt(DEBUGON, logfile, dirname):
+	import os, os.path
+	if (os.path.isdir(dirname)):
+		if os.path.ismount(dirname):
+			return dirname
+	xx =os.path.split(dirname)
+	if DEBUGON:
+		printlog('GetMntPt : Starting - xx[0]=(%s)' % xx[0],
+			logfile, 0, '')
+	while True:
+		if os.path.ismount(xx[0]):
+			break
+		else:
+			if DEBUGON:
+				printlog('GetMntPt : Looking - xx[0]=(%s)' % \
+				xx[0], logfile, 0, '')
+			xx=os.path.split(xx[0])
+	if DEBUGON:
+		printlog('GetMntPt : Exiting - xx[0]=(%s)' % xx[0],
+			logfile, 0, '')
+	return xx[0]
+#
