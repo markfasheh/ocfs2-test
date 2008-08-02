@@ -15,7 +15,7 @@ Pass 1: Checking inodes and blocks.
 [LINK_NULLTERM] The target of symlink inode 16858 isn't null terminated.  Clear the inode? y
 [INODE_ALLOC_REPAIR] Inode 16858 is marked as invalid but its position in the inode allocator is marked as in use.  Fix the allocation of this and all future inodes? y
 [LINK_SIZE] The target of symlink inode 16859 is 16 bytes long on disk, but i_size is 26 bytes long.  Update i_size to reflect the length on disk? y
-[INODE_CLUSTERS] Inode 16860 has 1 clusters but its blocks fit in 2 clusters.  Correct the number of clusters? y
+[INODE_CLUSTERS] Inode 16860 has 1 clusters but its blocks fit in 2 clusters. Correct the number of clusters? y
 [CLUSTER_ALLOC_BIT] Cluster 17880 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
 [CLUSTER_ALLOC_BIT] Cluster 17881 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
 [CLUSTER_ALLOC_BIT] Cluster 17884 is in use but isn't set in the global cluster bitmap. Set its bit in the bitmap? y

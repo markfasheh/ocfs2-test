@@ -12,16 +12,20 @@ Pass 0a: Checking cluster allocation chains
 Pass 0b: Checking inode allocation chains
 Pass 0c: Checking extent block allocation chains
 Pass 1: Checking inodes and blocks.
-[EB_BLKNO] An extent block at 18367 in inode 16857 claims to be located at block 18368.  Update the extent block's location? y
-[EB_GEN] An extent block at 18369 in inode 16858 has a generation of 1234 which doesn't match the volume's generation of ebc02395.  Consider this extent block invalid? y
-[EXTENT_EB_INVALID] The extent record for cluster offset 0 in inode 16858 refers to an invalid extent block at 18369.  Clear the reference to this invalid block? y
+[EB_BLKNO] An extent block at 18370 in inode 16857 claims to be located at block 18371.  Update the extent block's location? y
+[INODE_SIZE] Inode 16857 has a size of 0 but has 486 blocks of actual data. Correct the file size? y
+[EB_GEN] An extent block at 18372 in inode 16858 has a generation of 1234 which doesn't match the volume's generation of 8ff99d46.  Consider this extent block invalid? y
+[EXTENT_EB_INVALID] The extent record for cluster offset 0 in inode 16858 refers to an invalid extent block at 18372.  Clear the reference to this invalid block? y
 [EXTENT_BLKNO_RANGE] Extent record 0 in inode 16858 refers to a block that is out of range.  Remove this record from the extent list? y
-[EB_GEN] An extent block at 18371 in inode 16859 has a generation of 1234 which doesn't match the volume's generation of ebc02395.  Consider this extent block invalid? y
-[EXTENT_EB_INVALID] The extent record for cluster offset 0 in inode 16859 refers to an invalid extent block at 18371.  Clear the reference to this invalid block? y
+[INODE_SIZE] Inode 16858 has a size of 0 but has 486 blocks of actual data. Correct the file size? y
+[EB_GEN] An extent block at 18374 in inode 16859 has a generation of 1234 which doesn't match the volume's generation of 8ff99d46.  Consider this extent block invalid? y
+[EXTENT_EB_INVALID] The extent record for cluster offset 0 in inode 16859 refers to an invalid extent block at 18374.  Clear the reference to this invalid block? y
 [EXTENT_BLKNO_RANGE] Extent record 0 in inode 16859 refers to a block that is out of range.  Remove this record from the extent list? y
-[EB_GEN] An extent block at 18373 in inode 16860 has a generation of 1234 which doesn't match the volume's generation of ebc02395.  Consider this extent block invalid? y
-[EXTENT_EB_INVALID] The extent record for cluster offset 0 in inode 16860 refers to an invalid extent block at 18373.  Clear the reference to this invalid block? y
+[INODE_SIZE] Inode 16859 has a size of 0 but has 486 blocks of actual data. Correct the file size? y
+[EB_GEN] An extent block at 18376 in inode 16860 has a generation of 1234 which doesn't match the volume's generation of 8ff99d46.  Consider this extent block invalid? y
+[EXTENT_EB_INVALID] The extent record for cluster offset 0 in inode 16860 refers to an invalid extent block at 18376.  Clear the reference to this invalid block? y
 [EXTENT_BLKNO_RANGE] Extent record 0 in inode 16860 refers to a block that is out of range.  Remove this record from the extent list? y
+[INODE_SIZE] Inode 16860 has a size of 0 but has 486 blocks of actual data. Correct the file size? y
 [CLUSTER_ALLOC_BIT] Cluster 19624 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
 [CLUSTER_ALLOC_BIT] Cluster 19625 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
 [CLUSTER_ALLOC_BIT] Cluster 19626 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y

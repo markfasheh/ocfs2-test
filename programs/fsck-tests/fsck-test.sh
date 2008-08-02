@@ -415,12 +415,21 @@ function corrupt_test()
 		<"$BASE_DIR/workfiles/fsck-test/${disk_size}-disk/fsck.ocfs2.$corrupt.stdout" \
 		>"$TMP_DIR/fsck.ocfs2.$corrupt.expect.stdout" 2>/dev/null
 
+	if [ $corrupt = 22 -o $corrupt = 23 ]; then
 	diff -u -I "  uuid:              \( [0-9a-f][0-9a-f]\)\{16\}" \
-		-I "\[DIRENT_INODE_FREE\] Directory entry 'test[0-9A-Za-z]\{6\}' refers to inode number [0-9]\+ which isn't allocated, clear the entry? y" \
-		-I "\[EB_GEN\] An extent block at [0-9]\+ in inode [0-9]\+ has a generation of 1234 which doesn't match the volume's generation of [0-9a-f]\{8}.  Consider this extent block invalid? y" \
+		-I "  number of blocks:   [0-9]\+" \
+	        -I "  number of clusters: [0-9]\+" \
 		"$TMP_DIR/fsck.ocfs2.$corrupt.expect.stdout" \
 		"$TMP_DIR/fsck.ocfs2.$corrupt.actual.stdout" \
 		>"$STDOUT" &>"$STDOUT"
+	else
+	diff -u -I "  uuid:              \( [0-9a-f][0-9a-f]\)\{16\}" \
+		-I "\[DIRENT_INODE_FREE\] Directory entry 'test[0-9A-Za-z]\{6\}' refers to inode number [0-9]\+ which isn't allocated, clear the entry? y" \
+		-I "\[EB_GEN\] An extent block at [0-9]\+ in inode [0-9]\+ has a generation of 1234 which doesn't match the volume's generation of [0-9a-f]\{8\}.  Consider this extent block invalid? y" \
+		"$TMP_DIR/fsck.ocfs2.$corrupt.expect.stdout" \
+		"$TMP_DIR/fsck.ocfs2.$corrupt.actual.stdout" \
+		>"$STDOUT" &>"$STDOUT"
+	fi
 	test_fail_if_bad "$?" "fsck output differ with the expect one" || return
 
 	test_info "verifying"

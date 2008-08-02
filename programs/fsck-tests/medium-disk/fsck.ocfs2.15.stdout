@@ -12,8 +12,10 @@ Pass 0a: Checking cluster allocation chains
 Pass 0b: Checking inode allocation chains
 Pass 0c: Checking extent block allocation chains
 Pass 1: Checking inodes and blocks.
+[INODE_SIZE] Inode 16857 has a size of 0 but has 1 blocks of actual data. Correct the file size? y
 [EXTENT_BLKNO_RANGE] Extent record 0 in inode 16858 refers to a block that is out of range.  Remove this record from the extent list? y
-[EXTENT_CLUSTERS_OVERRUN] The extent record for cluster offset 0 in inode 16859 refers to an extent that goes beyond the end of the volume.  Truncate the extent by 1048576 clusters to fit it in the volume? y
+[EXTENT_CLUSTERS_OVERRUN] The extent record for cluster offset 0 in inode 16859 refers to an extent that goes beyond the end of the volume.  Truncate the extent by 1 clusters to fit it in the volume? y
+[INODE_SIZE] Inode 16859 has a size of 0 but has 1 blocks of actual data. Correct the file size? y
 [CLUSTER_ALLOC_BIT] Cluster 17880 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
 [CLUSTER_ALLOC_BIT] Cluster 17882 is marked in the global cluster bitmap but it isn't in use.  Clear its bit in the bitmap? y
 [CLUSTER_ALLOC_BIT] Cluster 1048575 is in use but isn't set in the global cluster bitmap. Set its bit in the bitmap? y

@@ -13,8 +13,11 @@ Pass 0b: Checking inode allocation chains
 Pass 0c: Checking extent block allocation chains
 Pass 1: Checking inodes and blocks.
 [EXTENT_LIST_DEPTH] Extent list in inode 16883 is recorded as being at depth 1 but we expect it to be at depth 0. update the list? y
+[INODE_SIZE] Inode 16883 has a size of 0 but has 408 blocks of actual data. Correct the file size? y
 [EXTENT_LIST_COUNT] Extent list in inode 16884 claims to have 120 records, but the maximum is 60. Fix the list's count? y
+[INODE_SIZE] Inode 16884 has a size of 0 but has 408 blocks of actual data. Correct the file size? y
 [EXTENT_LIST_FREE] Extent list in inode 16885 claims 120 as the next free chain record, but fsck believes the largest valid value is 60.  Clamp the next record value? y
+[INODE_SIZE] Inode 16885 has a size of 0 but has 408 blocks of actual data. Correct the file size? y
 Pass 2: Checking directory entries.
 Pass 3: Checking directory connectivity.
 Pass 4a: checking for orphaned inodes

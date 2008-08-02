@@ -1,18 +1,15 @@
 Checking OCFS2 filesystem in @DEVICE@:
   label:              <NONE>
   uuid:               bf f2 14 d7 c1 06 41 04 88 30 72 b1 a5 a8 ad 1b 
-  number of blocks:   338944
+  number of blocks:   262144
   bytes per block:    1024
-  number of clusters: 84736
+  number of clusters: 65536
   bytes per cluster:  4096
   max slots:          4
 
 @DEVICE@ was run with -f, check forced.
 Pass 0a: Checking cluster allocation chains
-[GROUP_EXPECTED_DESC] Block 276480 should be a group descriptor for the bitmap chain allocator but it wasn't found in any chains.  Reinitialize it as a group desc and link it into the bitmap allocator? y
-[GROUP_EXPECTED_DESC] Block 307200 should be a group descriptor for the bitmap chain allocator but it wasn't found in any chains.  Reinitialize it as a group desc and link it into the bitmap allocator? y
-[GROUP_EXPECTED_DESC] Block 337920 should be a group descriptor for the bitmap chain allocator but it wasn't found in any chains.  Reinitialize it as a group desc and link it into the bitmap allocator? y
-[SUPERBLOCK_CLUSTERS] Superblock has clusters set to 84736 instead of 81152. Fix? y
+[SUPERBLOCK_CLUSTERS] Superblock has clusters set to 84736 instead of 65536 recorded in global_bitmap, it may be caused by an unsuccessful resize. Trust global_bitmap? y
 Pass 0b: Checking inode allocation chains
 Pass 0c: Checking extent block allocation chains
 Pass 1: Checking inodes and blocks.

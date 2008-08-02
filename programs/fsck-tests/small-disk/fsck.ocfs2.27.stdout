@@ -16,11 +16,11 @@ Pass 1: Checking inodes and blocks.
 [INODE_BLKNO] Inode read from block 16885 has i_blkno set to 16985.  Set the inode's i_blkno value to reflect its location on disk? y
 [INODE_NZ_DTIME] Inode 16886 is in use but has a non-zero dtime. Reset the dtime to 0? y
 [INODE_SUBALLOC] Inode 16887 indicates that it was allocated from slot 10 but slot 0's chain allocator covers the inode.  Fix the inode's record of where it is allocated? y
-[INODE_SIZE] Inode 16888 has a size of 100 but has 0 bytes of actual data. Correct the file size? y
-[INODE_CLUSTERS] Inode 16889 has 0 clusters but its blocks fit in 10 clusters.  Correct the number of clusters? y
+[INODE_SIZE] Inode 16889 has a size of 0 but has 40 blocks of actual data. Correct the file size? y
+[INODE_CLUSTERS] Inode 16889 has 0 clusters but its blocks fit in 10 clusters. Correct the number of clusters? y
 Pass 2: Checking directory entries.
-[DIRENT_INODE_FREE] Directory entry 'test5ZeqRh' refers to inode number 16883 which isn't allocated, clear the entry? y
-[DIRENT_INODE_FREE] Directory entry 'testZcUGa4' refers to inode number 16884 which isn't allocated, clear the entry? y
+[DIRENT_INODE_FREE] Directory entry 'testLZbWGi' refers to inode number 16883 which isn't allocated, clear the entry? y
+[DIRENT_INODE_FREE] Directory entry 'testMwFzlJ' refers to inode number 16884 which isn't allocated, clear the entry? y
 Pass 3: Checking directory connectivity.
 Pass 4a: checking for orphaned inodes
 Pass 4b: Checking inodes link counts.

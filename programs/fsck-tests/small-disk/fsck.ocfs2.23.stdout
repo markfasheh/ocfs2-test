@@ -1,24 +1,15 @@
 Checking OCFS2 filesystem in @DEVICE@:
   label:              <NONE>
   uuid:               bf f2 14 d7 c1 06 41 04 88 30 72 b1 a5 a8 ad 1b 
-  number of blocks:   185344
+  number of blocks:   262144
   bytes per block:    1024
-  number of clusters: 46336
+  number of clusters: 65536
   bytes per cluster:  4096
   max slots:          4
 
 @DEVICE@ was run with -f, check forced.
 Pass 0a: Checking cluster allocation chains
-[CHAIN_HEAD_LINK_RANGE] Chain 7 in allocator inode 15 contains an initial block reference to 215040 which is out of range.  Clear this reference? y
-[CHAIN_HEAD_LINK_RANGE] Chain 8 in allocator inode 15 contains an initial block reference to 245760 which is out of range.  Clear this reference? y
-[CHAIN_BITS] Chain 7 in allocator inode 15 has 7679 bits marked free out of 7680 total bits but the block groups in the chain have 0 free out of 0 total.  Fix this by updating the chain record? y
-[CHAIN_EMPTY] Chain 7 in allocator inode 15 is empty.  Remove it from the chain record array in the inode and shift further chains into its place? y
-[CHAIN_BITS] Chain 7 in allocator inode 15 has 4095 bits marked free out of 4096 total bits but the block groups in the chain have 0 free out of 0 total.  Fix this by updating the chain record? y
-[CHAIN_EMPTY] Chain 7 in allocator inode 15 is empty.  Remove it from the chain record array in the inode and shift further chains into its place? y
-[CHAIN_GROUP_BITS] Allocator inode 15 has 4741 bits marked used out of 65536 total bits but the chains have 4739 used out of 53760 total.  Fix this by updating the inode counts? y
-[CHAIN_I_CLUSTERS] Allocator inode 15 has 53760 clusters represented in its allocator chains but has an i_clusters value of 65536. Fix this by updating i_clusters? y
-[CHAIN_I_SIZE] Allocator inode 15 has 53760 clusters represented in its allocator chain which accounts for 220200960 total bytes, but its i_size is 268435456. Fix this by updating i_size? y
-[SUPERBLOCK_CLUSTERS] Superblock has clusters set to 46336 instead of 53760. Fix? y
+[SUPERBLOCK_CLUSTERS] Superblock has clusters set to 46336 instead of 65536 recorded in global_bitmap, it may be caused by an unsuccessful resize. Trust global_bitmap? y
 Pass 0b: Checking inode allocation chains
 Pass 0c: Checking extent block allocation chains
 Pass 1: Checking inodes and blocks.
