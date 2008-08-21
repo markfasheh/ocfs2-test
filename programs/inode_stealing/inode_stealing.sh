@@ -687,7 +687,7 @@ YMD=`${DATE} +%Y%m%d_%H%M%S`
 mntdir="${outdir}/${YMD}"
 
 set_log_file
-set -x
+# set -x
 # mkdir in all the nodes.
 $MKDIR -p ${mntdir}
 ${SSH} ${node_list[1]} ${MKDIR} -p ${mntdir}
