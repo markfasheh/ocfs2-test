@@ -45,6 +45,7 @@ procs = 1
 cmd = config.BINDIR+'/create_racer'
 #
 Usage = '\n	 %prog [-i|--iteractions] \
+[-C | --cleanup logfile] \
 [-l | --logfile logfile] \
 [-n | --nodelist nodelist] \
 [-p | --path pathname] \
@@ -52,11 +53,29 @@ Usage = '\n	 %prog [-i|--iteractions] \
 #
 # FUNCTIONS
 #
+def Cleanup():
+	from os import access, F_OK
+	for i in range(options.iteractions):
+		filename = options.path+'/create_racer:'+str(i).zfill(6)
+		if access(filename,F_OK) == 1:
+			if DEBUGON:
+				o2tf.printlog('create_racer: Removing '+
+				'filename (%s)' % filename,
+				logfile, 0, '')
+			os.system('rm -f %s' % filename)
+	sys.exit()
 #
 # MAIN
 #
 if __name__=='__main__':
 	parser = optparse.OptionParser(usage=Usage)
+#
+	parser.add_option('-C',
+		'--cleanup',
+		action="store_true",
+		dest='cleanup',
+		default=False,
+		help='Perform directory cleanup.')
 #
 	parser.add_option('-i', 
 		'--iteractions', 
@@ -88,6 +107,10 @@ if __name__=='__main__':
 			logfile, 0, '')
 		parser.error('incorrect number of arguments')
 #
+	if options.cleanup and (not options.iteractions or 
+		not options.path):
+		parser.error('Cleanup options requires path and iteractions.')
+#
 	if options.iteractions:
 		iteractions = options.iteractions
 #
@@ -95,14 +118,16 @@ if __name__=='__main__':
 		logfile = options.logfile
 #
 	if options.nodelist:
-		nodelist = options.nodelist
-		nodelen = len(options.nodelist)
+		nodelist = options.nodelist.split(',')
+		nodelen = len(nodelist)
+		procs = nodelen
 		if nodelen == 1:
 			nodelist = nodelist.add(options.nodelist)
 		else:
 			nodelist = options.nodelist.split(',')
 	else:
-		parser.error('Invalid node list.')
+		if not options.cleanup:
+			parser.error('Invalid node list.')
 
 #
 	if options.path:
@@ -115,12 +140,12 @@ if DEBUGON:
 		os.getcwd(), logfile, 0, '')
 	o2tf.printlog('run_create_racer: main - cmd = %s' % cmd,
 		logfile, 0, '')
-	o2tf.printlog('run_create_racer: main - blocksize = %s' % 
-		options.blocksize, logfile, 0, '')
 #
+if options.cleanup:
+	Cleanup()
 o2tf.StartMPI(DEBUGON, options.nodelist, logfile)
 #
-o2tf.mpi_run(DEBUGON, procs, 
+ret = o2tf.mpi_run(DEBUGON, procs, 
 	str('%s -i %s %s 2>&1 | tee -a %s' % (cmd, 
 	options.iteractions, 
 	options.path, 
@@ -128,8 +153,7 @@ o2tf.mpi_run(DEBUGON, procs,
 	options.nodelist, 
 	options.logfile)
 #
-o2tf.printlog('run_create_racer: main - execution successful. Cleaning up',
-	logfile, 0, '')
-for i in range(options.iteractions):
-	os.system('rm -f %s/%s:%s' % (options.path, 'create_racer', 
-		str(i).zfill(4)))
+if not ret:
+	o2tf.printlog('run_create_racer: main - execution successful.',
+		logfile, 0, '')
+Cleanup()

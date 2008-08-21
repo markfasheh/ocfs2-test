@@ -98,7 +98,7 @@ static void run_test(void)
 	char file[PATH_MAX];
 
 	for(i = 0; i < max_iter; i++) {
-		len = snprintf(file, PATH_MAX, "%s/%s:%04d",
+		len = snprintf(file, PATH_MAX, "%s/%s:%06d",
 			       path, name_prefix, i);
 		if (len >= PATH_MAX)
 			abort_printf("Path \"%s\" is too long\n", path);
