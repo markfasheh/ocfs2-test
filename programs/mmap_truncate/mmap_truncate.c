@@ -21,6 +21,7 @@ static char *fname;
 static void *mapped;
 static unsigned int seconds = 300;
 static int die = 0;
+	pid_t pid;
 
 static void usage(void)
 {
@@ -222,10 +223,11 @@ int main(int argc, char *argv[])
 	printf("Running test against file \"%s\" with cluster size %u "
 	       "bytes for %u seconds.\n", fname, clustersize, seconds);
 
-	if (fork()) {
+	pid = fork();
+	if (pid) {
 		mmap_process(file_size);
-		kill(0, SIGINT);
-	} else
+		kill (pid, SIGINT);
+	} else 
 		truncating_process(fd, file_size, trunc_size);
 
 	return 0;
