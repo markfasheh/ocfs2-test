@@ -22,7 +22,7 @@ def CompSize(tarfile):
 		for i in range(linelist.count('')):
 			linelist.remove('')
 		if DEBUGON:
-			o2tf.prinlog('size = %s, filesize = %s' % \
+			o2tf.printlog('size = %s, filesize = %s' % \
 				(size, linelist[2]), logfile, 0, '')
 		size = size + int(linelist[2])
 	return size
@@ -40,15 +40,22 @@ def CheckDirs(nodes, dirs):
 			break
 		for y in range(len(nodesl)):
 			workdir=os.path.join(dirl[x], nodesl[y])
+			from os import access,F_OK
+			if os.access(workdir,F_OK) == 0:
+				os.mkdir(workdir)
+				InitTrue = True
+				break
 			size = getoutput('du -sb %s|cut -f1' % workdir)
 			if DEBUGON:
-				o2tf.prinlog('workdir (%s) - size (%s)' % \
-					(workdir, size), logfile, 0, '')
-			if MinSize > size:
+				o2tf.printlog('workdir(%s) Minsize(%s) \
+					 size (%s)' % \
+					(workdir, MinSize, size), 
+					logfile, 0, '')
+			if int(MinSize) > int(size):
 				InitTrue = True
 				break
 	if InitTrue:
-		o2tf.prinlog('At least one directory seems incomplete. \
+		o2tf.printlog('At least one directory seems incomplete. \
 			Will initialize them all',
 			logfile, 0, '')
 		Initialize()
@@ -170,7 +177,7 @@ if DEBUGON:
    o2tf.printlog('run_buildkernel: tarfile = (%s)' % tarfile, logfile, 0, '')
    o2tf.printlog('run_buildkernel: buildcmd = (%s)' % buildcmd, logfile, 0, '')
 #
-if options.initialize and i == 0:
+if options.initialize:
 	Initialize()
 else:
 	CheckDirs(options.nodelist, options.dirlist)
