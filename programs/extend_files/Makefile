@@ -15,6 +15,8 @@ DIST_FILES = $(SOURCES)
 
 BIN_PROGRAMS = $(TESTS)
 
+BIN_EXTRA = extend_files.sh
+
 truncate_direct: $(OBJECTS)
 	$(LINK) 
 
