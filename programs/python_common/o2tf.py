@@ -268,11 +268,15 @@ def mpi_run(DEBUGON, nproc, cmd, nodes, logfile):
 				logfile, 0, '')
 			printlog('o2tf.mpi_run: cmd = %s' % cmd,
 				logfile, 0, '')
-		pid = os.spawnv(os.P_NOWAIT,
+#		pid = os.spawnv(os.P_NOWAIT,
+#			'/bin/bash', ['bash', '-xc',
+#			config.MPIRUN + ' %s -sigs -ger -w n0-%d %s' % \
+#			( nprocopt, nodelen - 1, cmd)])
+		return os.spawnv(os.P_NOWAIT,
 			'/bin/bash', ['bash', '-xc',
 			config.MPIRUN + ' %s -sigs -ger -w n0-%d %s' % \
 			( nprocopt, nodelen - 1, cmd)])
-		os.waitpid(pid,0)
+#		os.waitpid(pid,0)
 	except os.error:
 		pass
 #
@@ -481,9 +485,10 @@ def Del(DEBUGON, logfile, deldir, dirlist):
 		if DEBUGON:
 			printlog('o2tf.Del - dirlist %s' % dirlist, logfile, 0, '')
 		AllowMntPt = BldAllowedMtPts(DEBUGON, logfile, dirlist)
-		if DEBUGON:
-			printlog('AllowMntPt %s' % AllowMntPt, logfile, 0, '')
 		mntpt = GetMntPt(DEBUGON, logfile, deldir)
+		if DEBUGON:
+			printlog('AllowMntPt (%s) - mntpt (%s)' % 
+				(AllowMntPt, mntpt), logfile, 0, '')
 		if mntpt not in AllowMntPt:
 			printlog('o2tf.Del - Cannot delete dir %s' % deldir,
 				logfile, 0, '')
@@ -504,12 +509,14 @@ def BldAllowedMtPts(DEBUGON, logfile, allowlist):
 	from os import access,F_OK
 	WorkingDirs = string.split(allowlist, ',')
 	if DEBUGON:
-		printlog('working lenght = %s' % len(WorkingDirs),
-			logfile, 0, '')
+		printlog('working lenght = %s, (%s)' % (len(WorkingDirs),
+			WorkingDirs), logfile, 0, '')
 	AllowMntPt=[None]*len(WorkingDirs)
 	if len(WorkingDirs) == 1:
-		AllowMntPt=AllowMntPt.append(GetMntPt(DEBUGON, logfile, 
-			allowlist))
+		if DEBUGON:
+			printlog('Only one working dir',
+				logfile, 0, '')
+		AllowMntPt[0]=GetMntPt(DEBUGON, logfile, allowlist)
 	else:
 		for i in range(len(WorkingDirs)):
 			if os.access(WorkingDirs[i],F_OK) == 0:
