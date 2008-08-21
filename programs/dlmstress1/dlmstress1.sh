@@ -64,8 +64,9 @@ fi;
 for (( i=1; i <= ${COUNT} ; i++ ))
 do
    ${ECHO} -e "Starting run ..... $i"
-   ${SSH} ${REMOTENODE} "${FIND} ${MOUNTPOINT} -ls >> /dev/null"
-   ${FIND} ${MOUNTPOINT} -ls >> /dev/null
+   ${SSH} ${REMOTENODE} "${FIND} ${MOUNTPOINT} -exec ls -lR {} \;" >> /dev/null &
+   ${FIND} ${MOUNTPOINT} -exec ls -lR {} \; >> /dev/null
+   wait;
    ${UMOUNT} ${MOUNTPOINT}
    ${SSH} ${REMOTENODE} "${UMOUNT} ${MOUNTPOINT}"
    ${MOUNT} LABEL=${LABEL} ${MOUNTPOINT}
