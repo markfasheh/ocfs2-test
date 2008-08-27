@@ -190,8 +190,10 @@ declare -i NUM_OF_PASS=0
 declare -i NUM_OF_FAIL=0
 declare -i NUM_OF_BROKEN=0
 CORRUPT=""
+BINDIR=`dirname ${0}`
 DISK_SIZE="small"
-LOG_DIR=""
+LOG_DIR=`dirname ${BINDIR}`
+
 
 #
 # ext_setup		Guess the position of fsck.ocfs2, fswreck and fill
@@ -224,7 +226,7 @@ function test_setup()
 	CURRENT_TEST="$1"
 	STDOUT=$(mktemp -p "$TMP_DIR")
 	STDERR=$(mktemp -p "$TMP_DIR")
-	test_info "starting"
+	test_info "starting" 
 }
 
 #
@@ -232,16 +234,16 @@ function test_setup()
 #
 function test_info()
 {
-	echo -n "$CURRENT_TEST"
-	echo -n " "
+	echo -n "$CURRENT_TEST"|tee -a ${LOGFILE}
+	echo -n " "|tee -a ${LOGFILE}
 	local -i i=${#CURRENT_TEST}
 	while (( i < 20 ))
 	do
-		echo -n "."
+		echo -n "."|tee -a ${LOGFILE}
 		(( ++i ))
 	done
-	echo -n " "
-	echo "$@"
+	echo -n " "|tee -a ${LOGFILE}
+	echo "$@"|tee -a ${LOGFILE}
 }
 
 #
@@ -263,12 +265,12 @@ function test_fail()
 	local info="$@"
 	[ "$info" ] && test_info "$info"
 	test_info "FAIL"
-	echo "=== The following is the stdout ==="
-	cat "$STDOUT" 2>/dev/null
-	echo "=== The above is the stdout ==="
-	echo "=== The following is the stderr ==="
-	cat "$STDERR" 2>/dev/null
-	echo "=== The above is the stderr ==="
+	echo "=== The following is the stdout ==="|tee -a ${LOGFILE}
+	cat "$STDOUT" 2>/dev/null|tee -a ${LOGFILE}
+	echo "=== The above is the stdout ==="|tee -a ${LOGFILE}
+	echo "=== The following is the stderr ==="|tee -a ${LOGFILE}
+	cat "$STDERR" 2>/dev/null|tee -a ${LOGFILE}
+	echo "=== The above is the stderr ==="|tee -a ${LOGFILE}
 	CURRENT_TEST=""
 }
 
@@ -281,12 +283,12 @@ function test_broken()
 	local info="$@"
 	[ "$info" ] && test_info "$info"
 	test_info "BROKEN"
-	echo "=== The following is the stdout ==="
-	cat "$STDOUT" 2>/dev/null
-	echo "=== The above is the stdout ==="
-	echo "=== The following is the stderr ==="
-	cat "$STDERR" 2>/dev/null
-	echo "=== The above is the stderr ==="
+	echo "=== The following is the stdout ==="|tee -a ${LOGFILE}
+	cat "$STDOUT" 2>/dev/null|tee -a ${LOGFILE}
+	echo "=== The above is the stdout ==="|tee -a ${LOGFILE}
+	echo "=== The following is the stderr ==="|tee -a ${LOGFILE}
+	cat "$STDERR" 2>/dev/null|tee -a ${LOGFILE}
+	echo "=== The above is the stderr ==="|tee -a ${LOGFILE}
 	CURRENT_TEST=""
 }
 
@@ -327,7 +329,7 @@ function test_summary()
 	[ 0 -eq "$NUM_OF_TESTS" ] && return
 	[ "$CURRENT_TEST" ] && test_broken
 
-	cat <<-EOF
+	cat |tee -a ${LOGFILE} <<-EOF
 	=============================================================================
 	Test Summary
 	------------------------------------
@@ -428,7 +430,7 @@ function corrupt_test()
 		-I "\[EB_GEN\] An extent block at [0-9]\+ in inode [0-9]\+ has a generation of 1234 which doesn't match the volume's generation of [0-9a-f]\{8\}.  Consider this extent block invalid? y" \
 		"$TMP_DIR/fsck.ocfs2.$corrupt.expect.stdout" \
 		"$TMP_DIR/fsck.ocfs2.$corrupt.actual.stdout" \
-		>"$STDOUT" &>"$STDOUT"
+		>"$STDOUT" &>"$STDOUT" |tee -a ${LOGFILE}
 	fi
 	test_fail_if_bad "$?" "fsck output differ with the expect one" || return
 
@@ -445,7 +447,7 @@ function corrupt_test()
 	diff -u -I "  uuid:              \( [0-9a-f][0-9a-f]\)\{16\}" \
 		"$TMP_DIR/fsck.ocfs2.clean.expect.stdout" \
 		"$TMP_DIR/fsck.ocfs2.$corrupt.actual.stdout" \
-		>"$STDOUT" &>"$STDOUT"
+		>"$STDOUT" &>"$STDOUT" |tee -a ${LOGFILE}
 	test_fail_if_bad "$?" "fsck output differ with the expect one" || return
 
 	test_pass
@@ -467,6 +469,7 @@ function basic_test()
 # main
 #
 . `dirname ${0}`/config.sh
+
 
 internal_setup
 
@@ -508,6 +511,11 @@ do
 	shift
 done
 
+LOGFILE=${LOG_DIR}/fsck-test.log
+if [ -f ${LOGFILE} ]; then
+	mv ${LOGFILE} `dirname ${LOGFILE}`/`date +%F-%H-%M-%S`-`basename ${LOGFILE}`
+fi;
+#
 if [ "" = "$CORRUPT" ]
 then
 	CORRUPT="$(seq -f "%02g" 00 43)"
