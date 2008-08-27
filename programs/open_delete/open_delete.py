@@ -91,7 +91,6 @@ if __name__=='__main__':
 		logfile = options.logfile
 	count = options.count
 	filename = options.filename
-	nodelist = options.nodelist.split(',')
 	if options.nodelist:
 		nodelist = options.nodelist.split(',')
 		numnodes = len(nodelist)
