@@ -2,7 +2,6 @@
 #
 # mkfs_test -o <outdir> -d <device>
 #
-
 usage() {
     echo "usage: ${MKFS_TEST} -o <outdir> -d <device>"
     echo "       -o output directory for the logs"
@@ -12,7 +11,7 @@ usage() {
 
 verify_sizes() {
     if [ "$#" -lt "4" ] ; then
-        echo "verify_size(): blocksize clustersize volsize out" >&2
+        echo "verify_size(): blocksize clustersize volsize out" |tee -a ${LOGFILE}
         exit 1
     fi
 
@@ -31,7 +30,7 @@ verify_sizes() {
 
     if [ ${num1} -eq 0 ] || [ ${num2} -eq 0 ] || [ ${num3} -eq 0 ]
     then
-        echo "error: device not formatted" >&2
+        echo "error: device not formatted" |tee -a ${LOGFILE}
         exit 1
     fi
 
@@ -39,7 +38,7 @@ verify_sizes() {
     c=$[$[2**$[${num2} - 9]]*512]
     v=$[${num3} * ${c}/${b}]
 
-     echo -n "verify ..... "
+     echo -n "verify ..... "  |tee -a ${LOGFILE}
 
     if [ ${B} -ne ${b} ]; then
         echo "ERROR: Blocksize mismatch - found ${b}, expected ${B}" >> ${O}
@@ -57,9 +56,9 @@ verify_sizes() {
     echo "" >> ${O}
 
     if [ ${RET} -ne 0 ]; then
-        echo "FAILED. Errors in ${O}"
+        echo "FAILED. Errors in ${O}"  |tee -a ${LOGFILE}
     else
-        echo "OK"
+        echo "OK"  |tee -a ${LOGFILE}
     fi
 
     return ${RET}
@@ -70,7 +69,7 @@ get_partsz() {
     num=`cat /proc/partitions | ${AWK} -v DEV=${dev} '
 		BEGIN{dev=DEV} // {split($0, a); if (a[4] == dev) {printf("%u\n", $3); exit 0;} }'`
     if [ ${num} -eq 0 ]; then
-        echo "error: unable to find size of device"
+        echo "error: unable to find size of device"  |tee -a ${LOGFILE}
         exit 1
     fi
 
@@ -80,19 +79,21 @@ get_partsz() {
 
 do_fsck() {
     if [ "$#" -lt "1" ]; then
-        echo "do_fsck(): <out>" >&2
+        echo "do_fsck(): <out>" |tee -a ${LOGFILE}
         exit 1
     fi
     out=$1
-    echo -n "fsck ..... "
+    echo ${FSCK} -fn ${device} >>${LOGFILE}
+    echo -n "fsck ..... " |tee -a ${LOGFILE}
     echo ${FSCK} -fn ${device} >>${out}
     ${FSCK} -fn ${device} >>${out} 2>&1
+    grep "All passes succeeded" ${LOGFILE} >/dev/null 2>&1
     grep "All passes succeeded" ${out} >/dev/null 2>&1
     if [ $? -ne 0 ] ; then
-        echo "FAILED. Errors in ${out}"
+        echo "FAILED. Errors in ${out}" |tee -a ${LOGFILE}
         exit 1
     else
-        echo "OK"
+        echo "OK" |tee -a ${LOGFILE}
     fi
     echo "" >> ${out}
     return 0
@@ -100,7 +101,7 @@ do_fsck() {
 
 do_mkfs() {
     if [ "$#" -lt "5" ] ; then
-        echo "do_mkfs(): blocksize clustersize device volsize out" >&2
+        echo "do_mkfs(): blocksize clustersize device volsize out"  |tee -a ${LOGFILE}
         exit 1
     fi
 
@@ -110,36 +111,37 @@ do_mkfs() {
     V=$4
     O=$5
 
-    echo -n "mkfs ..... "
+    echo ${MKFS} -b ${B} -C ${C} ${D} ${V} >> ${LOGFILE}
+    echo -n "mkfs ..... " |tee -a ${LOGFILE}
     echo ${MKFS} -b ${B} -C ${C} ${D} ${V} >> ${O}
     ${MKFS} -x -F -b ${B} -C ${C} -N 1 -J size=4M ${D} ${V} >> ${O} 2>&1
-    echo "OK"
+    echo "OK" |tee -a ${LOGFILE}
     echo "" >> ${O}
 }
 
 do_mount() {
 	# mount the device on mntdir
-	echo -n "mount "
+	echo -n "mount " |tee -a ${LOGFILE}
 	mount -t ocfs2 ${device} ${mntdir} 2>/dev/null
 	if [ $? -ne 0 ]
 	then
-		echo -n "FAILED. Check dmesg for errors." 2>&1
+		echo -n "FAILED. Check dmesg for errors." 2>&1  |tee -a ${LOGFILE}
 		exit 1
 	else
-		echo "OK"
+		echo "OK"  |tee -a ${LOGFILE}
 	fi
 }
 
 do_umount() {
 	# umount the volume
-	echo -n "umount "
+	echo -n "umount "  |tee -a ${LOGFILE}
 	umount ${mntdir} 2>/dev/null
 	if [ $? -ne 0 ]
 	then
-		echo "FAILED. Check dmesg for errors." 2>&1
+		echo "FAILED. Check dmesg for errors." 2>&1  |tee -a ${LOGFILE}
 		exit 1
 	else
-		echo "OK"
+		echo "OK"  |tee -a ${LOGFILE}
 	fi
 }
 
@@ -242,7 +244,8 @@ AWK=`which awk`
 
 MKFS_TEST=`basename $0`
 
-outdir=
+bindir=`basename ${0}`
+outdir=`basename ${bindir}`
 device=
 OPTIND=1
 while getopts "d:i:o:c" args
@@ -252,6 +255,10 @@ do
     d) device="$OPTARG";;
   esac
 done
+LOGFILE=${outdir}/mkfs-test.log
+if [ -f ${LOGFILE} ]; then
+	mv ${LOGFILE} `dirname ${LOGFILE}`/`date +%F-%H-%M-%S`-`basename ${LOGFILE}`
+fi;
 
 if [ -z "${outdir}" ]; then
     echo "invalid output directory: ${outdir}"
@@ -259,11 +266,11 @@ if [ -z "${outdir}" ]; then
 fi
 
 if [ ! -b "${device}" ]; then
-    echo "invalid device: ${device}"
+    echo "invalid device: ${device}" |tee -a ${LOGFILE}
     usage ;
 fi
 
-echo "create logdir ${outdir}"
+echo "create logdir ${outdir}" |tee -a ${LOGFILE}
 mkdir -p ${outdir}
 
 #get partition size
@@ -283,8 +290,11 @@ do
     do
         TAG=mkfs_test_${testnum}
         OUT=${outdir}/${TAG}.log
+	if [ -f ${OUT} ]; then
+		rm -f ${OUT};
+	fi;
 
-        echo "Test ${testnum}: -b ${blks} -C ${clusts}"
+        echo "Test ${testnum}: -b ${blks} -C ${clusts}" |tee -a ${LOGFILE}
         do_mkfs ${blks} ${clusts} ${device} ${numblks} ${OUT}
         verify_sizes ${blks} ${clusts} ${numblks} ${OUT}
         do_fsck ${OUT}
@@ -296,9 +306,12 @@ done
 ### Test option '-T mail'
 TAG=mkfs_test_${testnum}
 OUT=${outdir}/${TAG}.log
+if [ -f ${OUT} ]; then
+	rm -f ${OUT};
+fi;
 echo "Test ${testnum}: -T mail"
 echo -n "mkfs ..... "
-${MKFS} -x -F -b 4K -C 4K -N 2 -T mail ${device} 262144 >>${OUT} 2>&1
+${MKFS} -x -F -b 4K -C 4K -N 2 -T mail ${device} 262144 >${OUT} 2>&1
 echo "OK"
 echo -n "verify ..... "
 ${DEBUGFS} -R "ls -l //" ${device} >>${OUT} 2>&1
@@ -317,9 +330,12 @@ testnum=$[$testnum+1]
 ### Test option '-T datafiles'
 TAG=mkfs_test_${testnum}
 OUT=${outdir}/${TAG}.log
+if [ -f ${OUT} ]; then
+	rm -f ${OUT};
+fi;
 echo "Test ${testnum}: -T datafiles"
 echo -n "mkfs ..... "
-${MKFS} -x -F -b 4K -C 4K -N 2 -T datafiles ${device} 262144 >>${OUT} 2>&1
+${MKFS} -x -F -b 4K -C 4K -N 2 -T datafiles ${device} 262144 >${OUT} 2>&1
 echo "OK"
 echo -n "verify ..... "
 ${DEBUGFS} -R "ls -l //" ${device} >>${OUT} 2>&1
@@ -341,9 +357,12 @@ for jrnlsz in 64 256
 do
     TAG=mkfs_test_${testnum}
     OUT=${outdir}/${TAG}.log
+    if [ -f ${OUT} ]; then
+	rm -f ${OUT};
+    fi;
     echo "Test ${testnum}: -J size=${jrnlsz}M"
     echo -n "mkfs ..... "
-    ${MKFS} -x -F -b 4K -C 4K -N 2 -J size=${jrnlsz}M ${device} 262144 >>${OUT} 2>&1
+    ${MKFS} -x -F -b 4K -C 4K -N 2 -J size=${jrnlsz}M ${device} 262144 >${OUT} 2>&1
     echo "OK"
     echo -n "verify ..... "
     ${DEBUGFS} -R "ls -l //" ${device} >>${OUT} 2>&1
@@ -367,9 +386,12 @@ for slots in 4 32
 do
     TAG=mkfs_test_${testnum}
     OUT=${outdir}/${TAG}.log
+    if [ -f ${OUT} ]; then
+	rm -f ${OUT};
+    fi;
     echo "Test ${testnum}: -N ${slots}"
     echo -n "mkfs ..... "
-    ${MKFS} -x -F -b 4K -C 4K -N ${slots} -J size=4M ${device} 262144 >>${OUT} 2>&1
+    ${MKFS} -x -F -b 4K -C 4K -N ${slots} -J size=4M ${device} 262144 >${OUT} 2>&1
     echo "OK"
     echo -n "verify ..... "
     ${DEBUGFS} -R "stats" ${device} >>${OUT} 2>&1
@@ -389,10 +411,13 @@ done
 ### Test option '-L mylabel'
 TAG=mkfs_test_${testnum}
 OUT=${outdir}/${TAG}.log
+if [ -f ${OUT} ]; then
+	rm -f ${OUT};
+fi;
 echo "Test ${testnum}: -L mylabel"
 label="my_label_is_very_very_very_long_to_the_point_of_being_useless"
 echo -n "mkfs ..... "
-${MKFS} -x -F -b 4K -C 4K -N 1 -L ${label} ${device} 262144 >>${OUT} 2>&1
+${MKFS} -x -F -b 4K -C 4K -N 1 -L ${label} ${device} 262144 >${OUT} 2>&1
 echo "OK"
 echo -n "verify ..... "
 ${DEBUGFS} -R "stats" ${device} >>${OUT} 2>&1
@@ -410,6 +435,9 @@ testnum=$[$testnum+1]
 ### Test bitmap_cpg change
 TAG=mkfs_test_${testnum}
 OUT=${outdir}/${TAG}.log
+if [ -f ${OUT} ]; then
+	rm -f ${OUT};
+fi;
 blocksz=4096
 clustsz=1048576
 group_bitmap_size=$[$[${blocksz}-64]*8]
@@ -419,7 +447,7 @@ if [ $blkcount -gt $total_block ];
 then
 	blkcount=$total_block
 fi
-${MKFS} -x -F -b ${blocksz} -C ${clustsz} -N 2 ${device} ${blkcount} >>${OUT} 2>&1
+${MKFS} -x -F -b ${blocksz} -C ${clustsz} -N 2 ${device} ${blkcount} >${OUT} 2>&1
 
 #consume the whole volume and then delete all the files.
 do_bitmap_test
