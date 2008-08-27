@@ -26,6 +26,7 @@ SUBDIRS =			\
 	fill_verify_holes	\
 	flock_tests		\
 	fsck-tests		\
+	forkwriter		\
 	fsx			\
 	inline-data		\
 	iozone			\
@@ -42,6 +43,7 @@ SUBDIRS =			\
 	postmark		\
 	python_common		\
 	quick_appending_writes	\
+	recovery_load		\
 	resize_test		\
 	reserve_space		\
 	sendfiletest		\
