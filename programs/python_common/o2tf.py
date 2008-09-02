@@ -1,3 +1,20 @@
+# *
+# * o2tf.py
+# *
+# * Collection of functions used by ocfs2-test python programs.
+# *
+# * Copyright (C) 2004, 2008 Oracle.  All rights reserved.
+# *
+# * This program is free software; you can redistribute it and/or
+# * modify it under the terms of the GNU General Public
+# * License version 2 as published by the Free Software Foundation.
+# *
+# * This program is distributed in the hope that it will be useful,
+# * but WITHOUT ANY WARRANTY; without even the implied warranty of
+# * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# * General Public License for more details.
+# *
+# * Author : Marcos Matsunaga
 #
 # o2tf - OCFS2 Tests Functions.
 #
