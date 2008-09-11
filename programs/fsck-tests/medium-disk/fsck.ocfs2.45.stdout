@@ -1,0 +1,25 @@
+Checking OCFS2 filesystem in @DEVICE@:
+  label:              <NONE>
+  uuid:               04 31 ee 61 f6 02 44 ac a1 0b be a8 c7 59 6c b8 
+  number of blocks:   1048576
+  bytes per block:    4096
+  number of clusters: 1048576
+  bytes per cluster:  4096
+  max slots:          4
+
+@DEVICE@ was run with -f, check forced.
+Pass 0a: Checking cluster allocation chains
+Pass 0b: Checking inode allocation chains
+Pass 0c: Checking extent block allocation chains
+Pass 1: Checking inodes and blocks.
+[INLINE_DATA_COUNT_INVALID] Inode 16851 is inline file and its id_count is 0 which should be 3896. Correct this count? y
+[INODE_SIZE] Inode 16851has a size of 3897 which exceeds the max inline data size 3896. Correct the file size? y
+[INODE_CLUSTERS] Inode 16851 has 1 clusters but it has inline data flag set. Correct the number of clusters? y
+[INLINE_DATA_COUNT_INVALID] Inode 16852 is inline file and its id_count is 0 which should be 3896. Correct this count? y
+[INODE_SIZE] Inode 16852has a size of 3897 which exceeds the max inline data size 3896. Correct the file size? y
+[INODE_CLUSTERS] Inode 16852 has 1 clusters but it has inline data flag set. Correct the number of clusters? y
+Pass 2: Checking directory entries.
+Pass 3: Checking directory connectivity.
+Pass 4a: checking for orphaned inodes
+Pass 4b: Checking inodes link counts.
+All passes succeeded.

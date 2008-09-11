@@ -195,6 +195,10 @@ DISK_SIZE="small"
 LOG_DIR=`dirname ${BINDIR}`
 
 
+declare -a FS_FEATURES=""
+FS_FEATURES_OPTION="--fs-features="
+FS_FEATURES_ARGS=""
+
 #
 # ext_setup		Guess the position of fsck.ocfs2, fswreck and fill
 #			FSCK_BIN, FSWRECK_BIN
@@ -350,6 +354,24 @@ function smoke_test()
 	test_pass_or_fail 0
 }
 
+#add --fs-feature support for mkfs
+function gen_fs_features()
+{
+        local corrupt="$1"
+	FS_FEATURES_ARGS=
+
+        case "$corrupt" in
+                "44")   FS_FEATURES="noinline-data" ;;
+                "45")   FS_FEATURES="inline-data" ;;
+                *)      ;;
+        esac
+
+        for item in $FS_FEATURES;do
+                FS_FEATURES_ARGS="${FS_FEATURES_OPTION}${item} ${FS_FEATURES_ARGS}"
+        done
+
+}
+
 #	$2	Disk size, should be ``small'', ``medium'' or ``large''.
 function corrupt_test()
 {
@@ -396,10 +418,13 @@ function corrupt_test()
 	test_info "dd if=/dev/zero of=$DEVICE bs=1M count=4"
 	test_fail_if_bad "$?" "dd failed" || return
 
-	test_info mkfs.ocfs2 -b "${mkfs_profile[0]}" -C "${mkfs_profile[1]}" \
+	#add --fs-features support for mkfs
+        gen_fs_features ${corrupt}
+
+	test_info mkfs.ocfs2 ${FS_FEATURES_ARGS} -b "${mkfs_profile[0]}" -C "${mkfs_profile[1]}" \
 		-N "${mkfs_profile[2]}" -J "size=${mkfs_profile[3]}" \
 		"$DEVICE" "${mkfs_profile[4]}"
-	yes | "$MKFS_BIN" -b "${mkfs_profile[0]}" -C "${mkfs_profile[1]}" \
+	yes | "$MKFS_BIN" ${FS_FEATURES_ARGS} -b "${mkfs_profile[0]}" -C "${mkfs_profile[1]}" \
 		-N "${mkfs_profile[2]}" -J "size=${mkfs_profile[3]}" \
 		"$DEVICE" "${mkfs_profile[4]}" &>"$STDOUT"
 	test_fail_if_bad "$?" "mkfs failed" || return
@@ -518,7 +543,7 @@ fi;
 #
 if [ "" = "$CORRUPT" ]
 then
-	CORRUPT="$(seq -f "%02g" 00 43)"
+	CORRUPT="$(seq -f "%02g" 00 45)"
 fi
 
 [ -b "$DEVICE" ]

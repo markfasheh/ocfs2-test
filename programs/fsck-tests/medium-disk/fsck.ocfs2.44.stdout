@@ -1,0 +1,21 @@
+Checking OCFS2 filesystem in @DEVICE@:
+  label:              <NONE>
+  uuid:               f4 54 89 d1 04 97 4b 52 a7 b6 8c 73 26 77 22 d3 
+  number of blocks:   1048576
+  bytes per block:    4096
+  number of clusters: 1048576
+  bytes per cluster:  4096
+  max slots:          4
+
+@DEVICE@ was run with -f, check forced.
+Pass 0a: Checking cluster allocation chains
+Pass 0b: Checking inode allocation chains
+Pass 0c: Checking extent block allocation chains
+Pass 1: Checking inodes and blocks.
+[INLINE_DATA_FLAG_INVALID] Inode 16857 has inline flag set but the volume doesn't support it. Clear it? y
+[INLINE_DATA_FLAG_INVALID] Inode 16858 has inline flag set but the volume doesn't support it. Clear it? y
+Pass 2: Checking directory entries.
+Pass 3: Checking directory connectivity.
+Pass 4a: checking for orphaned inodes
+Pass 4b: Checking inodes link counts.
+All passes succeeded.
