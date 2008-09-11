@@ -432,6 +432,59 @@ fi
 do_fsck ${OUT}
 testnum=$[$testnum+1]
 
+
+### Test option '--fs-features=inline-data'
+TAG=mkfs_test_${testnum}
+OUT=${outdir}/${TAG}.log
+if [ -f ${OUT} ]; then
+        rm -f ${OUT};
+fi;
+echo "Test ${testnum}: --fs-features=inline-data"
+label="Oracle_Home"
+echo -n "mkfs ..... "
+${MKFS} --fs-features=inline-data -x -F -b 4K -C 4K -N 2 -L ${label} ${device} 262144 >>${OUT} 2>&1
+echo "OK"
+echo -n "verify ..... "
+${DEBUGFS} -R "stats" ${device} >>${OUT} 2>&1
+${DEBUGFS} -R "stats" ${device}|${GREP} -i "Feature Incompat"|${GREP} -q "InlineData"
+RC=$?
+if [ "${RC}" != "0" ]; then
+    echo "ERROR: Did not find InlineData Flag on superblock " >> ${OUT}
+    echo "" >> ${OUT}
+    echo "FAILED. Errors in ${OUT}"
+else
+    echo "OK"
+fi
+do_fsck ${OUT}
+testnum=$[$testnum+1]
+
+
+### Test default support for sparse file'
+TAG=mkfs_test_${testnum}
+OUT=${outdir}/${TAG}.log
+if [ -f ${OUT} ]; then
+        rm -f ${OUT};
+fi;
+echo "Test ${testnum}: Default option for sparse file support"
+label="Oracle_Home"
+echo -n "mkfs ..... "
+${MKFS} -x -F -b 4K -C 4K -N 2 -L ${label} ${device} 262144 >>${OUT} 2>&1
+echo "OK"
+echo -n "verify ..... "
+${DEBUGFS} -R "stats" ${device} >>${OUT} 2>&1
+${DEBUGFS} -R "stats" ${device}|${GREP} -i "Feature Incompat"|${GREP} -q "Sparse"
+RC=$?
+if [ "${RC}" != "0" ]; then
+    echo "ERROR: Did not find Sparse Flag on superblock " >> ${OUT}
+    echo "" >> ${OUT}
+    echo "FAILED. Errors in ${OUT}"
+else
+    echo "OK"
+fi
+do_fsck ${OUT}
+testnum=$[$testnum+1]
+
+
 ### Test bitmap_cpg change
 TAG=mkfs_test_${testnum}
 OUT=${outdir}/${TAG}.log
