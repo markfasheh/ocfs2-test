@@ -30,7 +30,11 @@ FSCK_BIN=`which fsck.ocfs2`
 DEBUGFS_BIN=`which debugfs.ocfs2`
 TUNEFS_BIN=`which tunefs.ocfs2`
 MOUNTED_BIN=`which mounted.ocfs2`
+MOUNT_BIN=`which mount.ocfs2`
+UMOUNT_BIN=`which umount`
 TEE_BIN=`which tee`
+MKDIR_BIN=`which mkdir`
+RM_BIN=`which rm`
 GAWK=`which gawk`
 GREP=`which grep`
 STAT=`which stat`
@@ -57,6 +61,9 @@ NNODES3=32
 BLKCNT1=262144		# 1st blk count 1GB
 BLKCNT2=1048576		# 2nd blk count 4GB
 BLKCNT3=3145728		# 3rd blk count 12GB
+
+FS_FEATURES=
+MOUNT_POINT=/tmp/storage.$$
 
 #
 # usage			Display help information and exit.
@@ -191,7 +198,7 @@ function test_summary()
 Set_Volume_For_Test()
 {
 	LogMsg "tunefs_test : Initializing volume for test"
-        echo "y"| ${MKFS_BIN} -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -L ${LABEL1} -N ${NNODES1} \
+        echo "y"| ${MKFS_BIN} ${FS_FEATURES} -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -L ${LABEL1} -N ${NNODES1} \
 	        -J size=${JOURNAL1} ${2} ${DEVICE} ${1} 2>&1 >> ${MKFSLOG}
 	Check_Volume;
 }
@@ -520,6 +527,136 @@ Journal_Node_Change()
 		fi;
 	fi;
 }
+
+#
+# Enable_Disable_Inline_Data - Enable inline-data support for volume,
+# specially verify if all inlined inodes be extented after disabling 
+# its inline-data support on SB.
+#
+Enable_Disable_Inline_Data()
+{
+        local O_BLOCKSIZE
+        local O_CLUSTERSIZE
+        local RC
+        local FILE_INDEX
+        local FILE_NUM=1000
+        local TEST_FILE
+
+        O_BLOCKSIZE=${BLOCKSIZE}
+        O_CLUSTERSIZE=${CLUSTERSIZE}
+
+        ${MKDIR_BIN} -p ${MOUNT_POINT}
+
+        for BLOCKSIZE in 512 1k 4k;do
+                for CLUSTERSIZE in 32k;do
+                        
+                        #set none inline-data support for volume
+                        LogMsg "tunefs_test : Enable/Disable Inline-data"
+                        LogMsg "tunefs_test : BlockSize=${BLOCKSIZE},ClusterSize=${CLUSTERSIZE}"
+                        FS_FEATURES="--fs-features=noinline-data"
+                        Set_Volume_For_Test ${BLKCNT2};
+
+                        #Check if we set none-inline-data for volume
+                        (( ++NUM_OF_TESTS ))
+                        CURRENT_TEST="Set None-inline-data support for volume by mkfs.ocfs2";
+                        ${DEBUGFS_BIN} -n -R "stats" ${DEVICE}|${GREP} -i "Feature Incompat"|${GREP} -q "InlineData"
+                        RC=$?
+                        if [ "$RC" -eq "0" ];then
+                                test_fail
+                        else
+                                ${MOUNT_BIN} -t ocfs2 ${DEVICE} ${MOUNT_POINT}
+                                for FILE_INDEX in `seq ${FILE_NUM}`;do
+                                        #make sure file size less than max_inline_sz
+                                        TEST_FILE=${MOUNT_POINT}/TEST_EXTENT_FILE_${FILE_INDEX}
+                                        echo "Extent-data-"${FILE_INDEX} >${TEST_FILE}
+                                        sync
+                                        ${DEBUGFS_BIN} -n -R "stat /TEST_EXTENT_FILE_${FILE_INDEX}" ${DEVICE}|${GREP} "Dynamic Features"|${GREP} -q "InlineData"
+                                        RC=$?
+                                        if [ "$RC" -eq "0" ];then
+                                                break
+                                        fi
+                                done
+                                if [ "$RC" -eq "0" ];then
+                                        test_fail
+                                else
+                                        test_pass
+                                fi
+                                ${UMOUNT_BIN} ${DEVICE}
+                        fi
+
+                        #Enable Inline-data support by tunefs
+                        (( ++NUM_OF_TESTS ))
+                        CURRENT_TEST="Enable Inline-data support for volume by tunefs.ocfs2"
+                        FS_FEATURES="--fs-features=inline-data"
+                        echo "y"|${TUNEFS_BIN} ${FS_FEATURES} ${DEVICE} 2>&1 >> ${TUNEFSLOG}
+                        Check_Volume
+                        ${DEBUGFS_BIN} -n -R "stats" ${DEVICE}|${GREP} -i "Feature Incompat"|${GREP} -q "InlineData"
+                        RC=$?
+                        if [ "$RC" -eq "0" ];then
+                                ${MOUNT_BIN} -t ocfs2 ${DEVICE} ${MOUNT_POINT}
+                                for FILE_INDEX in `seq ${FILE_NUM}`;do
+                                        #make sure file size less than max_inline_sz
+                                        TEST_FILE=${MOUNT_POINT}/TEST_INLINE_FILE_${FILE_INDEX}
+                                        echo "Inline-data-"${FILE_INDEX} >${TEST_FILE}
+                                        sync
+                                        ${DEBUGFS_BIN} -n -R "stat /TEST_INLINE_FILE_${FILE_INDEX}" ${DEVICE}|${GREP} "Dynamic Features"|${GREP} -q "InlineData"
+                                        RC=$?
+                                        if [ "$RC" -ne "0" ];then
+                                                break
+                                        fi
+                                done
+                                if [ "$RC" -eq "0" ];then
+                                        test_pass
+                                else
+                                        test_fail
+                                fi
+                                ${UMOUNT_BIN} ${DEVICE}
+                                
+                        else
+                                test_fail
+                        fi
+
+                        #Disable Inline-data support,extent the inlined inodde
+                        (( ++ NUM_OF_TESTS ))
+                        CURRENT_TEST="Disable Inline-data support for volume by tunefs.ocfs2"
+                        FS_FEATURES="--fs-features=noinline-data"
+                        echo "y"|${TUNEFS_BIN} ${FS_FEATURES} ${DEVICE} 2>&1 >> ${TUNEFSLOG}
+                        Check_Volume
+                        ${DEBUGFS_BIN} -n -R "stats" ${DEVICE}|${GREP} -i "Feature Incompat"|${GREP} -q "InlineData"
+                        RC=$?
+                        if [ "$RC" -eq "0" ] ;then
+                                test_fail
+                        else
+                                #Verify if all inlined inode be extented
+                                for FILE_INDEX in `seq ${FILE_NUM}`;do
+                                        #make sure file size less than max_inline_sz
+                                        TEST_FILE=${MOUNT_POINT}/TEST_INLINE_FILE_${FILE_INDEX}
+                                        ${DEBUGFS_BIN} -n -R "stat /TEST_INLINE_FILE_${FILE_INDEX}" ${DEVICE}|${GREP} "Dynamic Features"|${GREP} -q "InlineData"
+                                        RC=$?
+                                        if [ "$RC" -eq "0" ];then
+                                                break
+                                        fi
+                                done
+                                if [ "$RC" -eq "0" ];then
+                                        test_fail
+                                else
+                                        test_pass
+                                fi
+
+                        fi
+                        
+                done    #done for cluster_sz  loop
+        done    #done for blk_sz  loop
+
+        ${RM_BIN} -rf ${MOUNT_POINT}
+        
+        BLOCKSIZE=${O_BLOCKSIZE}
+        CLUSTERSIZE=${O_CLUSTERSIZE}
+        FS_FEATURES=
+}
+
+
+
 ################################################################
 
 #
@@ -590,6 +727,9 @@ declare -i NUM_OF_BROKEN=0
 
 set_log_file
 
+#Add Ctrl ^C signal handler for tunefs-test
+trap 'echo -ne "\n\n">>${LOGFILE};echo  "Interrupted by Ctrl ^C,Cleanuping... "|${TEE_BIN} -a ${LOGFILE};exit 1' SIGINT
+
 LogMsg "\ntunefs_test: Starting test \c"
 LogMsg "(`date +%F-%H-%M-%S`)\n\n"
 
@@ -612,6 +752,8 @@ Change_Mount_Type
 Add_Backup_Super
 
 Journal_Node_Change
+
+Enable_Disable_Inline_Data
 
 test_summary
 
