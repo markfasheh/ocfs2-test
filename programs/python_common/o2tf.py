@@ -196,6 +196,46 @@ def untar(DEBUGON, destdir, tarfile, logfile):
 			printlog('o2tf.untar: Extraction ended.', 
 				logfile, 0, '')
 #
+# StartMPI for openmpi
+#
+def OpenMPIInit(DEBUGON, nodes, logfile, remote_sh):
+	"""
+	Since Openmpi no longer need startup until executions issued,
+so just do a sanity check here to test if all nodes are available.
+	"""
+	from os import access,F_OK
+	if os.access(config.MPIRUN, F_OK) == 0:
+		printlog('o2tf.StartMPI: mpirun not found',
+			logfile, 0, '')
+		sys.exit(1)
+	if os.access(config.MPIHOSTS, F_OK) == 1:
+		os.system('rm -f ' + config.MPIHOSTS)
+	nodelist = string.split(nodes,',')
+	nodelen = len(nodelist)
+
+	if remote_sh == '' or remote_sh == 'ssh':
+		shopt = '-mca pls_rsh_agent ssh:rsh'
+	else:
+		shopt = '-mca pls_rsh_agent rsh:ssh'
+
+	fd = open(config.MPIHOSTS,'w',0)
+	for i in range(nodelen):
+		fd.write(nodelist[i] + '\n')
+	fd.close()
+
+	try:
+		if DEBUGON:
+			printlog('o2tf.StartOpenMPI: Trying to execute %s with \
+				 a simple command remotely among (%s)' \
+				  % (config.MPIRUN, nodes),
+				logfile, 0, '')
+		os.system('%s  %s --hostfile %s %s' % (config.MPIRUN, shopt,
+			  config.MPIHOSTS, 'echo -n'))
+
+	except os.error,inst:
+		printlog(str(inst), logfile, 0, '')
+		pass
+#
 # StartMPI is used by :
 #   - o2tf.py
 def StartMPI(DEBUGON, nodes, logfile):
@@ -261,6 +301,55 @@ def mpi_runparts(DEBUGON, nproc, cmd, nodes, logfile):
 		os.waitpid(pid,0)
 	except os.error:
 		pass
+
+#
+# Calls mpirun from openmpi
+#
+def openmpi_run(DEBUGON, nproc, cmd, nodes, remote_sh, logfile, w_flag):
+	"""
+	Execute commands in parallel using OpenMPI.'
+	"""
+	from os import access,F_OK
+	found = 0
+	uname = os.uname()
+	nodelen = len(string.split(nodes,','))
+	if nproc == 'C':
+		nprocopt=''
+	else:
+		nprocopt='-np ' + str(nproc)
+
+	if remote_sh == '' or remote_sh == 'ssh':
+		shopt = '-mca pls_rsh_agent ssh:rsh'
+	else:
+		shopt = '-mca pls_rsh_agent rsh:ssh'
+	try:
+		if DEBUGON:
+			printlog('o2tf.mpi_run: MPIRUN = %s' % config.MPIRUN,
+				logfile, 0, '')
+			printlog('o2tf.mpi_run: nproc = %s' % nproc,
+				logfile, 0, '')
+			printlog('o2tf.mpi_run: nodelen = %d' % nodelen,
+				logfile, 0, '')
+			printlog('o2tf.mpi_run: shopt = %d' % shopt,
+				logfile, 0, '')
+			printlog('o2tf.mpi_run: cmd = %s' % cmd,
+				logfile, 0, '')
+		pid = os.spawnv(os.P_NOWAIT,
+			'/bin/bash', ['bash', '-xc',
+			config.MPIRUN + ' -mca btl tcp,self -mca btl_tcp_if_include eth0  %s %s --host %s %s' % \
+			(shopt, nprocopt, nodes, cmd)])
+		if w_flag == 'NOWAIT':
+			return pid
+		else:
+			os.waitpid(pid, 0)
+
+	except os.error:
+		pass
+
+#
+# lamexec is used by :
+#   - 
+
 #
 # Calls mpirun (Original from the LAM/MPI Package)
 # mpi_run is used by :
