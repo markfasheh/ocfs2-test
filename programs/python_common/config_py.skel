@@ -35,6 +35,8 @@ LAMBOOT = MPIDIR + '/lamboot'
 
 LAMHOSTS = WORKFILESDIR + '/lamhosts'
 
+MPIHOSTS = WORKFILESDIR + '/mpihosts'
+
 RECON = MPIDIR + '/recon'
 
 MPIRUNPARTS = BINDIR + '/mpi-run-parts'

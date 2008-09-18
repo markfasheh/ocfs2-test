@@ -22,12 +22,20 @@ if [ $# -ne 1 ]; then
    echo -e 'Usage: $0 <DESTDIR>';
    exit 1;
 fi;
-LAMBOOT=`which lamboot`
-if [ -f ${LAMBOOT} ]; then
-   MPIDIR=`dirname ${LAMBOOT}`
+
+MPIRUN=`which mpirun`
+RC=$?
+if [ "$RC" != "0" ];then
+	MPIRUN=`rpm -ql openmpi|grep bin|grep mpirun`
+	MPIDIR=`dirname ${MPIRUN}`
 else
-   MPIDIR=/usr/bin
-fi;
+	if [ -f ${MPIRUN} ];then
+		MPIDIR=`dirname ${MPIRUN}`
+	else
+		MPIDIR=/usr/bin
+	fi
+fi
+
 BINDIR=${1}/bin
 sed "s;<DESTDIR>;${1};g" ${BINDIR}/config_py.skel >  ${BINDIR}/config.py
 mv ${BINDIR}/config.py  ${BINDIR}/config_py.skel
@@ -36,4 +44,4 @@ sed "s;<MPIDIR>;${MPIDIR};g" ${BINDIR}/config_py.skel >  ${BINDIR}/config.py
 sed "s;<DESTDIR>;${1};g" ${BINDIR}/config_shell.skel >  ${BINDIR}/config.sh
 mv ${BINDIR}/config.sh ${BINDIR}/config_shell.skel
 sed "s;<MPIDIR>;${MPIDIR};g" ${BINDIR}/config_shell.skel >  ${BINDIR}/config.sh
-rm -f ${BINDIR}/config_py.skel ${MPIDIR}/config_shell.skel
+rm -f ${BINDIR}/config_py.skel ${BINDIR}/config_shell.skel
