@@ -102,18 +102,20 @@ if numnodes < 2:
 	parser.print_help()
 	sys.exit(1)
 #
-o2tf.StartMPI(DEBUGON, options.nodelist, logfile)
+o2tf.OpenMPIInit(DEBUGON, options.nodelist, logfile, 'ssh')
 command=os.path.join(config.BINDIR, EXECPGM)
 if DEBUGON:
 	o2tf.printlog('command = %s' % command, 
 	logfile, 0, '')
-o2tf.mpi_run(DEBUGON, 
+o2tf.openmpi_run(DEBUGON, 
 	'C', 
 	str('%s -i %s %s' % 
 	(command, 
 	options.count, 
 	filename) ),
 	options.nodelist, 
-	options.logfile)
+	'ssh',
+	options.logfile,
+	'NOWAIT')
 
 sys.exit()

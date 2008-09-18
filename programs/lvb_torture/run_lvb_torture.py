@@ -155,9 +155,9 @@ if DEBUGON:
 		0, 
 		'')
 #
-o2tf.StartMPI(DEBUGON, options.nodelist, logfile)
+o2tf.OpenMPIInit(DEBUGON, options.nodelist, logfile, 'ssh')
 #
-o2tf.mpi_run(DEBUGON, procs, 
+o2tf.openmpi_run(DEBUGON, procs, 
 	str('%s -d %s %s -i %s %s %s 2>&1 | tee -a %s' % (cmd, 
 	dlmfs, 
 	hbdev, 
@@ -166,4 +166,6 @@ o2tf.mpi_run(DEBUGON, procs,
 	lockname,
 	options.logfile)), 
 	options.nodelist, 
-	options.logfile)
+	'ssh',
+	options.logfile,
+	'NOWAIT')

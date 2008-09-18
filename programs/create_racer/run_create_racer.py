@@ -143,15 +143,17 @@ if DEBUGON:
 #
 if options.cleanup:
 	Cleanup()
-o2tf.StartMPI(DEBUGON, options.nodelist, logfile)
+o2tf.OpenMPIInit(DEBUGON, options.nodelist, logfile, 'ssh')
 #
-ret = o2tf.mpi_run(DEBUGON, procs, 
+ret = o2tf.openmpi_run(DEBUGON, procs, 
 	str('%s -i %s %s 2>&1 | tee -a %s' % (cmd, 
 	options.iteractions, 
 	options.path, 
 	options.logfile)), 
 	options.nodelist, 
-	options.logfile)
+	'ssh',
+	options.logfile,
+	'NOWAIT')
 #
 if not ret:
 	o2tf.printlog('run_create_racer: main - execution successful.',

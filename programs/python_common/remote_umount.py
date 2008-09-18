@@ -39,7 +39,7 @@ Usage = 'Usage: %prog [-m|--mountpoint mountpoint] \
 [-n|--nodes nodelist]'
 #
 if userid == 'root':
-	o2tf.printlog('This program uses LAM/MPI. Should not run as root',
+	o2tf.printlog('This program uses Openmpi. Should not run as root',
 		logfile, 0, '')
 	sys.exit(1)
 if __name__=='__main__':
@@ -67,14 +67,10 @@ if __name__=='__main__':
 #
 	nodelist = options.nodelist.split(',')
 	nodelen = len(nodelist)
-	print('nodelist %s' % nodelist)
-	print('nodelen %s' % nodelen)
 	if nodelen == 1:
 		nodelist = nodelist.append(options.nodelist)
 	else:
 		nodelist = options.nodelist.split(',')
-	print('nodelist %s' % nodelist)
-	print('nodelen %s' % nodelen)
 
 	nproc = nodelen
 #
@@ -86,10 +82,14 @@ else:
 command = str('%s -m %s' % (buildcmd,
 	options.mountpoint))
 #
-o2tf.StartMPI(DEBUGON, options.nodelist, logfile)
+o2tf.OpenMPIInit(DEBUGON, options.nodelist, logfile, 'ssh')
 #
 #
-o2tf.lamexec(DEBUGON, nproc, config.WAIT, str('%s' % command),
-	options.nodelist,
-	logfile )
+o2tf.openmpi_run(DEBUGON,
+		 nproc,
+		 str('%s' % command),
+		 options.nodelist,
+		 'ssh', logfile,
+		 'WAIT')
+
 
