@@ -122,7 +122,7 @@ if __name__=='__main__':
 		nodelen = len(nodelist)
 		procs = nodelen
 		if nodelen == 1:
-			nodelist = nodelist.add(options.nodelist)
+			nodelist = nodelist.append(options.nodelist)
 		else:
 			nodelist = options.nodelist.split(',')
 	else:
