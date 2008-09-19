@@ -240,7 +240,7 @@ static int change_locking_type(char *type)
 
 static void usage(void)
 {
-	printf("usage: %s [-f <type>] <file1> <file2>\n", prog);
+	printf("usage: %s [-t <type>] <file1> <file2>\n", prog);
 	printf("<type> defaults to \"flock\" but can also be \"fcntl\".\n");
 	printf("<file1>, <file2> are required.\n");
 	printf("This will test the functionality of user file locking\n");
