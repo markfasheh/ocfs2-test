@@ -6,7 +6,7 @@
  * All utility functions used by both single and multiple
  * nodes inline-data testing.
  *
- * Copyright (C) 2004, 2008 Oracle.  All rights reserved.
+ * Copyright (C) 2008 Oracle.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public

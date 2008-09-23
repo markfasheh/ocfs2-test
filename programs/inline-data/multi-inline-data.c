@@ -24,7 +24,7 @@
  *    3) Extend file past min size
  *    4) Resrve space past min size
  *
- * Copyright (C) 2004, 2008 Oracle.  All rights reserved.
+ * Copyright (C) 2008 Oracle.  All rights reserved.
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public
