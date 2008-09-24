@@ -253,7 +253,7 @@ f_do_mkfs_and_mount()
 #	done<${MPI_HOSTFILE}
 	echo -n "Mounting device ${OCFS2_DEVICE} to nodes(${MPI_HOSTS}):"|tee -a ${RUN_LOG_FILE}
         ${REMOTE_MOUNT_BIN} -l oracle_home -m ${MOUNT_POINT} -n ${MPI_HOSTS}>>${RUN_LOG_FILE} 2>&1
-        ret=$?
+        RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
 
@@ -273,7 +273,7 @@ f_do_umount()
 
 	echo -n "Umounting device ${OCFS2_DEVICE} from nodes(${MPI_HOSTS}):"|tee -a ${RUN_LOG_FILE}
         ${REMOTE_UMOUNT_BIN} -m ${MOUNT_POINT} -n ${MPI_HOSTS}>>${RUN_LOG_FILE} 2>&1
-        ret=$?
+        RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
 
