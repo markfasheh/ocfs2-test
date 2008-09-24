@@ -35,7 +35,9 @@ REMOTE_SH_BIN=${SSH_BIN}
 AWK_BIN="`which awk`"
 TOUCH_BIN="`which touch`"
 MOUNT_BIN="`which sudo` -u root `which mount`"
+REMOTE_MOUNT_BIN="`which sudo` -u root `which remote_mount.py`"
 UMOUNT_BIN="`which sudo` -u root `which umount`"
+REMOTE_UMOUNT_BIN="`which sudo` -u root `which remote_umount.py`"
 MKFS_BIN="`which sudo` -u root `which mkfs.ocfs2`"
 INLINE_DATA_BIN=`which multi-inline-data`
 INLINE_DIRS_BIN=`which multi-inline-dirs`
@@ -53,10 +55,10 @@ BLOCKNUMS=
 
 TMP_DIR=/tmp
 DEFAULT_HOSTFILE=".openmpi_hostfile"
-CLUSTER_CONFIG_FILE="/etc/ocfs2/cluster.conf"
 DEFAULT_RANKS=4
 
 declare -i MPI_RANKS
+MPI_HOSTS=
 MPI_HOSTFILE=
 MPI_ACCESS_METHOD="ssh"
 MPI_PLS_AGENT_ARG="-mca pls_rsh_agent ssh:rsh"
@@ -121,10 +123,10 @@ exit_or_not()
 ################################################################################
 f_usage()
 {
-    echo "usage: `basename ${0}` [-r MPI_ranks] [-f MPI_hostfile] [-a access_method] [-o output] <-d <device>> <mountpoint path>"
+    echo "usage: `basename ${0}` [-r MPI_ranks] <-f MPI_hosts> [-a access_method] [-o output] <-d <device>> <mountpoint path>"
     echo "       -r size of MPI rank"
     echo "       -a access method for process propagation,should be ssh or rsh,set ssh as a default method when omited."
-    echo "       -f MPI hostfile,by default,script would generate one by referring to /etc/ocfs2/cluster.conf"
+    echo "       -f MPI hosts list,separated by comma,e.g -f node1.us.oracle.com,node2.us.oracle.com."
     echo "       -o output directory for the logs"
     echo "       -d device name used for ocfs2 volume"
     echo "       <mountpoint path> path of mountpoint where the ocfs2 volume will be mounted on."
@@ -143,7 +145,7 @@ f_getoptions()
                 case $options in
 		a ) MPI_ACCESS_METHOD="$OPTARG";;
 		r ) MPI_RANKS="$OPTARG";;
-		f ) MPI_HOSTFILE="$OPTARG";;
+		f ) MPI_HOSTS="$OPTARG";;
                 o ) LOG_OUT_DIR="$OPTARG";;
                 d ) OCFS2_DEVICE="$OPTARG";;
                 h ) f_usage
@@ -159,26 +161,28 @@ f_getoptions()
 
 f_create_hostfile()
 {
-        MPI_HOSTFILE="${TMP_DIR}/${DEFAULT_HOSTFILE}"
+	MPI_HOSTFILE="${TMP_DIR}/${DEFAULT_HOSTFILE}"
+        TMP_FILE="${TMP_DIR}/.tmp_openmpi_hostfile_$$"
 
-        TMP_FILE="${TMP_DIR}/.tmp_openmpi_hostfile"
+        echo ${MPI_HOSTS}|sed -e 's/,/\n/g'>$TMP_FILE
 
         if [ -f "$MPI_HOSTFILE" ];then
                 ${RM} -rf ${MPI_HOSTFILE}
         fi
 
-        cat ${CLUSTER_CONFIG_FILE}|grep name|sed '$ d'|${AWK_BIN} '{print $3}'>$TMP_FILE
-
         while read line
         do
+                if [ -z $line ];then
+                        continue
+                fi
+
                 echo "$line      slots=2">>$MPI_HOSTFILE
 
         done<$TMP_FILE
 
+
         ${RM} -rf $TMP_FILE
-
 }
-
 
 f_setup()
 {
@@ -196,6 +200,17 @@ f_setup()
 
         if [ -z "${MOUNT_POINT}" ];then
                 f_usage
+	else
+                if [ ! -d ${MOUNT_POINT} -o ! -w ${MOUNT_POINT} ]; then
+                        echo "Mount point ${MOUNT_POINT} does not exist or is not writable." 
+                        exit 1
+                else
+                        if [ "`dirname ${MOUNT_POINT}`" = "/" ]; then
+                                MOUNT_POINT="`dirname ${MOUNT_POINT}``basename ${MOUNT_POINT}`"
+                        else
+                                MOUNT_POINT="`dirname ${MOUNT_POINT}`/`basename ${MOUNT_POINT}`"
+                        fi
+                fi
         fi
 
 	MPI_RANKS=${MPI_RANKS:-$DEFAULT_RANKS}
@@ -210,12 +225,10 @@ f_setup()
         DIRS_LOG_FILE="`dirname ${LOG_OUT_DIR}`/`basename ${LOG_OUT_DIR}`/multiple-inline-dirs-test-${LOG_POSTFIX}.log"
         RUN_LOG_FILE="`dirname ${LOG_OUT_DIR}`/`basename ${LOG_OUT_DIR}`/run-${LOG_POSTFIX}.log"
 
-	if [ -z "$MPI_HOSTFILE" ];then
-                f_create_hostfile
+	if [ -z "$MPI_HOSTS" ];then
+		f_usage
         else
-                if [ ! -f "${MPI_HOSTFILE}" ];then
-                        f_usage
-                fi
+		f_create_hostfile
         fi
 
 }
@@ -224,33 +237,45 @@ f_do_mkfs_and_mount()
 {
 	echo -n "Mkfsing device(-b ${BLOCKSIZE} -C ${CLUSTERSIZE}): "|tee -a ${RUN_LOG_FILE}
 
-	echo y|${MKFS_BIN} --fs-features=inline-data -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -N 4 ${OCFS2_DEVICE} ${BLOCKNUMS}>>${RUN_LOG_FILE} 2>&1
+	echo y|${MKFS_BIN} --fs-features=inline-data -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -N 4 -L oracle_home ${OCFS2_DEVICE} ${BLOCKNUMS}>>${RUN_LOG_FILE} 2>&1
 
 	RET=$?
 	echo_status ${RET} |tee -a ${RUN_LOG_FILE}
 	exit_or_not ${RET}
 
-	while read node_line ; do
-		host_node=`echo ${node_line}|${AWK_BIN} '{print $1}'`
-		echo -n "Mounting device to ${MOUNT_POINT} on ${host_node}:"|tee -a ${RUN_LOG_FILE}
-		RET=$(${REMOTE_SH_BIN} -n ${host_node} "sudo /bin/mount -t ocfs2 -o rw,nointr ${OCFS2_DEVICE} ${MOUNT_POINT};echo \$?" 2>>${RUN_LOG_FILE})
-		echo_status ${RET} |tee -a ${RUN_LOG_FILE}
-		exit_or_not ${RET}
-			
-	done<${MPI_HOSTFILE}
+#	while read node_line ; do
+#		host_node=`echo ${node_line}|${AWK_BIN} '{print $1}'`
+#		echo -n "Mounting device to ${MOUNT_POINT} on ${host_node}:"|tee -a ${RUN_LOG_FILE}
+#		RET=$(${REMOTE_SH_BIN} -n ${host_node} "sudo /bin/mount -t ocfs2 -o rw,nointr ${OCFS2_DEVICE} ${MOUNT_POINT};echo \$?" 2>>${RUN_LOG_FILE})
+#		echo_status ${RET} |tee -a ${RUN_LOG_FILE}
+#		exit_or_not ${RET}
+#			
+#	done<${MPI_HOSTFILE}
+	echo -n "Mounting device ${OCFS2_DEVICE} to nodes(${MPI_HOSTS}):"|tee -a ${RUN_LOG_FILE}
+        ${REMOTE_MOUNT_BIN} -l oracle_home -m ${MOUNT_POINT} -n ${MPI_HOSTS}>>${RUN_LOG_FILE} 2>&1
+        ret=$?
+        echo_status ${RET} |tee -a ${RUN_LOG_FILE}
+        exit_or_not ${RET}
+
 
 } 
 
 f_do_umount()
 {
-	while read node_line;do
-		host_node=`echo ${node_line}|awk '{print $1}'`
-		echo -ne "Unmounting device from ${MOUNT_POINT} on ${host_node}:"|tee -a ${RUN_LOG_FILE}
-		RET=$(${REMOTE_SH_BIN} -n ${host_node} "sudo /bin/umount ${MOUNT_POINT};echo \$?" 2>>${RUN_LOG_FILE})
-		echo_status ${RET} |tee -a ${RUN_LOG_FILE}
-		exit_or_not ${RET}
-		
-	done<${MPI_HOSTFILE}
+#	while read node_line;do
+#		host_node=`echo ${node_line}|awk '{print $1}'`
+#		echo -ne "Unmounting device from ${MOUNT_POINT} on ${host_node}:"|tee -a ${RUN_LOG_FILE}
+#		RET=$(${REMOTE_SH_BIN} -n ${host_node} "sudo /bin/umount ${MOUNT_POINT};echo \$?" 2>>${RUN_LOG_FILE})
+#		echo_status ${RET} |tee -a ${RUN_LOG_FILE}
+#		exit_or_not ${RET}
+#		
+#	done<${MPI_HOSTFILE}
+
+	echo -n "Umounting device ${OCFS2_DEVICE} from nodes(${MPI_HOSTS}):"|tee -a ${RUN_LOG_FILE}
+        ${REMOTE_UMOUNT_BIN} -m ${MOUNT_POINT} -n ${MPI_HOSTS}>>${RUN_LOG_FILE} 2>&1
+        ret=$?
+        echo_status ${RET} |tee -a ${RUN_LOG_FILE}
+        exit_or_not ${RET}
 
 }
 
