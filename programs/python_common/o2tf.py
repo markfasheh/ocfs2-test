@@ -330,7 +330,7 @@ def openmpi_run(DEBUGON, nproc, cmd, nodes, remote_sh, logfile, w_flag):
 				logfile, 0, '')
 			printlog('o2tf.mpi_run: nodelen = %d' % nodelen,
 				logfile, 0, '')
-			printlog('o2tf.mpi_run: shopt = %d' % shopt,
+			printlog('o2tf.mpi_run: shopt = %s' % shopt,
 				logfile, 0, '')
 			printlog('o2tf.mpi_run: cmd = %s' % cmd,
 				logfile, 0, '')

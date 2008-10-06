@@ -168,4 +168,4 @@ o2tf.openmpi_run(DEBUGON, procs,
 	options.nodelist, 
 	'ssh',
 	options.logfile,
-	'NOWAIT')
+	'WAIT')

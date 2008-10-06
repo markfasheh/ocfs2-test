@@ -153,7 +153,7 @@ ret = o2tf.openmpi_run(DEBUGON, procs,
 	options.nodelist, 
 	'ssh',
 	options.logfile,
-	'NOWAIT')
+	'WAIT')
 #
 if not ret:
 	o2tf.printlog('run_create_racer: main - execution successful.',

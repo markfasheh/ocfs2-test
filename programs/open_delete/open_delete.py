@@ -116,6 +116,6 @@ o2tf.openmpi_run(DEBUGON,
 	options.nodelist, 
 	'ssh',
 	options.logfile,
-	'NOWAIT')
+	'WAIT')
 
 sys.exit()
