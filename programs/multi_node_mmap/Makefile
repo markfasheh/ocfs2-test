@@ -15,6 +15,8 @@ DIST_FILES = $(SOURCES)
 
 BIN_PROGRAMS = multi_mmap
 
+BIN_EXTRA = run_multi_mmap.py
+
 multi_mmap: $(OBJECTS)
 	$(LINK) 
 

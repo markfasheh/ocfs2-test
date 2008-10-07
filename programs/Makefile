@@ -53,6 +53,7 @@ SUBDIRS =			\
 	tunefs-test		\
 	untar_files		\
 	write_append_truncate	\
-	write_torture
+	write_torture		\
+	xattr_tests
 
 include $(TOPDIR)/Postamble.make

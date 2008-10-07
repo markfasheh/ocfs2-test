@@ -15,6 +15,8 @@ DIST_FILES = $(SOURCES)
 
 BIN_PROGRAMS = write_append_truncate
 
+BIN_EXTRA = run_write_append_truncate.py
+
 write_append_truncate: $(OBJECTS)
 	$(LINK)
 
