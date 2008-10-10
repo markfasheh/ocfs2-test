@@ -145,17 +145,7 @@ static errcode_t open_test_inode(ocfs2_filesys *fs, char *name, uint64_t *ino)
 
 	ret = ocfs2_link(fs, fs->fs_root_blkno, name,
 			 tmp_blkno, OCFS2_FT_REG_FILE);
-	if (ret == OCFS2_ET_DIR_NO_SPACE) {
-		ret = ocfs2_expand_dir(fs, fs->fs_root_blkno,
-				       fs->fs_root_blkno);
-		if (ret)
-			return ret;
-
-		ret = ocfs2_link(fs, fs->fs_root_blkno, name,
-				 tmp_blkno, OCFS2_FT_REG_FILE);
-		if (ret)
-			return ret;
-	} else if (ret)
+	if (ret)
 		return ret;
 
 	*ino = tmp_blkno;

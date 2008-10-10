@@ -276,16 +276,7 @@ static errcode_t create_orphan_file(ocfs2_filesys *fs, uint16_t slot)
 
 	ret = ocfs2_link(fs, dir, name,
 			 tmp_blkno, OCFS2_FT_REG_FILE);
-	if (ret == OCFS2_ET_DIR_NO_SPACE) {
-		ret = ocfs2_expand_dir(fs, dir, fs->fs_root_blkno);
-		if (ret)
-			return ret;
-
-		ret = ocfs2_link(fs, dir, name,
-				 tmp_blkno, OCFS2_FT_REG_FILE);
-		if (ret)
-			return ret;
-	} else if (ret)
+	if (ret)
 		return ret;
 
 	return 0;
