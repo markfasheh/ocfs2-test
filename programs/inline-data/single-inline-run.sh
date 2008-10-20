@@ -18,14 +18,21 @@
 ################################################################################
 PATH=$PATH:/sbin      # Add /sbin to the path for ocfs2 tools
 export PATH=$PATH:.
+
+. ./config.sh
+
+USERNAME=`id -un`
+GROUPNAME=`id -gn`
+
+SUDO="`which sudo` -u root"
 RM="`which rm`"
 MKDIR="`which mkdir`"
 TOUCH_BIN="`which touch`"
 MOUNT_BIN="`which sudo` -u root `which mount`"
 UMOUNT_BIN="`which sudo` -u root `which umount`"
 MKFS_BIN="`which sudo` -u root `which mkfs.ocfs2`"
-INLINE_DATA_BIN=`which inline-data`
-INLINE_DIRS_BIN=`which inline-dirs`
+INLINE_DATA_BIN="`which sudo` -u root ${BINDIR}/inline-data"
+INLINE_DIRS_BIN="`which sudo` -u root ${BINDIR}/inline-dirs"
 DEFAULT_LOG="inline-data-test-logs"
 LOG_OUT_DIR=
 DATA_LOG_FILE=
@@ -134,6 +141,18 @@ f_setup()
 
         if [ -z "${MOUNT_POINT}" ];then
                 f_usage
+	else
+		if [ ! -d ${MOUNT_POINT} ]; then
+			echo "Mount point ${MOUNT_POINT} does not exist."
+			exit 1
+		else
+			#To assure that mount point will not end with a trailing '/'
+			if [ "`dirname ${MOUNT_POINT}`" = "/" ]; then
+				MOUNT_POINT="`dirname ${MOUNT_POINT}``basename ${MOUNT_POINT}`"
+			else
+				MOUNT_POINT="`dirname ${MOUNT_POINT}`/`basename ${MOUNT_POINT}`"
+			fi
+		fi
         fi
 
         LOG_OUT_DIR=${LOG_OUT_DIR:-$DEFAULT_LOG}
@@ -164,6 +183,9 @@ f_do_mkfs_and_mount()
 	RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
+
+	${SUDO} chown -R ${USERNAME}:${GROUPNAME} ${MOUNT_POINT}
+	${SUDO} chmod -R 777 ${MOUNT_POINT}
 } 
 
 f_run_data_test()

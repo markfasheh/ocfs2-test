@@ -19,11 +19,9 @@
 PATH=$PATH:/sbin      # Add /sbin to the path for ocfs2 tools
 export PATH=$PATH:.
 
-MPI_RUN=`rpm -ql openmpi|grep bin|grep mpirun`
-MPI_BIN_PATH=`dirname ${MPI_RUN}`
-export PATH=$PATH:$MPI_BIN_PATH
+. ./config.sh
 
-MPIRUN_BIN="`which mpirun`"
+#MPIRUN="`which mpirun`"
 
 RM="`which rm`"
 MKDIR="`which mkdir`"
@@ -32,15 +30,19 @@ RSH_BIN="`which rsh`"
 SSH_BIN="`which ssh`"
 REMOTE_SH_BIN=${SSH_BIN}
 
+USERNAME=`id -un`
+GROUPNAME=`id -gn`
+
+SUDO="`which sudo` -u root"
 AWK_BIN="`which awk`"
 TOUCH_BIN="`which touch`"
 MOUNT_BIN="`which sudo` -u root `which mount`"
-REMOTE_MOUNT_BIN="`which sudo` -u root `which remote_mount.py`"
+REMOTE_MOUNT_BIN="${BINDIR}/remote_mount.py"
 UMOUNT_BIN="`which sudo` -u root `which umount`"
-REMOTE_UMOUNT_BIN="`which sudo` -u root `which remote_umount.py`"
+REMOTE_UMOUNT_BIN="${BINDIR}/remote_umount.py"
 MKFS_BIN="`which sudo` -u root `which mkfs.ocfs2`"
-INLINE_DATA_BIN=`which multi-inline-data`
-INLINE_DIRS_BIN=`which multi-inline-dirs`
+INLINE_DATA_BIN="`which sudo` -u root ${BINDIR}/multi-inline-data"
+INLINE_DIRS_BIN="`which sudo` -u root ${BINDIR}/multi-inline-dirs"
 DEFAULT_LOG="multiple-inline-data-test-logs"
 LOG_OUT_DIR=
 DATA_LOG_FILE=
@@ -167,7 +169,7 @@ f_create_hostfile()
         echo ${MPI_HOSTS}|sed -e 's/,/\n/g'>$TMP_FILE
 
         if [ -f "$MPI_HOSTFILE" ];then
-                ${RM} -rf ${MPI_HOSTFILE}
+               ${RM} -rf ${MPI_HOSTFILE}
         fi
 
         while read line
@@ -176,7 +178,7 @@ f_create_hostfile()
                         continue
                 fi
 
-                echo "$line      slots=2">>$MPI_HOSTFILE
+                echo "$line">>$MPI_HOSTFILE
 
         done<$TMP_FILE
 
@@ -186,10 +188,6 @@ f_create_hostfile()
 
 f_setup()
 {
-	rpm -q --quiet openmpi ||{
-                echo "Need to install openmpi in advance"
-                exit 1
-        }
 
         f_getoptions $*
 
@@ -201,8 +199,8 @@ f_setup()
         if [ -z "${MOUNT_POINT}" ];then
                 f_usage
 	else
-                if [ ! -d ${MOUNT_POINT} -o ! -w ${MOUNT_POINT} ]; then
-                        echo "Mount point ${MOUNT_POINT} does not exist or is not writable." 
+                if [ ! -d ${MOUNT_POINT} ]; then
+                        echo "Mount point ${MOUNT_POINT} does not exist." 
                         exit 1
                 else
                         if [ "`dirname ${MOUNT_POINT}`" = "/" ]; then
@@ -256,6 +254,8 @@ f_do_mkfs_and_mount()
         RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
+	${SUDO} chown -R ${USERNAME}:${GROUPNAME} ${MOUNT_POINT}
+	${SUDO} chmod -R 777 ${MOUNT_POINT}
 
 
 } 
@@ -290,7 +290,7 @@ f_run_data_test()
         echo "==========================================================">>${DATA_LOG_FILE}
 	echo -e "Testing Binary:\t\t${INLINE_DATA_BIN} -i 1 -d ${OCFS2_DEVICE} ${MOUNT_POINT}">>${DATA_LOG_FILE}
 
-	${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --hostfile ${MPI_HOSTFILE} ${INLINE_DATA_BIN} -i 1 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DATA_LOG_FILE} 2>&1
+	${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --hostfile ${MPI_HOSTFILE} ${INLINE_DATA_BIN} -i 1 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DATA_LOG_FILE} 2>&1
 	RET=$?
 	echo_status ${RET} |tee -a ${RUN_LOG_FILE}
 	exit_or_not ${RET}
@@ -304,7 +304,7 @@ f_run_data_test()
         echo "==========================================================">>${DATA_LOG_FILE}
 	echo -e "Testing Binary:\t\t${INLINE_DATA_BIN} -i 50 -d ${OCFS2_DEVICE} ${MOUNT_POINT}">>${DATA_LOG_FILE}
 
-        ${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --hostfile ${MPI_HOSTFILE} ${INLINE_DATA_BIN} -i 200  -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DATA_LOG_FILE} 2>&1
+        ${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --hostfile ${MPI_HOSTFILE} ${INLINE_DATA_BIN} -i 200  -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DATA_LOG_FILE} 2>&1
 	RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -321,7 +321,7 @@ f_run_dirs_test()
         echo "==========================================================">>${DIRS_LOG_FILE}
 	echo -e "Testing Binary:\t\t${INLINE_DIRS_BIN} -i 1 -s 20 -d ${OCFS2_DEVICE} ${MOUNT_POINT}">>${DIRS_LOG_FILE}
 
-	${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --hostfile ${MPI_HOSTFILE}  ${INLINE_DIRS_BIN} -i 1 -s 20 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
+	${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --hostfile ${MPI_HOSTFILE}  ${INLINE_DIRS_BIN} -i 1 -s 20 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
 	RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -335,7 +335,7 @@ f_run_dirs_test()
         echo "==========================================================">>${DIRS_LOG_FILE}
 	echo -e "Testing Binary:\t\t${INLINE_DIRS_BIN} -i 1 -s 100 -d ${OCFS2_DEVICE} ${MOUNT_POINT}">>${DIRS_LOG_FILE}
 
-        ${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --hostfile ${MPI_HOSTFILE}  ${INLINE_DIRS_BIN} -i 1 -s 100 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
+        ${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --hostfile ${MPI_HOSTFILE}  ${INLINE_DIRS_BIN} -i 1 -s 100 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
 	RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -349,7 +349,7 @@ f_run_dirs_test()
         echo "==========================================================">>${DIRS_LOG_FILE}
 	echo -e "Testing Binary:\t\t${INLINE_DIRS_BIN} -i 5 -s 20 -d ${OCFS2_DEVICE} ${MOUNT_POINT}">>${DIRS_LOG_FILE}
 
-        ${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --hostfile ${MPI_HOSTFILE}  ${INLINE_DIRS_BIN} -i 1 -s 20 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
+        ${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --hostfile ${MPI_HOSTFILE}  ${INLINE_DIRS_BIN} -i 1 -s 20 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
 	RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
