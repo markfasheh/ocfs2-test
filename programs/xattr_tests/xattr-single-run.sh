@@ -19,15 +19,23 @@
 ################################################################################
 PATH=$PATH:/sbin      # Add /sbin to the path for ocfs2 tools
 export PATH=$PATH:.
+
+. ./config.sh
+
 GETXATTR="`which sudo` -u root `which getfattr`"
 SETXATTR="`which sudo` -u root `which setfattr`"
+
+USERNAME=`id -un`
+GROUPNAME=`id -gn`
+
+SUDO="`which sudo` -u root"
 RM="`which rm`"
 MKDIR="`which mkdir`"
 TOUCH_BIN="`which touch`"
 MOUNT_BIN="`which sudo` -u root `which mount`"
 UMOUNT_BIN="`which sudo` -u root `which umount`"
 MKFS_BIN="`which sudo` -u root `which mkfs.ocfs2`"
-XATTR_TEST_BIN=`which xattr-test`
+XATTR_TEST_BIN="`which sudo` -u root ${BINDIR}/xattr-test"
 
 DEFAULT_LOG="xattr-test-logs"
 LOG_OUT_DIR=
@@ -145,6 +153,18 @@ f_setup()
 
 	if [ -z "${MOUNT_POINT}" ];then 
 		f_usage
+	else
+		if [ ! -d ${MOUNT_POINT} ]; then
+			echo "Mount point ${MOUNT_POINT} does not exist."
+			exit 1
+		else
+			#To assure that mount point will not end with a trailing '/'
+			if [ "`dirname ${MOUNT_POINT}`" = "/" ]; then
+				MOUNT_POINT="`dirname ${MOUNT_POINT}``basename ${MOUNT_POINT}`"
+			else
+				MOUNT_POINT="`dirname ${MOUNT_POINT}`/`basename ${MOUNT_POINT}`"
+			fi
+		fi
 	fi
 
 	LOG_POSTFIX=$(date +%Y%m%d-%H%M%S)
@@ -177,6 +197,9 @@ f_do_mkfs_and_mount()
         RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
+
+	${SUDO} chown -R ${USERNAME}:${GROUPNAME} ${MOUNT_POINT}
+	${SUDO} chmod -R 777 ${MOUNT_POINT}
 
         ${MKDIR} -p ${WORKPLACE} || exit 1
 
@@ -218,6 +241,7 @@ f_runtest()
 					continue
 				else
 					rc=1
+					echo "failed in $namespace mode with $filetype file"
 					echo_failure | tee -a ${RUN_LOG_FILE}
 					echo | tee -a ${RUN_LOG_FILE}
 					exit 1
@@ -396,12 +420,11 @@ f_runtest()
         echo >>${DETAIL_LOG_FILE}
         echo "==========================================================">>${DETAIL_LOG_FILE}
         echo -e "Testing Binary:\t\t${XATTR_TEST_BIN} -i 100 -x 10000 -n user -t normal -l 200 -s 60000  -r ${WORKPLACE}">>${DETAIL_LOG_FILE}
-        ${XATTR_TEST_BIN}  -i 100 -x 10000 -n user -t normal -l 200 -s 60000 -r  ${WORKPLACE} >>${DETAIL_LOG_FILE} 2>&1
+        ${XATTR_TEST_BIN}  -i 20 -x 10000 -n user -t normal -l 200 -s 6000   ${WORKPLACE} >>${DETAIL_LOG_FILE} 2>&1
         RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
         ${RM} -rf ${WORKPLACE}/* || exit 1
-
 
 }
 
@@ -419,7 +442,7 @@ trap ' : ' SIGTERM
 
 f_setup $*
 
-for BLOCKSIZE in 512 1024 4096
+for BLOCKSIZE in 1024 4096
 do
         for CLUSTERSIZE in 4096 32768 1048576
         do

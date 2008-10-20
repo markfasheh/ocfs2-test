@@ -21,11 +21,9 @@
 PATH=$PATH:/sbin      # Add /sbin to the path for ocfs2 tools
 export PATH=$PATH:.
 
-MPI_RUN=`rpm -ql openmpi|grep bin|grep mpirun`
-MPI_BIN_PATH=`dirname ${MPI_RUN}`
-export PATH=$PATH:$MPI_BIN_PATH
+. ./config.sh
 
-MPIRUN_BIN="`which mpirun`"
+#MPIRUN="`which mpirun`"
 
 RM="`which rm`"
 MKDIR="`which mkdir`"
@@ -34,17 +32,21 @@ RSH_BIN="`which rsh`"
 SSH_BIN="`which ssh`"
 REMOTE_SH_BIN=${SSH_BIN}
 
+USERNAME=`id -nu`
+GROUPNAME=`id -gn`
+
+SUDO="`which sudo` -u root"
 AWK_BIN="`which awk`"
 TOUCH_BIN="`which touch`"
 MOUNT_BIN="`which sudo` -u root `which mount`"
-REMOTE_MOUNT_BIN="`which sudo` -u root `which remote_mount.py`"
+REMOTE_MOUNT_BIN="${BINDIR}/remote_mount.py"
 UMOUNT_BIN="`which sudo` -u root `which umount`"
-REMOTE_UMOUNT_BIN="`which sudo` -u root `which remote_umount.py`"
+REMOTE_UMOUNT_BIN="${BINDIR}/remote_umount.py"
 MKFS_BIN="`which sudo` -u root `which mkfs.ocfs2`"
 CHMOD_BIN="`which sudo` -u root `which chmod`"
 CHOWN_BIN="`which sudo` -u root `which chown`"
 
-XATTR_TEST_BIN=`which xattr-multi-test`
+XATTR_TEST_BIN="${BINDIR}/xattr-multi-test"
 
 DEFAULT_LOG="multiple-xattr-test-logs"
 LOG_OUT_DIR=
@@ -109,8 +111,6 @@ echo_status()
                 echo
                 exit 1
         fi
-
-
 }
 
 exit_or_not()
@@ -177,22 +177,16 @@ f_create_hostfile()
 			continue
 		fi
 
-                echo "$line      slots=2">>$MPI_HOSTFILE
+                echo "$line">>$MPI_HOSTFILE
 
         done<$TMP_FILE
 
-
         ${RM} -rf $TMP_FILE
-
 }
 
 
 f_setup()
 {
-	rpm -q --quiet openmpi ||{
-                echo "Need to install openmpi in advance"
-                exit 1
-        }
 
 	f_getoptions $*
 	
@@ -204,8 +198,8 @@ f_setup()
 	if [ -z "${MOUNT_POINT}" ];then 
 		f_usage
 	else
-		if [ ! -d ${MOUNT_POINT} -o ! -w ${MOUNT_POINT} ]; then
-			echo "Mount point ${MOUNT_POINT} does not exist or is not writable." 
+		if [ ! -d ${MOUNT_POINT} ]; then
+			echo "Mount point ${MOUNT_POINT} does not exist." 
 			exit 1
 		else
 		#To assure that mount point will not end with a trailing '/'
@@ -237,7 +231,7 @@ f_setup()
 
 	${CHMOD_BIN} -R 777 ${MOUNT_POINT}
 
-        ${CHOWN_BIN} -R ${USER}:${USER} ${MOUNT_POINT}
+        ${CHOWN_BIN} -R ${USERNAME}:${GROUPNAME} ${MOUNT_POINT}
 
         WORKPLACE="`dirname ${MOUNT_POINT}`/`basename ${MOUNT_POINT}`/multi_xattr_test_place"
 	
@@ -266,6 +260,9 @@ f_do_mkfs_and_mount()
 	RET=$?
 	echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
+
+	${SUDO} chown -R ${USERNAME}:${GROUPNAME} ${MOUNT_POINT}
+	${SUDO} chmod -R 777 ${MOUNT_POINT}
 
         ${MKDIR} -p ${WORKPLACE} || exit 1
 
@@ -302,10 +299,10 @@ f_runtest()
 	do
 		for filetype in normal directory symlink
 		do
-			echo -e "Testing Binary:\t\t${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 20 -n ${namespace} -t ${filetype} -l 50 -s 200 ${WORKPLACE}">>${LOG_FILE}
+			echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 20 -n ${namespace} -t ${filetype} -l 50 -s 200 ${WORKPLACE}">>${LOG_FILE}
 			echo "********${namespace} mode on ${filetype}********">>${LOG_FILE}
 
-			${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 20 -n ${namespace} -t ${filetype} -l 50 -s 200 ${WORKPLACE}>>${LOG_FILE} 2>&1
+			${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 20 -n ${namespace} -t ${filetype} -l 50 -s 200 ${WORKPLACE}>>${LOG_FILE} 2>&1
 			rc=$?
 			if [ "$rc" != "0" ];then
 				if [ "$namespace" == "user" -a "$filetype" == "symlink" ]; then
@@ -343,8 +340,8 @@ f_runtest()
         echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
 	for((i=0;i<4;i++));do
-		echo -e "Testing Binary:\t\t${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 10 -n user -t normal -l 50 -s 100 ${WORKPLACE}">>${LOG_FILE}
-		${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 10 -n user -t normal -l 50 -s 100 ${WORKPLACE}>>${LOG_FILE} 2>&1
+		echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 10 -n user -t normal -l 50 -s 100 ${WORKPLACE}">>${LOG_FILE}
+		${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 10 -n user -t normal -l 50 -s 100 ${WORKPLACE}>>${LOG_FILE} 2>&1
 		rc=$?
 		if [ ! "$rc" == "0"  ];then
 			echo_failure |tee -a ${RUN_LOG_FILE}
@@ -365,8 +362,8 @@ f_runtest()
 	echo -ne "Check Max Multinode Xattr EA_Name_Length:">> ${LOG_FILE}
 	echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
-	echo -e "Testing Binary:\t\t${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 4 -n user -t normal -l 255 -s 300 ${WORKPLACE}">>${LOG_FILE}
-	${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 4 -n user -t normal -l 255 -s 300 ${WORKPLACE}>>${LOG_FILE} 2>&1
+	echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 4 -n user -t normal -l 255 -s 300 ${WORKPLACE}">>${LOG_FILE}
+	${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 4 -n user -t normal -l 255 -s 300 ${WORKPLACE}>>${LOG_FILE} 2>&1
 	RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -379,8 +376,8 @@ f_runtest()
         echo -ne "Check Max Multinode Xattr EA_Size:">> ${LOG_FILE}
         echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
-        echo -e "Testing Binary:\t\t${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1 -n user -t normal -l 50 -s 65536 ${WORKPLACE}">>${LOG_FILE}
-        ${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1 -n user -t normal -l 50 -s 65536 ${WORKPLACE}>>${LOG_FILE} 2>&1
+        echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1 -n user -t normal -l 50 -s 65536 ${WORKPLACE}">>${LOG_FILE}
+        ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1 -n user -t normal -l 50 -s 65536 ${WORKPLACE}>>${LOG_FILE} 2>&1
         RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -393,8 +390,8 @@ f_runtest()
         echo -ne "Check Huge Multinode Xattr EA_Entry_Nums:">> ${LOG_FILE}
         echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
-        echo -e "Testing Binary:\t\t${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 10000 -n user -t normal -l 100 -s 200 ${WORKPLACE}">>${LOG_FILE}
-        ${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 10000 -n user -t normal -l 100 -s 200 ${WORKPLACE}>>${LOG_FILE} 2>&1
+        echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 10000 -n user -t normal -l 100 -s 200 ${WORKPLACE}">>${LOG_FILE}
+        ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 10000 -n user -t normal -l 100 -s 200 ${WORKPLACE}>>${LOG_FILE} 2>&1
         RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -407,8 +404,8 @@ f_runtest()
         echo -ne "Check All Max Multinode Xattr Arguments Together:">> ${LOG_FILE}
         echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
-        echo -e "Testing Binary:\t\t${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 255 -s 65536 ${WORKPLACE}">>${LOG_FILE}
-        ${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 255 -s 65536 ${WORKPLACE}>>${LOG_FILE} 2>&1
+        echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 255 -s 65536 ${WORKPLACE}">>${LOG_FILE}
+        ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 255 -s 65536 ${WORKPLACE}>>${LOG_FILE} 2>&1
         RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -421,8 +418,8 @@ f_runtest()
         echo -ne "Launch Concurrent Adding Test:">> ${LOG_FILE}
         echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
-        echo -e "Testing Binary:\t\t${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 255 -s 5000 -o -r -k ${WORKPLACE}">>${LOG_FILE}
-        ${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 255 -s 5000 -o -r -k ${WORKPLACE}>>${LOG_FILE} 2>&1
+        echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 255 -s 5000 -o -r -k ${WORKPLACE}">>${LOG_FILE}
+        ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 255 -s 5000 -o -r -k ${WORKPLACE}>>${LOG_FILE} 2>&1
         RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -435,8 +432,8 @@ f_runtest()
         echo -ne "Launch MultiNode Xattr Stress Test:">> ${LOG_FILE}
         echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
-        echo -e "Testing Binary:\t\t${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 2000 -n user -t normal -l 255 -s 5000  -r -k ${WORKPLACE}">>${LOG_FILE}
-        ${MPIRUN_BIN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 2000 -n user -t normal -l 255 -s 5000  -r -k ${WORKPLACE}>>${LOG_FILE} 2>&1
+        echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 2000 -n user -t normal -l 255 -s 5000  -r -k ${WORKPLACE}">>${LOG_FILE}
+        ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 2000 -n user -t normal -l 255 -s 5000  -r -k ${WORKPLACE}>>${LOG_FILE} 2>&1
         RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
