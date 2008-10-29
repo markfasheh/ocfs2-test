@@ -495,6 +495,7 @@ function basic_test()
 #
 . `dirname ${0}`/config.sh
 
+set -o pipefail
 
 internal_setup
 
@@ -536,6 +537,13 @@ do
 	shift
 done
 
+if [ ! -d ${LOG_DIR} ]; then
+	mkdir -p ${LOG_DIR}
+	if [ $? -ne 0 ]; then
+		echo -e "Failed to create directory ${LOG_DIR}\n";
+		exit(1);
+	fi;
+fi;
 LOGFILE=${LOG_DIR}/fsck-test.log
 if [ -f ${LOGFILE} ]; then
 	mv ${LOGFILE} `dirname ${LOGFILE}`/`date +%F-%H-%M-%S`-`basename ${LOGFILE}`
