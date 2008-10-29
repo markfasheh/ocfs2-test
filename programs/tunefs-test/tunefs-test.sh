@@ -438,7 +438,7 @@ Change_Mount_Type()
 	Check_Volume;
 	SB_MTYPE=`${DEBUGFS_BIN} -n -R "stats" ${DEVICE}|${GREP} Incompat:| \
 		${GAWK} '{print \$3; exit}'`;
-	if [ ${SB_MTYPE} -ne 8 ]; then
+	if [ ${SB_MTYPE} -ne 8 || ${SB_MTYPE} -ne 24]; then
 	   test_fail;
 	   LogMsg "tunefs_test : Mount Type change failed. Superblock \c"
 	   LogMsg "Feature Incompat (${SB_MTYPE})";
