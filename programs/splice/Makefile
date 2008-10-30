@@ -13,9 +13,11 @@ SPLICE_WRITE_OBJECTS = $(patsubst %.c,%.o,$(SPLICE_WRITE_SOURCES))
 
 SOURCES = $(SPLICE_WRITE_SOURCES) $(SPLICE_READ_SOURCES)
 
-DIST_FILES = $(SOURCES)
+DIST_FILES = $(SOURCES) splice_test.py
 
 BIN_PROGRAMS = splice_read splice_write
+
+BIN_EXTRA = splice_test.py
 
 splice_read: $(SPLICE_READ_OBJECTS)
 	$(LINK) 

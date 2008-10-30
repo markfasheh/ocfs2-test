@@ -15,11 +15,11 @@ int main(int argc, char *argv[])
 		printf("open file failed.\n");
 		exit(-1);
 	}
-	slen = splice(STDIN_FILENO, NULL, fd, NULL, 1000, 0);
+	slen = splice(STDIN_FILENO, NULL, fd, NULL, 10000000, 0);
 	if (slen < 0)
-		printf("splice failed.\n");
+		fprintf(stderr, "splice failed.\n");
 	else
-		printf("spliced length = %d\n",slen);
+		fprintf(stderr, "spliced length = %d\n",slen);
 	close(fd);
 	if (slen < 0)
 		exit(-1);
