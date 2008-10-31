@@ -18,8 +18,8 @@
 # Boston, MA 021110-1307, USA.
 
 #
-if [ $# -ne 1 ]; then
-   echo -e 'Usage: $0 <DESTDIR>';
+if [ $# -ne 1 -a $# -ne 2 ]; then
+   echo -e 'Usage: $0 <DESTDIR> [INSTALLDIR]';
    exit 1;
 fi;
 
@@ -34,14 +34,20 @@ else
 	else
 		MPIDIR=/usr/bin
 	fi
-fi
+fi;
 
-BINDIR=${1}/bin
-sed "s;<DESTDIR>;${1};g" ${BINDIR}/config_py.skel >  ${BINDIR}/config.py
-mv ${BINDIR}/config.py  ${BINDIR}/config_py.skel
-sed "s;<MPIDIR>;${MPIDIR};g" ${BINDIR}/config_py.skel >  ${BINDIR}/config.py
+if [ $# -eq 1 ]; then
+	INSTALLDIR=${1};
+else
+	INSTALLDIR=${2};
+fi;
+
+ROOT_CONFIG_BIN=${1}/bin
+sed "s;<DESTDIR>;${INSTALLDIR};g" ${ROOT_CONFIG_BIN}/config_py.skel >  ${ROOT_CONFIG_BIN}/config.py
+mv ${ROOT_CONFIG_BIN}/config.py  ${ROOT_CONFIG_BIN}/config_py.skel
+sed "s;<MPIDIR>;${MPIDIR};g" ${ROOT_CONFIG_BIN}/config_py.skel >  ${ROOT_CONFIG_BIN}/config.py
 #
-sed "s;<DESTDIR>;${1};g" ${BINDIR}/config_shell.skel >  ${BINDIR}/config.sh
-mv ${BINDIR}/config.sh ${BINDIR}/config_shell.skel
-sed "s;<MPIDIR>;${MPIDIR};g" ${BINDIR}/config_shell.skel >  ${BINDIR}/config.sh
-rm -f ${BINDIR}/config_py.skel ${BINDIR}/config_shell.skel
+sed "s;<DESTDIR>;${INSTALLDIR};g" ${ROOT_CONFIG_BIN}/config_shell.skel >  ${ROOT_CONFIG_BIN}/config.sh
+mv ${ROOT_CONFIG_BIN}/config.sh ${ROOT_CONFIG_BIN}/config_shell.skel
+sed "s;<MPIDIR>;${MPIDIR};g" ${ROOT_CONFIG_BIN}/config_shell.skel >  ${ROOT_CONFIG_BIN}/config.sh
+rm -f ${ROOT_CONFIG_BIN}/config_py.skel ${ROOT_CONFIG_BIN}/config_shell.skel

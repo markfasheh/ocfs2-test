@@ -10,6 +10,8 @@ SUBDIRS =
 
 DIST_FILES = 	config_py.skel \
 		config_shell.skel \
+		Config.make \
+		setup.sh \
 		o2tf.py \
 		single_run.sh \
 		multiple_run.sh \

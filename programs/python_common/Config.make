@@ -5,9 +5,14 @@ CONFIG_SCRIPT := setup.sh
 
 CURDIR = $(shell pwd)
 
-config-script: $(CONFIG_SCRIPT)
+ifdef RPM_BUILD_ROOT
+INSTALLDIR = /usr/local
+endif
+
+config-script: $(CONFIG_SCRIPT) 
+
 ifdef CONFIG_SCRIPT
-	$(SHELL) $(CURDIR)/$(CONFIG_SCRIPT) $(DESTDIR)
+	$(SHELL) $(CURDIR)/$(CONFIG_SCRIPT) $(DESTDIR) $(INSTALLDIR)
 endif
 
 	mkdir -p  $(DESTDIR)/workfiles $(DESTDIR)/log
