@@ -2,13 +2,13 @@ TOPDIR = ..
 
 include $(TOPDIR)/Preamble.make
 
+
 SUBDIRS =			\
 	aio-stress		\
 	aio_direct		\
 	atime_quantum		\
 	backup_super		\
 	basic-dual-data		\
-	bonnie			\
 	buildkernel		\
 	check_file_size_limits	\
 	create_and_open		\
@@ -16,7 +16,6 @@ SUBDIRS =			\
 	create_racer		\
 	cross_delete		\
 	db_resize		\
-	dbench			\
 	dirop_fileop_racer	\
 	dlmstress1		\
 	exorcist		\
@@ -29,7 +28,6 @@ SUBDIRS =			\
 	forkwriter		\
 	fsx			\
 	inline-data		\
-	iozone			\
 	kernel_build_parallel_find	\
 	lock_grab		\
 	logwriter		\
@@ -40,7 +38,6 @@ SUBDIRS =			\
 	multi_node_mmap		\
 	open_delete		\
 	parallel_timing		\
-	postmark		\
 	python_common		\
 	quick_appending_writes	\
 	recovery_load		\
@@ -55,5 +52,9 @@ SUBDIRS =			\
 	write_append_truncate	\
 	write_torture		\
 	xattr_tests
+
+ifdef OCFS2_TEST_ENABLE_THIRDPARTY
+SUBDIRS += bonnie dbench iozone postmark
+endif
 
 include $(TOPDIR)/Postamble.make
