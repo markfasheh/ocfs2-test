@@ -16,23 +16,29 @@ else
 COMPILE_PY = 1
 endif
 
-TOOLSARCH = $(shell $(TOPDIR)/rpmarch.guess tools $(TOPDIR))
+TESTARCH = $(shell $(TOPDIR)/rpmarch.guess tools $(TOPDIR))
 
-ifeq ($(TOOLSARCH),error)
-$(error could not detect architecture for tools)
+ifeq ($(TESTARCH),error)
+$(error could not detect architecture for ocfs2-test)
 endif
 
 SUBDIRS = programs utilities tests suites
 
+SUBDIRS += vendor
+
 
 DIST_FILES = \
 	COPYING					\
+	CREDITS					\
+	MAINTAINERS				\
 	README					\
 	Config.make.in				\
 	Preamble.make				\
 	Postamble.make				\
 	aclocal.m4				\
+	mbvendor.m4				\
 	python.m4				\
+	pythondev.m4				\
 	runlog.m4				\
 	config.guess				\
 	config.sub				\
@@ -40,16 +46,45 @@ DIST_FILES = \
 	configure.in				\
 	install-sh				\
 	mkinstalldirs				\
+	Vendor.make				\
+	vendor.guess				\
+	svnrev.guess				\
 	rpmarch.guess
 
-srpm: dist
-	$(RPMBUILD) -bs --define "_sourcedir $(RPM_TOPDIR)" --define "_srcrpmdir $(RPM_TOPDIR)" --define "pygtk_name $(PYGTK_NAME)" --define "pyversion $(PYVERSION)" --define "chkconfig_dep $(CHKCONFIG_DEP)" --define "compile_py $(COMPILE_PY)" $(TOPDIR)/vendor/common/ocfs2-tools.spec
+DIST_RULES = dist-subdircreate
 
-rpm: srpm
-	$(RPMBUILD) --rebuild --define "pygtk_name $(PYGTK_NAME)" --define "pyversion $(PYVERSION)" --define "chkconfig_dep $(CHKCONFIG_DEP)" --define "compile_py $(COMPILE_PY)" $(TOOLSARCH) "ocfs2-tools-$(DIST_VERSION)-$(RPM_VERSION).src.rpm"
+.PHONY: dist dist-subdircreate dist-bye dist-fresh distclean
+
+dist-subdircreate:
+	$(TOPDIR)/mkinstalldirs $(DIST_DIR)/documentation/samples
+	$(TOPDIR)/mkinstalldirs $(DIST_DIR)/debian
+
+dist-bye:
+	-rm -rf $(DIST_TOPDIR)
+
+dist-fresh: dist-bye
+	$(TOPDIR)/mkinstalldirs $(DIST_TOPDIR)
+
+dist: dist-fresh dist-all
+	GZIP=$(GZIP_OPTS) tar chozf $(DIST_TOPDIR).tar.gz $(DIST_TOPDIR)
+	$(MAKE) dist-bye
+
+distclean: clean
+	rm -f Config.make config.status config.cache config.log $(PKGCONFIG_FILES)
+
+INSTALL_RULES = install-pkgconfig
+
+install-pkgconfig: $(PKGCONFIG_FILES)
+	$(SHELL) $(TOPDIR)/mkinstalldirs $(DESTDIR)$(libdir)/pkgconfig
+	for p in $(PKGCONFIG_FILES); do \
+	  $(INSTALL_DATA) $$p $(DESTDIR)$(libdir)/pkgconfig/$$p; \
+	done
+
+
+include Vendor.make
 
 def:
-	@echo $(TOOLSARCH)
+	@echo $(TESTARCH)
 
 include $(TOPDIR)/Postamble.make
 
