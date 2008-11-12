@@ -28,5 +28,5 @@ $(TOPDIR)/ocfs2-test-$(DIST_VERSION)-$(PKG_VERSION).$(VENDOR_EXTENSION).src.rpm:
 srpm: $(TOPDIR)/ocfs2-test-$(DIST_VERSION)-$(PKG_VERSION).$(VENDOR_EXTENSION).src.rpm
 
 rpm: srpm
-	$(RPMBUILD) --rebuild $(TOOLSARCH) "ocfs2-test-$(DIST_VERSION)-$(PKG_VERSION).$(VENDOR_EXTENSION).src.rpm"
+	$(RPMBUILD) --rebuild $(TESTARCH) "ocfs2-test-$(DIST_VERSION)-$(PKG_VERSION).$(VENDOR_EXTENSION).src.rpm"
 
