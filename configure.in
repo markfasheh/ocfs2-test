@@ -6,11 +6,13 @@ PACKAGE=ocfs2-test
 
 AC_SUBST(PACKAGE)
 
+MPICC=`which mpicc`
+INSTALLDIR=/usr/local
 # Adjust these for the software version.
-MAJOR_VERSION=0
+MAJOR_VERSION=1
 MINOR_VERSION=0
 MICRO_VERSION=1
-EXTRA_VERSION=
+EXTRA_VERSION=0
 
 # Adjust this only to bump the RPM packaging version
 RPM_VERSION=1
@@ -113,12 +115,21 @@ PKG_CHECK_MODULES(OCFS2, ocfs2,, [
   AC_SUBST(OCFS2_LIBS)
 ])
 
+AC_MSG_CHECKING(whether to enable third party packages)
+AC_ARG_ENABLE([third-party], [  --enable-third-party=[yes/no]   Enable third party software build (Disabled by default)],, enable_third_party=no)
+OCFS2_TEST_ENABLE_THIRDPARTY=
+if test "x$enable_third_party" = "xyes"; then
+    OCFS2_TEST_ENABLE_THIRDPARTY=yes
+fi
+AC_SUBST(OCFS2_TEST_ENABLE_THIRDPARTY)
+AC_MSG_RESULT($enable_third_party)
 
 dnl check for Python
 AM_PATH_PYTHON(2.3, , AC_MSG_ERROR([could not find Python 2.3 or higher.]))
 
 AC_CONFIG_FILES([
 Config.make
+vendor/common/ocfs2-test.spec-generic
 ])
 
 AC_OUTPUT
