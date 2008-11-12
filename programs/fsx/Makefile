@@ -2,13 +2,18 @@ TOPDIR = ../..
 
 include $(TOPDIR)/Preamble.make
 
+CFLAGS = -O2 -Wall -g
+
+SOURCES = fsx-linux.c
+OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
+
+DIST_FILES = $(SOURCES)
+
 BIN_PROGRAMS = fsx
 
-CFILES = fsx-linux.c
+BIN_EXTRA = test.sh
 
-OBJS = $(subst .c,.o,$(CFILES))
-
-fsx: $(OBJS)
-	$(LINK)
+fsx: $(OBJECTS)
+	$(LINK) 
 
 include $(TOPDIR)/Postamble.make
