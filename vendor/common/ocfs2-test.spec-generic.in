@@ -1,0 +1,295 @@
+#
+# Spec file for ocfs-test
+#
+
+# Macros
+# This one is hardcoded because, well, it belongs there
+%define _prefix /
+%define _installdir /usr/local/ocfs2-test
+# Because RPM is dumb
+%define _unpackaged_files_terminate_build 0
+# Because RH defines lib64 on ppc32 builds
+%ifarch ppc
+%define brokenrhlibdir /usr/lib
+%else
+%define brokenrhlibdir %{_libdir}
+%endif
+
+%define compile_py @@COMPILE_PY@@
+
+Summary: OCFS2-TEST is package to test ocfs2 and ocfs2-tools.
+Name: ocfs2-test
+Version: @DIST_VERSION@
+Release: @@PKG_VERSION@@.@@VENDOR_EXTENSION@@
+License: GPL
+Group: System Environment/Kernel
+Source: ocfs2-test-@DIST_VERSION@.tar.gz
+URL: http://oss.oracle.com/projects/ocfs2-test/
+Distribution: Oracle
+Vendor: Oracle
+Packager: Marcos Matsunaga <Marcos.Matsunaga@oracle.com>
+Exclusiveos: Linux
+Requires: bash, coreutils, net-tools, modutils, e2fsprogs, @@CHKCONFIG_DEP@@, glib2 >= 2.2.3, util-linux >= 2.12j, openmpi >= 1.2.5, openmpi-devel >= 1.2.5, openmpi-libs >= 1.2.5, python >= @@PYVERSION@@
+BuildRequires: e2fsprogs-devel, glib2-devel >= 2.2.3, python-devel >= @@PYVERSION@@, util-linux >= 2.12j, openmpi-devel >= 1.2.5, openmpi-libs >= 1.2.5
+
+BuildRoot: %{_tmppath}/ocfs2-test-%{PACKAGE_VERSION}-%{PACKAGE_RELEASE}-root
+
+%description
+OCFS2-TEST is package to test ocfs2 and ocfs2-tools.
+
+
+%prep
+%setup -n ocfs2-test-%{version}
+
+
+%build
+%configure --disable-debug --prefix=/usr --mandir=/usr/share/man --libdir=%{brokenrhlibdir}
+make
+
+
+%install
+
+
+make DESTDIR="$RPM_BUILD_ROOT%{_installdir}" install
+
+%if %{compile_py}
+%{__python} -c "import compileall; compileall.compile_dir('$RPM_BUILD_ROOT/%{brokenrhlibdir}/python@@PYVERSION@@/site-packages/ocfs2interface', ddir='%{brokenrhlibdir}/python@@PYVERSION@@/site-packages/ocfs2interface')"
+%endif
+
+
+%clean
+rm -rf "$RPM_BUILD_ROOT"
+
+%post
+/bin/chmod 777 %{_installdir}/log
+
+%files
+%defattr(-,root,root)
+%{_installdir}/bin/aio-stress
+%{_installdir}/bin/partial_aio_direct
+%{_installdir}/bin/test_atime_quantum.py
+%{_installdir}/bin/test_backup_super.sh
+%{_installdir}/bin/buildkernel.py
+%{_installdir}/bin/run_buildkernel.py
+%{_installdir}/bin/test_netfail.py
+%{_installdir}/bin/ocfs2_nicdown.py
+%{_installdir}/bin/check_file_size_limits
+%{_installdir}/bin/create_and_open
+%{_installdir}/bin/create_racer
+%{_installdir}/bin/run_create_racer.py
+%{_installdir}/bin/crdel_del_files.py
+%{_installdir}/bin/crdel_gen_files.py
+%{_installdir}/bin/cross_delete.py
+%{_installdir}/bin/dlmstress1.sh
+%{_installdir}/bin/extend_and_write
+%{_installdir}/bin/verify
+%{_installdir}/bin/run_extend_and_write.py
+%{_installdir}/bin/truncate_direct
+%{_installdir}/bin/extend_files.sh
+%{_installdir}/bin/extendo
+%{_installdir}/bin/fill_holes
+%{_installdir}/bin/punch_holes
+%{_installdir}/bin/verify_holes
+%{_installdir}/bin/burn-in.sh
+%{_installdir}/bin/old_burn-in.sh
+%{_installdir}/bin/flock_unit_test
+%{_installdir}/bin/run_flock_unit_test.py
+%{_installdir}/bin/fsck-test.sh
+%{_installdir}/bin/forkwriter
+%{_installdir}/bin/run_forkwriter.py
+%{_installdir}/bin/lock_grab
+%{_installdir}/bin/logwriter
+%{_installdir}/bin/enospc_test
+%{_installdir}/bin/enospc.sh
+%{_installdir}/bin/rename_write_race.sh
+%{_installdir}/bin/lvb_torture
+%{_installdir}/bin/run_lvb_torture.py
+%{_installdir}/bin/mkfs-test.sh
+%{_installdir}/bin/mmap_test
+%{_installdir}/bin/mmap_truncate
+%{_installdir}/bin/multi_mmap
+%{_installdir}/bin/run_multi_mmap.py
+%{_installdir}/bin/open_delete
+%{_installdir}/bin/open_delete.py
+%{_installdir}/bin/o2tf.py
+%{_installdir}/bin/single_run.sh
+%{_installdir}/bin/remote_mount.py
+%{_installdir}/bin/remote_umount.py
+%{_installdir}/bin/command.py
+%{_installdir}/bin/recovery_load.py
+%{_installdir}/bin/resize_test.sh
+%{_installdir}/bin/reserve_space
+%{_installdir}/bin/sendfiletest
+%{_installdir}/bin/splice_read
+%{_installdir}/bin/splice_write
+%{_installdir}/bin/truncate
+%{_installdir}/bin/ttest
+%{_installdir}/bin/remove_slot
+%{_installdir}/bin/remove_slot.sh
+%{_installdir}/bin/corrupt_remove_slot.sh
+%{_installdir}/bin/tunefs-test.sh
+%{_installdir}/bin/write_append_truncate
+%{_installdir}/bin/run_write_append_truncate.py
+%{_installdir}/bin/write_torture
+%{_installdir}/bin/write_torture.py
+%{_installdir}/bin/run_write_torture.py
+%{_installdir}/bin/xattr-test
+%{_installdir}/bin/xattr-multi-test
+%{_installdir}/bin/xattr-single-run.sh
+%{_installdir}/bin/xattr-multi-run.sh
+%{_installdir}/bin/mpi-run-parts
+%{_installdir}/bin/buildkernel.pyc
+%{_installdir}/bin/command.pyc
+%{_installdir}/bin/crdel_del_files.pyc
+%{_installdir}/bin/crdel_gen_files.pyc
+%{_installdir}/bin/cross_delete.pyc
+%{_installdir}/bin/o2tf.pyc
+%{_installdir}/bin/ocfs2_nicdown.pyc
+%{_installdir}/bin/open_delete.pyc
+%{_installdir}/bin/recovery_load.pyc
+%{_installdir}/bin/remote_mount.pyc
+%{_installdir}/bin/remote_umount.pyc
+%{_installdir}/bin/run_buildkernel.pyc
+%{_installdir}/bin/run_create_racer.pyc
+%{_installdir}/bin/run_extend_and_write.pyc
+%{_installdir}/bin/run_flock_unit_test.pyc
+%{_installdir}/bin/run_forkwriter.pyc
+%{_installdir}/bin/run_lvb_torture.pyc
+%{_installdir}/bin/run_multi_mmap.pyc
+%{_installdir}/bin/run_write_append_truncate.pyc
+%{_installdir}/bin/run_write_torture.pyc
+%{_installdir}/bin/test_atime_quantum.pyc
+%{_installdir}/bin/test_netfail.pyc
+%{_installdir}/bin/write_torture.pyc
+%{_installdir}/bin/buildkernel.pyo
+%{_installdir}/bin/command.pyo
+%{_installdir}/bin/crdel_del_files.pyo
+%{_installdir}/bin/crdel_gen_files.pyo
+%{_installdir}/bin/cross_delete.pyo
+%{_installdir}/bin/o2tf.pyo
+%{_installdir}/bin/ocfs2_nicdown.pyo
+%{_installdir}/bin/open_delete.pyo
+%{_installdir}/bin/recovery_load.pyo
+%{_installdir}/bin/remote_mount.pyo
+%{_installdir}/bin/remote_umount.pyo
+%{_installdir}/bin/run_buildkernel.pyo
+%{_installdir}/bin/run_create_racer.pyo
+%{_installdir}/bin/run_extend_and_write.pyo
+%{_installdir}/bin/run_flock_unit_test.pyo
+%{_installdir}/bin/run_forkwriter.pyo
+%{_installdir}/bin/run_lvb_torture.pyo
+%{_installdir}/bin/run_multi_mmap.pyo
+%{_installdir}/bin/run_write_append_truncate.pyo
+%{_installdir}/bin/run_write_torture.pyo
+%{_installdir}/bin/test_atime_quantum.pyo
+%{_installdir}/bin/test_netfail.pyo
+%{_installdir}/bin/write_torture.pyo
+%{_installdir}/bin/config.py
+%{_installdir}/bin/config.sh
+%{_installdir}/bin/fsx
+%{_installdir}/bin/inline-data
+%{_installdir}/bin/inline-dirs
+%{_installdir}/bin/multi-inline-data
+%{_installdir}/bin/multi-inline-dirs
+%{_installdir}/bin/multi-inline-run.sh
+%{_installdir}/bin/ocfs2_truncate.sh
+%{_installdir}/bin/single-inline-run.sh
+%{_installdir}/bin/splice_test.py
+%{_installdir}/bin/test.sh
+%{_installdir}/bin/test_truncate
+%{_installdir}/log
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.00.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.01.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.02.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.03.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.04.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.05.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.06.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.07.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.08.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.09.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.10.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.11.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.12.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.13.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.14.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.15.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.16.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.17.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.18.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.19.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.20.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.21.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.22.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.23.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.24.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.25.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.26.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.27.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.28.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.29.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.30.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.31.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.32.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.33.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.34.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.35.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.36.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.37.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.38.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.39.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.40.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.41.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.42.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.43.stdout
+%{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.clean.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.00.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.01.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.02.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.03.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.04.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.05.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.06.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.07.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.08.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.09.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.10.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.11.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.12.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.13.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.14.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.15.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.16.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.17.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.18.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.19.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.20.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.21.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.22.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.23.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.24.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.25.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.26.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.27.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.28.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.29.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.30.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.31.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.32.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.33.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.34.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.35.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.36.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.37.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.38.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.39.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.40.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.41.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.42.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.43.stdout
+%{_installdir}/workfiles/fsck-test/small-disk/fsck.ocfs2.clean.stdout
+
+
+%changelog
+* Wed Oct 22 2008 Marcos Matsunaga <Marcos.Matsunaga@oracle.com>
+- Initial rpm spec
