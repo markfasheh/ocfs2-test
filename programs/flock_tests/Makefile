@@ -15,7 +15,7 @@ DIST_FILES = $(SOURCES)
 
 BIN_PROGRAMS = flock_unit_test
 
-BIN_EXTRA = run_flock_unit_test.py
+BIN_EXTRA = run_flock_unit_test.py concurrent_flock_test.pl
 
 flock_unit_test: $(OBJECTS)
 	$(LINK)
