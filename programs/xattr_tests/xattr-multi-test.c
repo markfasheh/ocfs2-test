@@ -516,7 +516,9 @@ static int one_round_run(enum FILE_TYPE ft, int round_no)
 			memset(xattr_value, 0, xattr_value_sz);
 			memset(xattr_value_get, 0, xattr_value_sz);
 			xattr_value_constructor(j);
-			add_or_update_ea(ft, fd, XATTR_REPLACE, "update");
+			ret = add_or_update_ea(ft, fd, XATTR_REPLACE, "update");
+			if (ret < 0 )
+				teardown(MPI_RET_FAILED);
 			if (ft == NORMAL)
 				ret = write(fd, write_buf, 100);
 		}
