@@ -51,7 +51,8 @@ SUBDIRS =			\
 	untar_files		\
 	write_append_truncate	\
 	write_torture		\
-	xattr_tests
+	xattr_tests		\
+	acl_tests
 
 ifdef OCFS2_TEST_ENABLE_THIRDPARTY
 SUBDIRS += bonnie dbench iozone postmark
