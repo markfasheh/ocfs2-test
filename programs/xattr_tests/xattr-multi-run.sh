@@ -1,6 +1,22 @@
 #!/bin/bash
+#
+# Copyright (C) 2008 Oracle.  All rights reserved.
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public
+# License, version 2,  as published by the Free Software Foundation.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# General Public License for more details.
+#
+# You should have received a copy of the GNU General Public
+# License along with this program; if not, write to the
+# Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+# Boston, MA 021110-1307, USA.
+#
 # vi: set ts=8 sw=8 autoindent noexpandtab :
-################################################################################
 #
 # File :	xattr-multi-run.sh
 #
@@ -13,8 +29,7 @@
 #
 # History:      6 July 2008
 #
-# Copyright (C) 2008 Oracle.  All rights reserved.
-#
+
 ################################################################################
 # Global Variables
 ################################################################################
@@ -22,8 +37,6 @@ PATH=$PATH:/sbin      # Add /sbin to the path for ocfs2 tools
 export PATH=$PATH:.
 
 . ./config.sh
-
-#MPIRUN="`which mpirun`"
 
 RM="`which rm`"
 MKDIR="`which mkdir`"
@@ -70,6 +83,9 @@ MPI_HOSTS=
 MPI_HOSTFILE=
 MPI_ACCESS_METHOD="ssh"
 MPI_PLS_AGENT_ARG="-mca pls_rsh_agent ssh:rsh"
+
+TEST_NO=0
+TEST_PASS=0
 
 ###for success/failure print
 BOOTUP=color
@@ -241,22 +257,14 @@ f_do_mkfs_and_mount()
 {
         echo -n "Mkfsing device(-b ${BLOCKSIZE} -C ${CLUSTERSIZE}): "|tee -a ${RUN_LOG_FILE}
 
-        echo y|${MKFS_BIN} --fs-features=xattr -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -N 4 -L ocfs2-xattr-test ${OCFS2_DEVICE} ${BLOCKNUMS}>>${RUN_LOG_FILE} 2>&1
+        echo y|${MKFS_BIN} --fs-features=xattr -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -N 2 -L ocfs2-xattr-multi-test ${OCFS2_DEVICE} ${BLOCKNUMS}>>${RUN_LOG_FILE} 2>&1
 
         RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
 
-#        while read node_line ; do
-#                host_node=`echo ${node_line}|${AWK_BIN} '{print $1}'`
-#                echo -n "Mounting device to ${MOUNT_POINT} on ${host_node}:"|tee -a ${RUN_LOG_FILE}
-#                RET=$(${REMOTE_SH_BIN} -n ${host_node} "sudo /bin/mount -t ocfs2 -o rw,nointr ${OCFS2_DEVICE} ${MOUNT_POINT};echo \$?" 2>>${RUN_LOG_FILE})
-#                echo_status ${RET} |tee -a ${RUN_LOG_FILE}
-#                exit_or_not ${RET}
-#
-#        done<${MPI_HOSTFILE}
 	echo -n "Mounting device ${OCFS2_DEVICE} to nodes(${MPI_HOSTS}):"|tee -a ${RUN_LOG_FILE}
-	${REMOTE_MOUNT_BIN} -l ocfs2-xattr-test -m ${MOUNT_POINT} -n ${MPI_HOSTS}>>${RUN_LOG_FILE} 2>&1
+	${REMOTE_MOUNT_BIN} -l ocfs2-xattr-multi-test -m ${MOUNT_POINT} -n ${MPI_HOSTS}>>${RUN_LOG_FILE} 2>&1
 	RET=$?
 	echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -270,15 +278,6 @@ f_do_mkfs_and_mount()
 
 f_do_umount()
 {
-#        while read node_line;do
-#                host_node=`echo ${node_line}|awk '{print $1}'`
-#                echo -ne "Unmounting device from ${MOUNT_POINT} on ${host_node}:"|tee -a ${RUN_LOG_FILE}
-#                RET=$(${REMOTE_SH_BIN} -n ${host_node} "sudo /bin/umount ${MOUNT_POINT};echo \$?" 2>>${RUN_LOG_FILE})
-#                echo_status ${RET} |tee -a ${RUN_LOG_FILE}
-#                exit_or_not ${RET}
-#
-#        done<${MPI_HOSTFILE}
-
 	echo -n "Umounting device ${OCFS2_DEVICE} from nodes(${MPI_HOSTS}):"|tee -a ${RUN_LOG_FILE}
 	${REMOTE_UMOUNT_BIN} -m ${MOUNT_POINT} -n ${MPI_HOSTS}>>${RUN_LOG_FILE} 2>&1
 	RET=$?
@@ -289,10 +288,11 @@ f_do_umount()
 
 f_runtest()
 {
+	((TEST_NO++))
 	echo >>${LOG_FILE}
 	echo "==========================================================">>${LOG_FILE}
-	echo -ne "Check Namespace&Filetype of Multinode Xattr on Ocfs2:"|tee -a ${RUN_LOG_FILE}
-	echo -ne "Check Namespace&Filetype of Multinode Xattr on Ocfs2:">>${LOG_FILE}
+	echo -ne "[${TEST_NO}] Check Namespace&Filetype of Multinode Xattr on Ocfs2:"|tee -a ${RUN_LOG_FILE}
+	echo -ne "[${TEST_NO}] Check Namespace&Filetype of Multinode Xattr on Ocfs2:">>${LOG_FILE}
 	echo >>${LOG_FILE}
 	echo "==========================================================">>${LOG_FILE}
 	for namespace in user trusted
@@ -331,12 +331,14 @@ f_runtest()
                 echo |tee -a ${RUN_LOG_FILE}
         fi
         ${RM} -rf ${WORKPLACE}/* || exit 1
+	((TEST_PASS++))
 
 
+	((TEST_NO++))
 	echo >>${LOG_FILE}
 	echo "==========================================================">>${LOG_FILE}
-        echo -ne "Check Utility of Multinode Xattr on Ocfs2:"|tee -a ${RUN_LOG_FILE}
-        echo -ne "Check Utility of Multinode Xattr on Ocfs2:">>${LOG_FILE}
+        echo -ne "[${TEST_NO}] Check Utility of Multinode Xattr on Ocfs2:"|tee -a ${RUN_LOG_FILE}
+        echo -ne "[${TEST_NO}] Check Utility of Multinode Xattr on Ocfs2:">>${LOG_FILE}
         echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
 	for((i=0;i<4;i++));do
@@ -354,12 +356,14 @@ f_runtest()
                 echo | tee -a ${RUN_LOG_FILE}
         fi
         ${RM} -rf ${WORKPLACE}/* || exit 1
+	((TEST_PASS++))
 
 
+	((TEST_NO++))
 	echo >>${LOG_FILE}
 	echo "==========================================================">>${LOG_FILE}
-	echo -ne "Check Max Multinode Xattr EA_Name_Length:"|tee -a ${RUN_LOG_FILE}
-	echo -ne "Check Max Multinode Xattr EA_Name_Length:">> ${LOG_FILE}
+	echo -ne "[${TEST_NO}] Check Max Multinode Xattr EA_Name_Length:"|tee -a ${RUN_LOG_FILE}
+	echo -ne "[${TEST_NO}] Check Max Multinode Xattr EA_Name_Length:">> ${LOG_FILE}
 	echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
 	echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 4 -n user -t normal -l 255 -s 300 ${WORKPLACE}">>${LOG_FILE}
@@ -368,12 +372,14 @@ f_runtest()
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
         ${RM} -rf ${WORKPLACE}/* || exit 1
+	((TEST_PASS++))
 
 
+	((TEST_NO++))
 	echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
-        echo -ne "Check Max Multinode Xattr EA_Size:"|tee -a ${RUN_LOG_FILE}
-        echo -ne "Check Max Multinode Xattr EA_Size:">> ${LOG_FILE}
+        echo -ne "[${TEST_NO}] Check Max Multinode Xattr EA_Size:"|tee -a ${RUN_LOG_FILE}
+        echo -ne "[${TEST_NO}] Check Max Multinode Xattr EA_Size:">> ${LOG_FILE}
         echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
         echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1 -n user -t normal -l 50 -s 65536 ${WORKPLACE}">>${LOG_FILE}
@@ -382,12 +388,14 @@ f_runtest()
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
         ${RM} -rf ${WORKPLACE}/* || exit 1
+	((TEST_PASS++))
 
 
+	((TEST_NO++))
 	echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
-        echo -ne "Check Huge Multinode Xattr EA_Entry_Nums:"|tee -a ${RUN_LOG_FILE}
-        echo -ne "Check Huge Multinode Xattr EA_Entry_Nums:">> ${LOG_FILE}
+        echo -ne "[${TEST_NO}] Check Huge Multinode Xattr EA_Entry_Nums:"|tee -a ${RUN_LOG_FILE}
+        echo -ne "[${TEST_NO}] Check Huge Multinode Xattr EA_Entry_Nums:">> ${LOG_FILE}
         echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
         echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 10000 -n user -t normal -l 100 -s 200 ${WORKPLACE}">>${LOG_FILE}
@@ -396,12 +404,14 @@ f_runtest()
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
         ${RM} -rf ${WORKPLACE}/* || exit 1
+	((TEST_PASS++))
 
 	
+	((TEST_NO++))
 	echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
-        echo -ne "Check All Max Multinode Xattr Arguments Together:"|tee -a ${RUN_LOG_FILE}
-        echo -ne "Check All Max Multinode Xattr Arguments Together:">> ${LOG_FILE}
+        echo -ne "[${TEST_NO}] Check All Max Multinode Xattr Arguments Together:"|tee -a ${RUN_LOG_FILE}
+        echo -ne "[${TEST_NO}] Check All Max Multinode Xattr Arguments Together:">> ${LOG_FILE}
         echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
         echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 255 -s 65536 ${WORKPLACE}">>${LOG_FILE}
@@ -410,12 +420,14 @@ f_runtest()
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
         ${RM} -rf ${WORKPLACE}/* || exit 1
+	((TEST_PASS++))
 
 
+	((TEST_NO++))
 	echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
-        echo -ne "Launch Concurrent Adding Test:"|tee -a ${RUN_LOG_FILE}
-        echo -ne "Launch Concurrent Adding Test:">> ${LOG_FILE}
+        echo -ne "[${TEST_NO}] Launch Concurrent Adding Test:"|tee -a ${RUN_LOG_FILE}
+        echo -ne "[${TEST_NO}] Launch Concurrent Adding Test:">> ${LOG_FILE}
         echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
         echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 255 -s 5000 -o -r -k ${WORKPLACE}">>${LOG_FILE}
@@ -424,12 +436,14 @@ f_runtest()
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
         ${RM} -rf ${WORKPLACE}/* || exit 1
+	((TEST_PASS++))
 
 	
+	((TEST_NO++))
 	echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
-        echo -ne "Launch MultiNode Xattr Stress Test:"|tee -a ${RUN_LOG_FILE}
-        echo -ne "Launch MultiNode Xattr Stress Test:">> ${LOG_FILE}
+        echo -ne "[${TEST_NO}] Launch MultiNode Xattr Stress Test:"|tee -a ${RUN_LOG_FILE}
+        echo -ne "[${TEST_NO}] Launch MultiNode Xattr Stress Test:">> ${LOG_FILE}
         echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
         echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 2000 -n user -t normal -l 255 -s 5000  -r -k ${WORKPLACE}">>${LOG_FILE}
@@ -438,8 +452,7 @@ f_runtest()
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
         ${RM} -rf ${WORKPLACE}/* || exit 1
-
-
+	((TEST_PASS++))
 }
 
 f_cleanup()
@@ -459,12 +472,16 @@ trap ' : ' SIGTERM
 
 f_setup $*
 
-for BLOCKSIZE in 512 1024 4096
+START_TIME=${SECONDS}
+echo "=====================Multiple nodes xattr testing starts: `date`=====================" |tee -a ${RUN_LOG_FILE}
+echo "=====================Multiple nodes xattr testing starts: `date`=====================" >> ${LOG_FILE}
+
+for BLOCKSIZE in 512 1024 2048 4096
 do
         for CLUSTERSIZE in  4096 32768 1048576
         do
-                echo "++++++++++Multiple node xattr test with \"-b ${BLOCKSIZE} -C ${CLUSTERSIZE}\"++++++++++" |tee -a ${RUN_LOG_FILE}
-                echo "++++++++++Multiple node xattr test with \"-b ${BLOCKSIZE} -C ${CLUSTERSIZE}\"++++++++++">>${LOG_FILE}
+                echo "++++++++++xattr tests with \"-b ${BLOCKSIZE} -C ${CLUSTERSIZE}\"++++++++++" |tee -a ${RUN_LOG_FILE}
+                echo "++++++++++xattr tests with \"-b ${BLOCKSIZE} -C ${CLUSTERSIZE}\"++++++++++">>${LOG_FILE}
                 echo "======================================================================================="
                 f_do_mkfs_and_mount
 		f_runtest
@@ -473,7 +490,14 @@ do
                 echo -e "\n\n\n">>${LOG_FILE}
         done
 done
-
 f_cleanup
+
+END_TIME=${SECONDS}
+echo "=====================Multiple nodes xattr testing ends: `date`=====================" |tee -a ${RUN_LOG_FILE}
+echo "=====================Multiple nodes xattr testing ends: `date`=====================" >> ${LOG_FILE}
+
+echo "Time elapsed(s): $((${END_TIME}-${START_TIME}))" |tee -a ${RUN_LOG_FILE}
+echo "Tests total: ${TEST_NO}" |tee -a ${RUN_LOG_FILE}
+echo "Tests passed: ${TEST_PASS}" |tee -a ${RUN_LOG_FILE}
 
 
