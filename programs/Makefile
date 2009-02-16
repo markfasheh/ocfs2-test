@@ -53,7 +53,8 @@ SUBDIRS =			\
 	write_torture		\
 	xattr_tests		\
 	acl_tests		\
-	quota_tests
+	quota_tests		\
+	inode_alloc_perf_tests
 
 ifdef OCFS2_TEST_ENABLE_THIRDPARTY
 SUBDIRS += bonnie dbench iozone postmark
