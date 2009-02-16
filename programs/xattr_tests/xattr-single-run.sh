@@ -178,6 +178,12 @@ f_getoptions()
 
 f_setup()
 {
+
+	if [ "${UID}" = "0" ];then
+		echo "Should not run tests as root."
+		exit 1
+	fi
+
 	f_getoptions $*
 
 	if [ -z "${MOUNT_POINT}" ];then 
