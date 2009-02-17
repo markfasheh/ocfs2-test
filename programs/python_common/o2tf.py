@@ -269,7 +269,7 @@ def openmpi_run(DEBUGON, nproc, cmd, nodes, remote_sh, logfile, w_flag):
 				logfile, 0, '')
 		pid = os.spawnv(os.P_NOWAIT,
 			'/bin/bash', ['bash', '-xc',
-			config.MPIRUN + ' -mca btl tcp,self -mca btl_tcp_if_include eth0  %s %s --host %s %s' % \
+			config.MPIRUN + ' -mca btl tcp,self %s %s --host %s %s' % \
 			(shopt, nprocopt, nodes, cmd)])
 		if w_flag == 'NOWAIT':
 			return pid
