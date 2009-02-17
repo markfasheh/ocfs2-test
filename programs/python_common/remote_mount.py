@@ -95,7 +95,7 @@ command = str('%s -l %s -m %s' % (buildcmd,
 o2tf.OpenMPIInit(DEBUGON, options.nodelist, logfile, 'ssh')
 #
 #
-o2tf.openmpi_run(DEBUGON,
+ret = o2tf.openmpi_run(DEBUGON,
 		 nproc,
 		 str('%s' % command),
 		 options.nodelist,
@@ -103,3 +103,7 @@ o2tf.openmpi_run(DEBUGON,
 		 logfile,
 		 'WAIT')
 
+if ret:
+	sys.exit(1)
+else:
+	sys.exit(0)

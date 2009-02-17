@@ -243,6 +243,8 @@ def openmpi_run(DEBUGON, nproc, cmd, nodes, remote_sh, logfile, w_flag):
 	Execute commands in parallel using OpenMPI.'
 	"""
 	from os import access,F_OK
+	pid = 0
+        status = 0
 	found = 0
 	uname = os.uname()
 	nodelen = len(string.split(nodes,','))
@@ -274,7 +276,8 @@ def openmpi_run(DEBUGON, nproc, cmd, nodes, remote_sh, logfile, w_flag):
 		if w_flag == 'NOWAIT':
 			return pid
 		else:
-			os.waitpid(pid, 0)
+			(pid, status) = os.waitpid(pid, 0)
+			return status
 
 	except os.error:
 		pass

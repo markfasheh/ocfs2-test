@@ -83,6 +83,8 @@ if __name__=='__main__':
 		else:
 			o2tf.printlog('Partition already mounted.',
 				logfile, 0, '')
+			sys.exit(1)
+
 	if options.doumount:
 		if not options.mountpoint:
 			parser.error('Please specify mountpoint.')
@@ -92,4 +94,5 @@ if __name__=='__main__':
 		else:
 			o2tf.printlog('Partition not mounted.',
 				logfile, 0, '')
+			sys.exit(1)
 #
