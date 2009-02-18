@@ -112,6 +112,7 @@ Usage = 'Usage: %prog [-c|--count count] \
 [-i|--initialize] \
 [-l|-logfile logfilename] \
 [-n|--nodes nodelist] \
+[-nocheck] \
 [-t|--tarfile fullpath tar filename] \
 [-u|--user username]'
 #
@@ -159,6 +160,12 @@ if __name__=='__main__':
 		type='string',
 		help='List of nodes where the test will be executed.')
 #
+	parser.add_option('--nocheck', 
+		action="store_true",
+		dest='nocheckdirs',
+		default=False,
+		help='Ignore directory check before the run. Default=False.')
+#
 	parser.add_option('-t', 
 		'--tarfile', 
 		dest='tarfile', 
@@ -202,7 +209,7 @@ if DEBUGON:
 #
 if options.initialize:
 	Initialize()
-else:
+elif not options.nocheckdirs:
 	CheckDirs(options.nodelist, options.dirlist)
 #
 for i in range(options.count):
