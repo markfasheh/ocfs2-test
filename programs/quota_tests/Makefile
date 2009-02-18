@@ -11,7 +11,7 @@ CFLAGS = -O2 -Wall -g $(O2DLM_CFLAGS) $(OCFS2_CFLAGS)
 SOURCES = quota_multi_tests.c quota.h
 OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 
-DIST_FILES = $(SOURCES) open_delete.py
+DIST_FILES = $(SOURCES)
 
 BIN_EXTRA = run_quota_multi_tests.py quota_tests.sh
 
