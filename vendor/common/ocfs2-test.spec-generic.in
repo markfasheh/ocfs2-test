@@ -197,6 +197,14 @@ rm -rf "$RPM_BUILD_ROOT"
 %{_installdir}/bin/splice_test.py
 %{_installdir}/bin/test.sh
 %{_installdir}/bin/test_truncate
+%{_installdir}/bin/acl_tests.sh
+%{_installdir}/bin/concurrent_flock_test.pl
+%{_installdir}/bin/inode_alloc_perf.sh
+%{_installdir}/bin/multi_inode_alloc_perf.sh
+%{_installdir}/bin/multi_inode_alloc_perf_runner.sh
+%{_installdir}/bin/quota_multi_tests
+%{_installdir}/bin/quota_tests.sh
+%{_installdir}/bin/run_quota_multi_tests.py
 %{_installdir}/log
 %{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.00.stdout
 %{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.01.stdout
