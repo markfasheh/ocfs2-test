@@ -157,7 +157,7 @@ if DEBUGON:
 #
 o2tf.OpenMPIInit(DEBUGON, options.nodelist, logfile, 'ssh')
 #
-o2tf.openmpi_run(DEBUGON, procs, 
+ret = o2tf.openmpi_run(DEBUGON, procs, 
 	str('%s -d %s %s -i %s %s %s 2>&1 | tee -a %s' % (cmd, 
 	dlmfs, 
 	hbdev, 
@@ -169,3 +169,10 @@ o2tf.openmpi_run(DEBUGON, procs,
 	'ssh',
 	options.logfile,
 	'WAIT')
+if not ret:
+	o2tf.printlog('run_lvb_torture: execution successful.',
+		logfile, 0, '')
+else:
+	o2tf.printlog('run_lvb_torture: execution failed.',
+		logfile, 0, '')
+	sys.exit(1)
