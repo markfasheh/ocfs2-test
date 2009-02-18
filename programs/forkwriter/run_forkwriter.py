@@ -154,18 +154,27 @@ if DEBUGON:
 		0, 
 		'')
 #
-o2tf.StartMPI(DEBUGON, options.nodelist, logfile)
+o2tf.OpenMPIInit(DEBUGON, options.nodelist, logfile, 'ssh')
 #
 for z in range(options.count):
 	o2tf.printlog('run_forkwriter: Running test# %s of %s' % (z, options.count), 
 	logfile, 
 	0, 
 	'')
-	o2tf.lamexec(DEBUGON, options.procs, config.WAIT, str('%s %s %s %s %s' %
+	ret = o2tf.openmpi_run(DEBUGON, options.procs, str('%s %s %s %s %s' %
 		(cmd, 
 		options.filename, 
 		options.count, 
 		options.procs, 
 		options.sleep ) ), 
 		options.nodelist, 
-		options.logfile)
+		'ssh',
+		options.logfile,
+		'WAIT')
+	if not ret:
+		o2tf.printlog('run_forkwriter: RUN# %s execution successful.' \
+		% z, logfile, 0, '')
+	else:
+		o2tf.printlog('run_forkwriter: RUN# %s execution failed.' % z,
+			logfile, 0, '')
+		sys.exit(1)
