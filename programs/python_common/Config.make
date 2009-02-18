@@ -6,7 +6,7 @@ CONFIG_SCRIPT := setup.sh
 CURDIR = $(shell pwd)
 
 ifdef RPM_BUILD_ROOT
-INSTALLDIR = /usr/local
+INSTALLDIR = /usr/local/ocfs2-test
 endif
 
 config-script: $(CONFIG_SCRIPT) 

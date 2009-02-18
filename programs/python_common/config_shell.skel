@@ -30,21 +30,11 @@ LIBDIR=${O2TDIR}/lib
 export LIBDIR
 LOGFILE=${O2TDIR}/log/o2t.log
 export LOGFILE
-LAMBOOT=${MPIDIR}/lamboot
-export LAMBOOT
-LAMHOSTS=${WORKFILESDIR}/lamhosts
-export LAMHOSTS
 MPIHOSTS=${WORKFILESDIR}/mpihosts
 export MPIHOSTS
-RECON=${MPIDIR}/recon
-export RECON
-MPIRUNPARTS=${BINDIR}/mpi-run-parts
-export MPIRUNPARTS
 KERNELDIR=linux*
 export KERNELDIR
 MPIRUN=${MPIDIR}/mpirun
 export MPIRUN
-LAMEXEC=${MPIDIR}/lamexec
-export LAMEXEC
 NPROC=1
 export NPROC

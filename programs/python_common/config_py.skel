@@ -31,21 +31,11 @@ LIBDIR = O2TDIR + '/lib'
 
 LOGFILE = O2TDIR + '/log/o2t.log'
 
-LAMBOOT = MPIDIR + '/lamboot'
-
-LAMHOSTS = WORKFILESDIR + '/lamhosts'
-
 MPIHOSTS = WORKFILESDIR + '/mpihosts'
-
-RECON = MPIDIR + '/recon'
-
-MPIRUNPARTS = BINDIR + '/mpi-run-parts'
 
 KERNELDIR = 'linux*'
 
 MPIRUN = MPIDIR + '/mpirun'
-
-LAMEXEC = MPIDIR + '/lamexec'
 
 NPROC = 1
 
