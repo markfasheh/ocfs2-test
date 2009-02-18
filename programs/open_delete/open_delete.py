@@ -107,7 +107,7 @@ command=os.path.join(config.BINDIR, EXECPGM)
 if DEBUGON:
 	o2tf.printlog('command = %s' % command, 
 	logfile, 0, '')
-o2tf.openmpi_run(DEBUGON, 
+ret = o2tf.openmpi_run(DEBUGON, 
 	'C', 
 	str('%s -i %s %s' % 
 	(command, 
@@ -117,5 +117,10 @@ o2tf.openmpi_run(DEBUGON,
 	'ssh',
 	options.logfile,
 	'WAIT')
-
-sys.exit()
+if not ret:
+	o2tf.printlog('open_delete: execution successful.',
+		logfile, 0, '')
+else:
+	o2tf.printlog('open_delete: execution failed.',
+		logfile, 0, '')
+	sys.exit(1)
