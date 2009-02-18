@@ -56,6 +56,7 @@ def Populate():
 		os.system('rm -fr '+localdir)
 	o2tf.CreateDir(DEBUGON, localdir, logfile)
 	o2tf.untar(DEBUGON, localdir, tarfile, logfile)
+#
 def Find():
 	finddir=os.path.join(options.directory, str('%s_recovery' % nodelist[NodeIndex]))
 	if DEBUGON:
@@ -66,6 +67,9 @@ def Find():
 		o2tf.printlog('recovery_load: directory [%s]' % \
 			options.directory, logfile, 0, '')
 	os.system(str('find %s -type f -exec touch {} \;' % options.directory))
+#
+def Cleanup(ret):
+	sys.exit(ret)
 #
 # MAIN
 #
@@ -188,29 +192,47 @@ if NodeIndex == nodelen-1:
 #
 # first. Start MPI
 if not Client:
-	o2tf.StartMPI(DEBUGON, ','.join(nodelist), logfile)
+	o2tf.OpenMPIInit(DEBUGON, ','.join(nodelist), logfile, 'ssh')
 
 	if DEBUGON:
 		cmdline = os.path.join(config.BINDIR, 'recovery_load.py -D')
 	else:
 		cmdline = os.path.join(config.BINDIR, 'recovery_load.py')
 # Extract the tar file
-	o2tf.lamexec( DEBUGON, nproc, config.WAIT, 
+	ret = o2tf.openmpi_run( DEBUGON, nproc, 
 		str('%s -e -d %s -l %s -n %s -t %s' % \
 		(cmdline, options.directory,
 		options.logfile,
 		options.nodes, tarfile) ),
 		','.join(nodelist),
-		logfile)
+		'ssh',
+		logfile,
+		'WAIT')
+	if not ret:
+		o2tf.printlog('recovery_load: extraction successful.',
+			logfile, 0, '')
+	else:
+		o2tf.printlog('recovery_load: extraction failed.',
+			logfile, 0, '')
+		Cleanup(1)
 # run the find command
 	raw_input('Extraction completed. Press ENTER to continue.')
-	o2tf.lamexec( DEBUGON, nproc, config.WAIT, 
+	ret = o2tf.openmpi_run( DEBUGON, nproc, 
 		str('%s -f -d %s -l %s -n %s' % \
 		(cmdline, options.directory,
 		options.logfile,
 		options.nodes) ),
 		','.join(nodelist),
-		logfile)
+		'ssh',
+		logfile,
+		'WAIT')
+	if not ret:
+		o2tf.printlog('recovery_load: find successful.',
+			logfile, 0, '')
+	else:
+		o2tf.printlog('recovery_load: find failed.',
+			logfile, 0, '')
+		Cleanup(1)
 else:
 	if options.extract:
 		Populate()
@@ -221,7 +243,3 @@ else:
 			o2tf.printlog('recovery_load: SHOULD NOT BE HERE.',
 			logfile, 0, '')
 			sys.exit(1)
-	
-o2tf.printlog('recovery_load: Job completed successfully',
-	logfile, 3, '=')
-sys.exit
