@@ -208,12 +208,21 @@ for z in range(options.count):
 	0, 
 	'')
 #
-	o2tf.StartMPI(DEBUGON, options.nodelist, logfile)
-	o2tf.lamexec(DEBUGON, options.procs, config.WAIT, 
+	o2tf.OpenMPIInit(DEBUGON, options.nodelist, logfile, 'ssh')
+	ret = o2tf.openmpi_run(DEBUGON, options.procs,
 		str('%s -b %s -l %s -s %s -f %s' % (cmd, 
 		options.blocksize, 
 		options.logfile, 
 		options.seconds, 
 		os.path.join(options.directory, filename) ) ), 
 		options.nodelist, 
-		options.logfile)
+		'ssh',
+		options.logfile,
+		'WAIT')
+	if not ret:
+		o2tf.printlog('run_write_torture: main - execution successful.',
+			logfile, 0, '')
+	else:
+		o2tf.printlog('run_write_torture: main - execution failed.',
+			logfile, 0, '')
+		sys.exit(1)
