@@ -143,7 +143,12 @@ def BuildDelList(nodelist, dirlist):
 				logfile,
 				0,
 				'')
-
+#
+def Cleanup(ret):
+#
+	os.system('rm -f '+stagedir+'/*.dat')
+	sys.exit(ret)
+#=============================================================================
 #
 # MAIN
 #
@@ -276,7 +281,7 @@ if DEBUGON:
 #
 stagedir = dirlist[0]
 #
-o2tf.StartMPI(DEBUGON, ','.join(nodelist), logfile)
+o2tf.OpenMPIInit(DEBUGON, ','.join(nodelist), logfile, 'ssh')
 for y in range(count):
 	o2tf.printlog('cross-delete: RUN# %s of %s' % (y+1, count),
 		logfile,
@@ -289,23 +294,37 @@ for y in range(count):
 		cmdline = os.path.join(config.BINDIR, 'crdel_gen_files.py -D')
 	else:
 		cmdline = os.path.join(config.BINDIR, 'crdel_gen_files.py')
-	o2tf.lamexec( DEBUGON, nproc, config.WAIT, str('%s -s %s -l %s -t %s' % \
+	ret = o2tf.openmpi_run( DEBUGON, nproc, str('%s -s %s -l %s -t %s' % \
 		(cmdline, stagedir,
 		options.logfile,
 		tarfile) ),
 		','.join(nodelist),
-		logfile)
+		'ssh',
+		logfile,
+		'WAIT')
+	if not ret:
+		o2tf.printlog('cross_delete: RUN# %s extraction successful.'\
+			% (y+1), logfile, 0, '')
+	else:
+		o2tf.printlog('cross_delete: RUN# %s extraction failed.' \
+			% (y+1), logfile, 0, '')
+		Cleanup(1)
 	if DEBUGON:
 		cmdline = os.path.join(config.BINDIR, 'crdel_del_files.py -D')
 	else:
 		cmdline = os.path.join(config.BINDIR, 'crdel_del_files.py')
-	o2tf.lamexec( DEBUGON, nproc, config.WAIT, str('%s -s %s -l %s ' % \
+	ret = o2tf.openmpi_run( DEBUGON, nproc, str('%s -s %s -l %s ' % \
 		(cmdline, stagedir, options.logfile) ),
 		','.join(nodelist),
-		logfile)
-os.system('rm -f '+stagedir+'/*.dat')
-o2tf.printlog('cross-delete: Job completed successfully',
-	logfile,
-	3,
-	'=')
-sys.exit
+		'ssh',
+		logfile,
+		'WAIT')
+	if not ret:
+		o2tf.printlog(
+			'cross_delete: RUN# %s delete successful.' % (y+1),
+			logfile, 0, '')
+	else:
+		o2tf.printlog('cross_delete: RUN# %s delete failed.' % (y+1),
+			logfile, 0, '')
+		Cleanup(1)
+Cleanup(0)
