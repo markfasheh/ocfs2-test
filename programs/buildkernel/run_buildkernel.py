@@ -84,22 +84,26 @@ def Initialize():
 	'Initialize the directories (remove and extract)'
 #
 	o2tf.printlog('Cleaning up directories.', logfile, 0, '')
-	o2tf.StartMPI(DEBUGON, options.nodelist, logfile)
-	o2tf.lamexec(DEBUGON, nproc, config.WAIT, str('%s -c -d %s -l %s' % \
+	o2tf.OpenMPIInit(DEBUGON, options.nodelist, logfile, 'ssh')
+	o2tf.openmpi_run(DEBUGON, nproc, str('%s -c -d %s -l %s' % \
 			(buildcmd, 
 			options.dirlist, 
 			options.logfile) ),
 			options.nodelist, 
-			options.logfile )
+			'ssh',
+			options.logfile,
+			'WAIT')
 #
 	o2tf.printlog('Extracting tar file into directories.', logfile, 0, '')
-	o2tf.lamexec(DEBUGON, nproc, config.WAIT, str('%s -e -d %s -l %s -t %s' % \
+	o2tf.openmpi_run(DEBUGON, nproc, str('%s -e -d %s -l %s -t %s' % \
 			(buildcmd, 
 			options.dirlist, 
 			options.logfile,
 			tarfile) ),
 			options.nodelist, 
-			options.logfile )
+			'ssh',
+			options.logfile,
+			'WAIT')
 	o2tf.printlog('Directories initialization completed.', logfile, 0, '')
 #
 Usage = 'Usage: %prog [-c|--count count] \
@@ -205,13 +209,21 @@ for i in range(options.count):
 	r = i+1
 	o2tf.printlog('run_buildkernel: Starting RUN# %s of %s' % (r, options.count),
 		logfile, 3, '=')
-	o2tf.StartMPI(DEBUGON, options.nodelist, logfile)
-	o2tf.lamexec(DEBUGON, nproc, config.WAIT, str('%s -d %s -l %s -n %s' % \
+	o2tf.OpenMPIInit(DEBUGON, options.nodelist, logfile, 'ssh')
+	ret = o2tf.openmpi_run(DEBUGON, nproc, str('%s -d %s -l %s -n %s' % \
 			(buildcmd, 
 			options.dirlist, 
 			options.logfile, 
 			options.nodelist) ), 
 			options.nodelist, 
-			options.logfile )
-o2tf.printlog('run_buildkernel: Test completed successfully.',
-	logfile, 3, '=')
+			'ssh',
+			options.logfile,
+			'WAIT' )
+if not ret:
+	o2tf.printlog('run_buildkernel: main - execution successful.',
+		logfile, 0, '')
+	sys.exit(0)
+else:
+	o2tf.printlog('run_buildkernel: main - execution failed.',
+		logfile, 0, '')
+	sys.exit(1)
