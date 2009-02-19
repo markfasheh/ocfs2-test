@@ -15,7 +15,7 @@ ifdef CONFIG_SCRIPT
 	$(SHELL) $(CURDIR)/$(CONFIG_SCRIPT) $(DESTDIR) $(INSTALLDIR)
 endif
 
-	mkdir -p  $(DESTDIR)/workfiles $(DESTDIR)/log
-	chmod 1777 $(DESTDIR)/log
+	mkdir -p  $(DESTDIR)/workfiles $(DESTDIR)/log $(DESTDIR)/tmp
+	chmod 1777 $(DESTDIR)/log $(DESTDIR)/tmp
 
 install: config-script

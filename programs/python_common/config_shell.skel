@@ -30,7 +30,7 @@ LIBDIR=${O2TDIR}/lib
 export LIBDIR
 LOGFILE=${O2TDIR}/log/o2t.log
 export LOGFILE
-MPIHOSTS=${WORKFILESDIR}/mpihosts
+MPIHOSTS=${O2TDIR}/tmp/mpihosts
 export MPIHOSTS
 KERNELDIR=linux*
 export KERNELDIR

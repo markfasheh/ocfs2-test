@@ -206,6 +206,7 @@ rm -rf "$RPM_BUILD_ROOT"
 %{_installdir}/bin/quota_tests.sh
 %{_installdir}/bin/run_quota_multi_tests.py
 %{_installdir}/log
+%{_installdir}/tmp
 %{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.00.stdout
 %{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.01.stdout
 %{_installdir}/workfiles/fsck-test/medium-disk/fsck.ocfs2.02.stdout

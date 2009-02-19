@@ -31,7 +31,7 @@ LIBDIR = O2TDIR + '/lib'
 
 LOGFILE = O2TDIR + '/log/o2t.log'
 
-MPIHOSTS = WORKFILESDIR + '/mpihosts'
+MPIHOSTS = O2TDIR + '/tmp/mpihosts'
 
 KERNELDIR = 'linux*'
 
