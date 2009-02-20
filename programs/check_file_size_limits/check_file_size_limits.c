@@ -1,3 +1,22 @@
+/* -*- mode: c; c-basic-offset: 8; -*-
+ * vim: noexpandtab sw=8 ts=8 sts=0:
+ *
+ * check_file_size_limits.c
+ *
+ * Tests file I/O at the maximum offsets that Ocfs2 supports
+ *
+ * Copyright (C) 2004, 2008 Oracle.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public
+ * License version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ */
+
 #define _LARGEFILE64_SOURCE
 #define _GNU_SOURCE
 #include <stdio.h>
