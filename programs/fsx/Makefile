@@ -11,7 +11,7 @@ DIST_FILES = $(SOURCES)
 
 BIN_PROGRAMS = fsx
 
-BIN_EXTRA = test.sh
+BIN_EXTRA = fsx-run.sh
 
 fsx: $(OBJECTS)
 	$(LINK) 

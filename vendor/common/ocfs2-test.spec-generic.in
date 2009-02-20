@@ -195,7 +195,7 @@ rm -rf "$RPM_BUILD_ROOT"
 %{_installdir}/bin/ocfs2_truncate.sh
 %{_installdir}/bin/single-inline-run.sh
 %{_installdir}/bin/splice_test.py
-%{_installdir}/bin/test.sh
+%{_installdir}/bin/fsx-run.sh
 %{_installdir}/bin/test_truncate
 %{_installdir}/bin/acl_tests.sh
 %{_installdir}/bin/concurrent_flock_test.pl
