@@ -17,7 +17,8 @@ DIST_FILES = 	config_py.skel \
 		multiple_run.sh \
 		remote_mount.py \
 		remote_umount.py \
-		command.py
+		command.py	\
+		o2tf.sh
 
 BIN_EXTRA = 	config_py.skel \
 		config_shell.skel \
@@ -25,7 +26,8 @@ BIN_EXTRA = 	config_py.skel \
 		single_run.sh \
 		remote_mount.py \
 		remote_umount.py \
-		command.py
+		command.py	\
+		o2tf.sh
 
 post-install:
 include $(TOPDIR)/Postamble.make
