@@ -478,6 +478,20 @@ f_combin_test()
 	${SETXATTR} -n "user.small" -v "SMALL" ${TEST_FILE}
 	exit_or_not $?
 
+	${DD_BIN} if=/dev/zero of=${TEST_FILE} bs=$((${MAX_INLINE_DATA}-${MAX_INLINE_XATTR}+1))  count=1 2>>${DETAIL_LOG_FILE} >/dev/null
+
+	sync
+	${DEBUGFS_BIN} -R "stat ${DEBUG_TEST_FILE}" ${OCFS2_DEVICE}|grep -qi InlineData && {
+		echo "Inline data should not invade a reserved inline-xattr space.">>${DETAIL_LOG_FILE}
+		return 1
+	}
+
+	${RM} -rf ${TEST_FILE}
+	${TOUCH_BIN} ${TEST_FILE}
+
+	${SETXATTR} -n "user.small" -v "SMALL" ${TEST_FILE}
+	exit_or_not $?
+
 	${SETXATTR} -x "user.small" ${TEST_FILE}
 	exit_or_not $?
 
