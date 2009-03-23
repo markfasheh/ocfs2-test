@@ -69,13 +69,6 @@ struct my_dirent {
 	char		name[OCFS2_MAX_FILENAME_LEN];
 };
 
-union semun {
-	int val;                    /* value for SETVAL */
-	struct semid_ds *buf;       /* buffer for IPC_STAT, IPC_SET */
-	unsigned short int *array;  /* array for GETALL, SETALL */
-	struct seminfo *__buf;      /* buffer for IPC_INFO */
-};
-
 static char *prog;
 static char device[100];
 
