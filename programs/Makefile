@@ -4,6 +4,7 @@ include $(TOPDIR)/Preamble.make
 
 
 SUBDIRS =			\
+	libocfs2test		\
 	aio-stress		\
 	aio_direct		\
 	atime_quantum		\
