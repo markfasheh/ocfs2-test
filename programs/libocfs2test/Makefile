@@ -7,14 +7,20 @@ LIBRARIES = libocfs2test.a
 CFLAGS += -fPIC
 
 CFILES =		\
-	file_ops.c	\
 	dir_ops.c	\
 	xattr_ops.c
 
+ifdef OCFS2_TEST_REFLINK
+CFILES +=	file_ops.c
+endif
+
 HFILES =		\
-	file_ops.h	\
 	dir_ops.h	\
 	xattr_ops.h
+
+ifdef OCFS2_TEST_REFLINK
+HFILES +=	file_ops.h
+endif
 
 mpi_ops.o: mpi_ops.c mpi_ops.h
 	$(MPICC) -c -o mpi_ops.o mpi_ops.c $(CFLAGS)
