@@ -26,7 +26,8 @@ SUBDIRS = programs utilities tests suites
 
 SUBDIRS += vendor
 
-API_COMPAT_FILES =
+API_COMPAT_FILES = \
+	api-compat/include/splice.h
 
 DIST_FILES = \
 	COPYING					\

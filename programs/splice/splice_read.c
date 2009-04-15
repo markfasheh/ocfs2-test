@@ -1,5 +1,12 @@
 /* splice_read.c */
-#include "splice_test.h"
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <assert.h>
+#include <errno.h>
+#include <limits.h>
 
 int main(int argc, char *argv[])
 {

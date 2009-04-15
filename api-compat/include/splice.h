@@ -1,11 +1,8 @@
-#define _GNU_SOURCE
-#include <stdio.h>
-#include <stdlib.h>
+#ifndef API_SPLICE_H
+#define API_SPLICE_H
+
 #include <unistd.h>
 #include <fcntl.h>
-#include <assert.h>
-#include <errno.h>
-#include <limits.h>
 
 #if defined(__i386__)
 
@@ -37,3 +34,4 @@ int splice(int fdin, loff_t *off_in, int fdout,
 	return syscall(__NR_splice, fdin, off_in, fdout, off_out, len, flags);
 }
 
+#endif

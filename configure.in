@@ -130,6 +130,15 @@ AM_PATH_PYTHON(2.3, , AC_MSG_ERROR([could not find Python 2.3 or higher.]))
 API_COMPAT_HEADERS=""
 API_COMPAT_CFLAGS=""
 
+splice_compat_header=""
+OCFS2_CHECK_HEADERS([splice() in bits/fcntl.h], bits/fcntl.h,
+  , splice_compat_header="splice.h", [splice (int __fdin])
+API_COMPAT_HEADERS="$API_COMPAT_HEADERS $splice_compat_header"
+
+for h in $API_COMPAT_HEADERS; do
+  API_COMPAT_CFLAGS="$API_COMPAT_CFLAGS -include \$(TOPDIR)/api-compat/include/$h"
+done
+
 AC_SUBST(API_COMPAT_CFLAGS)
 
 AC_CONFIG_FILES([

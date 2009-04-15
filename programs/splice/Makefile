@@ -6,7 +6,9 @@ TESTS = splice_read splice_write
 
 CFLAGS = -O2 -Wall -g
 
-SPLICE_READ_SOURCES = splice_read.c splice_test.h
+CFLAGS += $(EXTRA_CFLAGS)
+
+SPLICE_READ_SOURCES = splice_read.c
 SPLICE_READ_OBJECTS = $(patsubst %.c,%.o,$(SPLICE_READ_SOURCES))
 SPLICE_WRITE_SOURCES = splice_write.c
 SPLICE_WRITE_OBJECTS = $(patsubst %.c,%.o,$(SPLICE_WRITE_SOURCES))
