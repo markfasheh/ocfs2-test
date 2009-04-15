@@ -26,6 +26,7 @@ SUBDIRS = programs utilities tests suites
 
 SUBDIRS += vendor
 
+API_COMPAT_FILES =
 
 DIST_FILES = \
 	COPYING					\
