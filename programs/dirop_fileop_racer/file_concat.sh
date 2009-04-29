@@ -29,7 +29,7 @@ concat(){
 }
 
 while /bin/true ; do 
-    file=$(($RANDOM%$MAX))
-    new_file=$(($RANDOM%$MAX))
+    file="${DIROP_FILE_PREFIX}"$(($RANDOM%$MAX))
+    new_file="${DIROP_FILE_PREFIX}"$(($RANDOM%$MAX))
     concat 2> /dev/null
 done

@@ -31,6 +31,11 @@ MAX_FILES=20
 CLEAR_SECS=30
 DIR="race"
 
+#
+# Set DIROP_FILE_PREFIX in the environment to put a prefix on each
+# test filename.
+#
+
 [ -e $DIR ] || mkdir $DIR
 ./file_create.sh $DIR $MAX_FILES &
 ./file_create.sh $DIR $MAX_FILES &

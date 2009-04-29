@@ -30,7 +30,7 @@ create() {
 }
 
 while /bin/true ; do 
-    file=$(($RANDOM%$MAX))
+    file="${DIROP_FILE_PREFIX}"$(($RANDOM%$MAX))
     create 2> /dev/null
 done
 
