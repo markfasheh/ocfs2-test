@@ -438,7 +438,7 @@ Change_Mount_Type()
 	Check_Volume;
 	SB_MTYPE=`${DEBUGFS_BIN} -n -R "stats" ${DEVICE}|${GREP} Incompat:| \
 		${GAWK} '{print \$3; exit}'`;
-	if [ ${SB_MTYPE} -ne 8 || ${SB_MTYPE} -ne 24]; then
+	if [ ${SB_MTYPE} -ne 8 || ${SB_MTYPE} -ne 24 ]; then
 	   test_fail;
 	   LogMsg "tunefs_test : Mount Type change failed. Superblock \c"
 	   LogMsg "Feature Incompat (${SB_MTYPE})";
@@ -458,7 +458,7 @@ Add_Backup_Super()
 	echo "y"|${TUNEFS_BIN} --backup-super ${DEVICE} 2>&1 >> ${TUNEFSLOG};
 	Check_Volume;
 	SB_BSUPER=`${DEBUGFS_BIN} -n -R "stats" ${DEVICE}|${GREP} Compat:| \
-		${GAWK} '{print \$3; exit}'`;
+		${GREP} backup-super|wc -l`;
 	if [ ${SB_BSUPER} -ne 1 ]; then
 	   test_fail;
 	   LogMsg "tunefs_test : Change to backup super failed. Superblock \c"
@@ -559,7 +559,7 @@ Enable_Disable_Inline_Data()
                         #Check if we set none-inline-data for volume
                         (( ++NUM_OF_TESTS ))
                         CURRENT_TEST="Set None-inline-data support for volume by mkfs.ocfs2";
-                        ${DEBUGFS_BIN} -n -R "stats" ${DEVICE}|${GREP} -i "Feature Incompat"|${GREP} -q "InlineData"
+                        ${DEBUGFS_BIN} -n -R "stats" ${DEVICE}|${GREP} -i "Feature Incompat"|${GREP} -q "inline-data"
                         RC=$?
                         if [ "$RC" -eq "0" ];then
                                 test_fail
@@ -590,7 +590,7 @@ Enable_Disable_Inline_Data()
                         FS_FEATURES="--fs-features=inline-data"
                         echo "y"|${TUNEFS_BIN} ${FS_FEATURES} ${DEVICE} 2>&1 >> ${TUNEFSLOG}
                         Check_Volume
-                        ${DEBUGFS_BIN} -n -R "stats" ${DEVICE}|${GREP} -i "Feature Incompat"|${GREP} -q "InlineData"
+                        ${DEBUGFS_BIN} -n -R "stats" ${DEVICE}|${GREP} -i "Feature Incompat"|${GREP} -q "inline-data"
                         RC=$?
                         if [ "$RC" -eq "0" ];then
                                 ${MOUNT_BIN} -t ocfs2 ${DEVICE} ${MOUNT_POINT}
@@ -622,7 +622,7 @@ Enable_Disable_Inline_Data()
                         FS_FEATURES="--fs-features=noinline-data"
                         echo "y"|${TUNEFS_BIN} ${FS_FEATURES} ${DEVICE} 2>&1 >> ${TUNEFSLOG}
                         Check_Volume
-                        ${DEBUGFS_BIN} -n -R "stats" ${DEVICE}|${GREP} -i "Feature Incompat"|${GREP} -q "InlineData"
+                        ${DEBUGFS_BIN} -n -R "stats" ${DEVICE}|${GREP} -i "Feature Incompat"|${GREP} -q "inline-data"
                         RC=$?
                         if [ "$RC" -eq "0" ] ;then
                                 test_fail
