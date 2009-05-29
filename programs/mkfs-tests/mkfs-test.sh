@@ -446,7 +446,7 @@ ${MKFS} --fs-features=inline-data -x -F -b 4K -C 4K -N 2 -L ${label} ${device} 2
 echo "OK"
 echo -n "verify ..... "
 ${DEBUGFS} -R "stats" ${device} >>${OUT} 2>&1
-${DEBUGFS} -R "stats" ${device}|${GREP} -i "Feature Incompat"|${GREP} -q "InlineData"
+${DEBUGFS} -R "stats" ${device}|${GREP} -i "Feature Incompat"|${GREP} -q "inline-data"
 RC=$?
 if [ "${RC}" != "0" ]; then
     echo "ERROR: Did not find InlineData Flag on superblock " >> ${OUT}
@@ -472,7 +472,7 @@ ${MKFS} -x -F -b 4K -C 4K -N 2 -L ${label} ${device} 262144 >>${OUT} 2>&1
 echo "OK"
 echo -n "verify ..... "
 ${DEBUGFS} -R "stats" ${device} >>${OUT} 2>&1
-${DEBUGFS} -R "stats" ${device}|${GREP} -i "Feature Incompat"|${GREP} -q "Sparse"
+${DEBUGFS} -R "stats" ${device}|${GREP} -i "Feature Incompat"|${GREP} -q "sparse"
 RC=$?
 if [ "${RC}" != "0" ]; then
     echo "ERROR: Did not find Sparse Flag on superblock " >> ${OUT}
