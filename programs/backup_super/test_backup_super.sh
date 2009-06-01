@@ -296,12 +296,6 @@ function test_tunefs_add_backup()
 	echo "ls //"|$DEBUGFS_BIN $DEVICE -s 1|grep global_bitmap
 	exit_if_bad $? 1 "tunefs.ocfs2" $LINENO
 
-	#we don't allow change volume with backup
-	$TUNEFS_BIN --backup-super -L "test" $DEVICE
-	exit_if_bad $? 1 "tunefs.ocfs2" $LINENO
-	$TUNEFS_BIN --backup-super -N 8 $DEVICE	#we don't allow change slots with backup
-	exit_if_bad $? 1 "tunefs.ocfs2" $LINENO
-
 	#tunefs a volume to add backup superblocks
 	cmd="$TUNEFS_BIN --backup-super $DEVICE"
 	echo "y"|$cmd
@@ -378,7 +372,7 @@ function volume_small_test()
 	# the output of stderr and find what we want.
 	$MKFS_BIN -b 1K -C 4K $DEVICE -N 4 --no-backup-super $tmp_block_count
 	err=`$TUNEFS_BIN --backup-super $DEVICE 2>&1`
-	echo $err|grep "Volume is too small"
+	echo $err|grep "too small to contain backup superblocks"
 	exit_if_bad $? 0 "tunefs.ocfs2" $LINENO
 }
 
