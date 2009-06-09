@@ -7,7 +7,11 @@
 # blocks, where each chunk has to be greater than a cluster
 #
 
-PATH=$PATH:/sbin        # Add /sbin to the path for ocfs2 tools
+if [ -f `dirname ${0}`/config.sh ]; then
+	. `dirname ${0}`/config.sh
+fi
+
+PATH=$PATH:/sbin:${BINDIR}        # Add /sbin to the path for ocfs2 tools
 
 usage() {
     echo "usage: resize_test.sh -c -o <outdir> -d <device> -i <iters> -l <label> -m <mntdir> -n <nodelist>"
@@ -179,21 +183,29 @@ do_tunefs() {
     else
         echo -n "grow device to ${blk} blocks "
     fi
-    echo ${TUNEFS} -S ${device} ${blk} > ${out}
-    ${TUNEFS} -x -S ${device} ${blk} >>${out} 2>&1
-    ${GREP} "Cannot grow volume size" ${out} >/dev/null 2>&1
-    if [ $? -eq 0 ]
-    then
-         echo "OK (ENOSPC)"
-         return 1
+
+    echo ${TUNEFS} -v -S ${device} ${blk} > ${out}
+    ${TUNEFS} -v -S ${device} ${blk} >>${out} 2>&1
+
+    if [ $? -eq 0 ]; then
+	 g_size=`${DEBUGFS} -R "stat //global_bitmap" ${device} 2>/dev/null | awk '/Size:/ {print $8;}'`
+	 blocks=$((${g_size}/${blocksz}))
+	 #In the case when blk number didn't align to cluster
+	 if [ "$((${blk}%${bpc}))" != "0" ];then
+		blk=$((${blk}+${bpc}-$((${blk}%${bpc}))))
+		if [ ${blk} -gt ${partsz} ]; then
+			${blk}=$((${blk}-${bpc}))
+		fi
+	 fi
+	 if [ "${blocks}" != "${blk}" ]; then
+		echo "FAILED, wanted to grow ${blk}, but got ${blocks} instead"
+		return 1
+	 fi
+    else
+	 echo "FAILED. Errors in ${out}"
+	 exit 1
     fi
 
-    ${GREP} "Resized volume" ${out} >/dev/null 2>&1
-    if [ $? -ne 0 ] ;
-    then
-        echo "FAILED. Errors in ${out}"
-        exit 1
-    fi
     echo "OK"
     return 0
 }
@@ -361,6 +373,9 @@ DD="`which sudo` -u root `which dd`"
 MKDIR="`which sudo` -u root `which mkdir`"
 GREP=`which grep`
 DATE=`which date`
+CHOWN_BIN=`which chown`
+CHMOD_BIN=`which chmod`
+SUDO="`which sudo` -u root"
 REMOTE_MOUNT=`which remote_mount.py`
 REMOTE_UMOUNT=`which remote_umount.py`
 
@@ -404,6 +419,9 @@ fi
 
 echo "create logdir ${outdir}"
 ${MKDIR} -p ${outdir}
+
+${SUDO} ${CHMOD_BIN} -R 777 ${outdir}
+${SUDO} ${CHOWN_BIN} -R ${USERNAME}:${GROUPNAME} ${outdir}
 
 blocksz=0
 clustsz=0
