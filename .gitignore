@@ -1,0 +1,7 @@
+Config.make
+autom4te.cache
+config.*
+configure
+cscope.*
+ocfs2-test.spec-generic
+
