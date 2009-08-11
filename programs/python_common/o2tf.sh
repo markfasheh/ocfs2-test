@@ -252,15 +252,24 @@ function f_remote_mount()
 	#${2} specify label name
 	#${3} specify mount point
 	#${4} specify MPI hosts, it's comma-spearated-value
+	#${5} specify mount options
 
 	local logfile=${1}
 
 	local L=${2}
 	local M=${3}
 	local MPIHOSTS=${4}
+	local MT_OPTIONS=
 
-        f_LogMsg ${logfile} "${REMOTE_MOUNT_BIN} -l ${L} -m ${M} -n ${MPIHOSTS}"
-        ${REMOTE_MOUNT_BIN} -l ${L} -m ${M} -n ${MPIHOSTS}>>${logfile} 2>&1
+	shift 4
+
+	local O=${@}
+	if [ ! -z "${O}" ];then
+		MT_OPTIONS="-o ${O}"
+	fi
+
+        f_LogMsg ${logfile} "${REMOTE_MOUNT_BIN} -l ${L} -m ${M} -n ${MPIHOSTS} ${MT_OPTIONS}"
+        ${REMOTE_MOUNT_BIN} -l ${L} -m ${M} -n ${MPIHOSTS} ${MT_OPTIONS}>>${logfile} 2>&1
         RET=$?
 
         if [ "${RET}" != "0" ];then

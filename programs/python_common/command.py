@@ -34,6 +34,7 @@ logfile = config.LOGFILE
 Usage = 'Usage: %prog [--Debug] \
 [-l|--label label] \
 [-m|--mountpoint mountpoint] \
+[-o|--options mountoptions] \
 [--mount] \
 [--umount]'
 #
@@ -62,6 +63,12 @@ if __name__=='__main__':
 		type='string',
 		help='Directory where the partition will be mount.')
 #
+	parser.add_option('-o',
+		'--options',
+		dest='mountoptions',
+		type='string',
+		help='mounting options to be added')
+#
 	parser.add_option('--umount',
 		action="store_true",
 		dest='doumount',
@@ -77,9 +84,14 @@ if __name__=='__main__':
 			parser.error('Please specify mountpoint.')
 		if not options.label:
 			parser.error('Please specify Label.')
+		if options.mountoptions:
+			mt_options = '-o %s' %(options.mountoptions)
+		else:
+			mt_options = ''
 		if not mounted:
 			o2tf.SudoMount(options.DEBUGON, logfile, 
-				options.mountpoint, options.label)
+				       options.mountpoint, options.label,
+				       mt_options)
 		else:
 			o2tf.printlog('Partition already mounted.',
 				logfile, 0, '')

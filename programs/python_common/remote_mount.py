@@ -37,7 +37,8 @@ logfile = config.LOGFILE
 #
 Usage = 'Usage: %prog [-l|-label label] \
 [-m|--mountpoint mountpoint] \
-[-n|--nodes nodelist]'
+[-n|--nodes nodelist] \
+[-o|--options mountoptions]'
 #
 if userid == 'root':
 	o2tf.printlog('This program uses Openmpi. Should not run as root',
@@ -63,6 +64,12 @@ if __name__=='__main__':
 		dest='nodelist',
 		type='string',
 		help='List of nodes where the test will be executed.')
+
+	parser.add_option('-o',
+		'--options',
+		dest='mountoptions',
+		type='string',
+		help='Mounting options to be added.')
 #
 	(options, args) = parser.parse_args()
 	if len(args) != 0:
@@ -73,6 +80,10 @@ if __name__=='__main__':
 		parser.error('Please specify mountpoint.')
 	if not options.label:
 		parser.error('Please specify Label.')
+	if options.mountoptions:
+		mt_options = '-o %s' %(options.mountoptions)
+	else:
+		mt_options = ''
 #
 	nodelist = options.nodelist.split(',')
 	nodelen = len(nodelist)
@@ -88,9 +99,10 @@ if DEBUGON:
 else:
 	buildcmd=config.BINDIR+'/command.py --mount'
 #
-command = str('%s -l %s -m %s' % (buildcmd,
+command = str('%s -l %s -m %s %s' % (buildcmd,
 	options.label,
-	options.mountpoint))
+	options.mountpoint,
+	mt_options))
 #
 o2tf.OpenMPIInit(DEBUGON, options.nodelist, logfile, 'ssh')
 #

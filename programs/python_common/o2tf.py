@@ -405,10 +405,10 @@ def SudoUmount(DEBUGON, logfile, mountpoint):
 #
 # SudoMount is used by:
 #
-def SudoMount(DEBUGON, logfile, mountpoint, label):
+def SudoMount(DEBUGON, logfile, mountpoint, label, options):
 	'''Find and return device Label based on devicename'''
 	from commands import getstatusoutput
-	status = getstatusoutput('sudo mount LABEL=%s %s' % (label,
+	status = getstatusoutput('sudo mount LABEL=%s %s %s' % (label, options,
 		mountpoint))
 	if status[0] == 0:
 		return
