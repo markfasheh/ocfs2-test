@@ -171,7 +171,6 @@ def untar(DEBUGON, destdir, tarfile, logfile):
 	dirlog = os.path.dirname(logfile)
 	nodename = str(socket.gethostname())
 	pid = os.getpid()
-	tarlog = dirlog+'/tar_'+nodename+'_'+str(pid)+'.log'
 	options = 'xvf'
 	compress = 'z'
 	st = os.stat(destdir)
@@ -186,7 +185,7 @@ def untar(DEBUGON, destdir, tarfile, logfile):
 				logfile, 0, '')
 		t1 = time.time()
 		os.system('cd %s; tar %s %s 2>&1 1>> %s; du -sh * 1>> %s' % \
-			(destdir, options + compress, tarfile, tarlog,
+			(destdir, options + compress, tarfile, logfile,
 				logfile))
 		t2 = time.time()
 		printlog('o2tf.untar: Extraction elapsed time = %s' % \
