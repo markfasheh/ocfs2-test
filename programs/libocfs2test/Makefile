@@ -8,7 +8,8 @@ CFLAGS += -fPIC
 
 CFILES =		\
 	dir_ops.c	\
-	xattr_ops.c
+	xattr_ops.c	\
+	mpi_ops.c	\
 
 ifdef OCFS2_TEST_REFLINK
 CFILES +=	file_ops.c
@@ -16,11 +17,14 @@ endif
 
 HFILES =		\
 	dir_ops.h	\
-	xattr_ops.h
+	xattr_ops.h	\
+	mpi_ops.h
 
 ifdef OCFS2_TEST_REFLINK
 HFILES +=	file_ops.h
 endif
+
+SOURCES = $(CFILES) $(HFILES)
 
 mpi_ops.o: mpi_ops.c mpi_ops.h
 	$(MPICC) -c -o mpi_ops.o mpi_ops.c $(CFLAGS)
@@ -33,7 +37,6 @@ $(LIBRARIES): $(OBJS)
 	$(AR) r $@ $^
 	$(RANLIB) $@
 
-DIST_FILES = $(CFILES) $(HFILES)
+DIST_FILES = $(SOURCES)
 
 include $(TOPDIR)/Postamble.make
-

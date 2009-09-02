@@ -19,6 +19,9 @@
  * General Public License for more details.
  */
 
+#define _GNU_SOURCE
+#define _XOPEN_SOURCE 500
+#define _LARGEFILE64_SOURCE
 #include "xattr_ops.h"
 
 extern char filename[PATH_MAX];
@@ -242,7 +245,7 @@ int add_or_update_ea(enum FILE_TYPE ft, int fd, int ea_flags,
 		if (ret < 0) {
 			ret = errno;
 			fprintf(stderr, "Failed at fsetxattr(%s,errno:%d,%s) "
-				"on %s:xattr_name=%s,xattr_value_sz=%ld,"
+				"on %s:xattr_name=%s,xattr_value_sz=%d,"
 				"xattr_value=%s\n", prt_str, ret, strerror(ret),
 				filename, xattr_name, strlen(xattr_value) + 1,
 				xattr_value);
@@ -255,7 +258,7 @@ int add_or_update_ea(enum FILE_TYPE ft, int fd, int ea_flags,
 		if (ret < 0) {
 			ret = errno;
 			fprintf(stderr, "Failed at lsetxattr(%s,errno:%d,%s) "
-				"on %s:xattr_name=%s,xattr_value_sz=%ld,"
+				"on %s:xattr_name=%s,xattr_value_sz=%d,"
 				"xattr_value=%s\n", prt_str, ret, strerror(ret),
 				filename, xattr_name, strlen(xattr_value) + 1,
 				xattr_value);
@@ -268,7 +271,7 @@ int add_or_update_ea(enum FILE_TYPE ft, int fd, int ea_flags,
 		if (ret < 0) {
 			ret = errno;
 			fprintf(stderr, "Failed at setxattr(%s,errno:%d,%s) "
-				"on %s:xattr_name=%s,xattr_value_sz=%ld,"
+				"on %s:xattr_name=%s,xattr_value_sz=%d,"
 				"xattr_value=%s\n", prt_str, ret, strerror(ret),
 				filename, xattr_name, strlen(xattr_value) + 1,
 				xattr_value);
@@ -353,7 +356,7 @@ void xattr_value_constructor(int xattr_entry_no)
 	strlen(value_postfix_magic) -
 	strlen(xattr_name) - 5);
 
-	snprintf(value_sz, 6, "%05ld", strlen(value_prefix_magic) +
+	snprintf(value_sz, 6, "%05d", strlen(value_prefix_magic) +
 		 strlen(xattr_name) + strlen(xattr_value) + 5 +
 		 strlen(value_postfix_magic));
 

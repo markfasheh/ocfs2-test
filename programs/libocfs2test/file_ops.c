@@ -19,6 +19,9 @@
  * General Public License for more details.
  */
 
+#define _GNU_SOURCE
+#define _XOPEN_SOURCE 500
+#define _LARGEFILE64_SOURCE
 #include "file_ops.h"
 
 unsigned long get_rand(unsigned long min, unsigned long max)

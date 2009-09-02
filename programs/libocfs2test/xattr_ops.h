@@ -18,9 +18,6 @@
 #ifndef XATTR_TEST_H
 #define XATTR_TEST_H
 
-#define _GNU_SOURCE
-#define _XOPEN_SOURCE 500
-#define _LARGEFILE64_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

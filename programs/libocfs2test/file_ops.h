@@ -18,9 +18,6 @@
 #ifndef FILE_OPS_H
 #define FILE_OPS_H
 
-#define _GNU_SOURCE
-#define _XOPEN_SOURCE 500
-#define _LARGEFILE64_SOURCE
 #include <unistd.h>
 #include <errno.h>
 #include <sys/types.h>

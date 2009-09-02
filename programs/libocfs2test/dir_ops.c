@@ -17,6 +17,9 @@
  * General Public License for more details.
  */
 
+#define _GNU_SOURCE
+#define _XOPEN_SOURCE 600
+#define _LARGEFILE64_SOURCE
 #include "dir_ops.h"
 
 extern unsigned long num_dirents;
@@ -334,7 +337,7 @@ int build_dir_tree(char *dirname, unsigned long entries,
 			snprintf(fullpath, PATH_MAX, "%s/%s%ld%ld",
 				 dirname, "F", layer, i);
 		if (strlen(fullpath) > PATH_MAX)
-			return;
+			raise(SIGSEGV);		/* FIX ME */
 
 		fd = open(fullpath, FILE_BUFFERED_RW_FLAGS, FILE_MODE);
 		if (fd < 0) {
@@ -357,7 +360,7 @@ int build_dir_tree(char *dirname, unsigned long entries,
 			snprintf(fullpath, PATH_MAX, "%s/%s%ld%ld",
 				 dirname, "D", layer, i);
 		if (strlen(fullpath) > PATH_MAX)
-			return;
+			raise(SIGSEGV);		/* FIX ME */
 
 		build_dir_tree(fullpath, entries, layer - 1, is_random);
 	}

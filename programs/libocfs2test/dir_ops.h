@@ -18,10 +18,6 @@
 #ifndef DIR_OPS_H
 #define DIR_OPS_H
 
-#define _XOPEN_SOURCE 600
-#define _GNU_SOURCE
-#define _LARGEFILE64_SOURCE
-
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
