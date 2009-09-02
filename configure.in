@@ -61,7 +61,7 @@ fi
 
 AC_PATH_PROG(MPICC, mpicc)
 if test "x$MPICC" = "x"; then
-  AC_MSG_ERROR(mpicc is required)
+  AC_MSG_ERROR([mpicc not found. Install openmpi-libs, openmpi-devel, openmpi and mpi-selector packages. Use mpi-selector to set it as default.])
 fi
 
 AC_CHECK_LIB(aio, io_setup, [
