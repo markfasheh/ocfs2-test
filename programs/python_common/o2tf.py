@@ -57,7 +57,6 @@ def printlog(message, logfile, prflag=0, prsep=''):
 		fd.write(datetime+' '+hostname+' '+(prsep * prseplen)+'\n')
 #
 	fd.write(datetime+' '+hostname+' '+message+'\n')
-	print '%s %s : %s ' % (datetime, hostname, message)
 #
 	if prflag == 2 or prflag == 3:
 		fd.write(datetime+' '+hostname+' '+(prsep * prseplen)+'\n')
