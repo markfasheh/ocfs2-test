@@ -262,12 +262,11 @@ import os.path
 logdir = os.path.dirname(logfile)
 pidlist = [0] * dirlen * 2
 for x in range(dirlen):
-	buildlog = logdir + '/build_' + lhostname + '_' + str(x) + '.log'
-	findlog = logdir + '/find_' + lhostname + '_' + str(x) + '.log'
 	wdir = dirlist[x] + '/' + str(socket.gethostname()) +'/'+ config.KERNELDIR
-	cmd = 'cd ' + wdir + ';  make mrproper 2>&1 1>> %s; \
-			make defconfig 2>&1 1>> %s; /usr/bin/make -j2 V=1 2>&1 1>> %s' %  \
-			(buildlog, buildlog, buildlog)
+	cmd = 'cd ' + wdir + '; \
+		make mrproper 1>>%s 2>&1; \
+		make defconfig 1>>%s 2>&1; \
+		/usr/bin/make -j2 V=1 1>>%s 2>&1' %  (logfile, logfile, logfile)
 #
 	if DEBUGON:
 		o2tf.printlog('buildkernel:Main - current directory %s' % os.getcwd(),
@@ -288,8 +287,8 @@ for x in range(dirlen):
 			'')
 	t1 = time.time()
 	tbuild(x, cmd)
-	cmd = 'cd ' + dirlist[x] + '/' + nodefind + '; find . -print \
-		2>&1 1>> %s' % findlog
+	cmd = 'cd ' + dirlist[x] + '/' + nodefind + '; \
+		find . -print 1>> %s 2>&1' % logfile
 	tbuild(int(x + dirlen), cmd)
 	if DEBUGON:
 		o2tf.printlog('buildkernel:Main - cmd = %s' % cmd, logfile, 0, '')
