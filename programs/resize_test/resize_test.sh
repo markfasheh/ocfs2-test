@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# resize_test -c -o <outdir> -d <device> -i <iters> -l <label> -m <mntdir> -n <nodelist>
+# resize_test -c -o <outdir> -d <device> -i <iters> -l <label> -m <mntdir>
 #
 # Requires the device to be formatted with enough space
 # left over to extend the device in <iters> chunks of
@@ -14,14 +14,13 @@ fi
 PATH=$PATH:/sbin:${BINDIR}        # Add /sbin to the path for ocfs2 tools
 
 usage() {
-    echo "usage: resize_test.sh -c -o <outdir> -d <device> -i <iters> -l <label> -m <mntdir> -n <nodelist>"
+    echo "usage: resize_test.sh -c -o <outdir> -d <device> -l <label> -i <iters> -m <mntdir>"
     echo "       -i number of resize iterations"
     echo "       -o output directory for the logs"
     echo "       -d device"
+    echo "       -l label"
     echo "       -c consume space after resize"
-	echo "       -l volume label for remote mount and umount"
 	echo "       -m mount dir for moutn and umount"
-	echo "       -n node list for mount and umount"
     exit 1;
 }
 
@@ -69,7 +68,7 @@ get_partsz() {
 do_mount() {
     # mount the device
     echo -n "mount "
-    $REMOTE_MOUNT -m ${mntdir} -l ${label} -n ${nodelist} >/dev/null 2>&1
+    $MOUNT_BIN ${device} ${mntdir} >/dev/null 2>&1
     if [ $? -ne 0 ]
     then
         echo -n "FAILED. Check dmesg for errors." 2>&1
@@ -83,7 +82,7 @@ do_mount() {
 do_umount() {
     # umount the volume
     echo -n "umount "
-    $REMOTE_UMOUNT -m ${mntdir} -n ${nodelist} >/dev/null 2>&1
+    ${UMOUNT_BIN} ${mntdir} >/dev/null 2>&1
     if [ $? -ne 0 ]
     then
         echo "FAILED. Check dmesg for errors." 2>&1
@@ -376,24 +375,22 @@ DATE=`which date`
 CHOWN_BIN=`which chown`
 CHMOD_BIN=`which chmod`
 SUDO="`which sudo` -u root"
-REMOTE_MOUNT=`which remote_mount.py`
-REMOTE_UMOUNT=`which remote_umount.py`
+MOUNT_BIN="`which sudo` -u root `which mount.ocfs2`"
+UMOUNT_BIN="`which sudo` -u root `which umount`"
 
 outdir=
 device=
-nodelist=
 label=
 iters=0
 consume=0
 OPTIND=1
-while getopts "d:i:o:l:m:n:c" args
+while getopts "d:i:o:m:l:c" args
 do
   case "$args" in
     o) outdir="$OPTARG";;
     d) device="$OPTARG";;
     i) iters="$OPTARG";;
     m) mntdir="$OPTARG";;
-    n) nodelist="$OPTARG";;
     l) label="$OPTARG";;
     c) consume=1;
   esac
