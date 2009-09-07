@@ -189,6 +189,9 @@ do_tunefs() {
     if [ $? -eq 0 ]; then
 	 g_size=`${DEBUGFS} -R "stat //global_bitmap" ${device} 2>/dev/null | awk '/Size:/ {print $8;}'`
 	 blocks=$((${g_size}/${blocksz}))
+	 if [ -z ${blk} ];then
+		blk=${partsz}
+	 fi
 	 #In the case when blk number didn't align to cluster
 	 if [ "$((${blk}%${bpc}))" != "0" ];then
 		blk=$((${blk}+${bpc}-$((${blk}%${bpc}))))
