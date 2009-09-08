@@ -10,7 +10,7 @@ SOURCES = fill_holes.c punch_holes.c verify_holes.c fill_holes.h reservations.h
 
 DIST_FILES = $(SOURCES)
 
-BIN_EXTRA = burn-in.sh old_burn-in.sh
+BIN_EXTRA = burn-in.sh old_burn-in.sh fill_verify_holes.sh
 
 BIN_PROGRAMS = fill_holes punch_holes verify_holes 
 

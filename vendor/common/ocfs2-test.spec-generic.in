@@ -92,6 +92,7 @@ rm -rf "$RPM_BUILD_ROOT"
 %{_installdir}/bin/verify_holes
 %{_installdir}/bin/burn-in.sh
 %{_installdir}/bin/old_burn-in.sh
+%{_installdir}/bin/fill_verify_holes.sh
 %{_installdir}/bin/flock_unit_test
 %{_installdir}/bin/run_flock_unit_test.py
 %{_installdir}/bin/fsck-test.sh
