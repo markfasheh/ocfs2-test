@@ -1,29 +1,34 @@
 #!/bin/bash
 #
 
-PATH=$PATH:`dirname ${0}`:/sbin
-RUNTIME=300	# seconds
 APP=`basename ${0}`
-USERNAME=`/usr/bin/whoami`
-DATE=`which date`
-HOSTNAME=`which hostname`
-SUDO="`which sudo` -u root"
-DEBUGFS_BIN="`which sudo` -u root `which debugfs.ocfs2`"
-TUNEFS_BIN="`which sudo` -u root `which tunefs.ocfs2`"
-MKFS_BIN="`which sudo` -u root `which mkfs.ocfs2`"
-CUT=`which cut`
+PATH=$PATH:`dirname ${0}`:/sbin
+RUNTIME=300			# seconds
+
 AWK=`which awk`
-MOUNT=`which mount`
-UMOUNT=`which umount`
-ECHO=`which echo`
-MKDIR=`which mkdir`
 CAT=`which cat`
+CHOWN=`which chown`
+CUT=`which cut`
+DATE=`which date`
+ECHO=`which echo`
+HOSTNAME=`which hostname`
 MD5SUM=`which md5sum`
-WGET=`which wget`
+MKDIR=`which mkdir`
 SEQ=`which seq`
+SUDO="`which sudo` -u root"
+WGET=`which wget`
+WHOAMI=`which whoami`
+
 DWNLD_PATH="http://oss.oracle.com/~smushran/ocfs2-test"
 KERNEL_TARBALL="linux-kernel.tar.gz"
 KERNEL_TARBALL_CHECK="${KERNEL_TARBALL}.md5sum"
+USERID=`${WHOAMI}`
+
+DEBUGFS_BIN="${SUDO} `which debugfs.ocfs2`"
+TUNEFS_BIN="${SUDO} `which tunefs.ocfs2`"
+MKFS_BIN="${SUDO} `which mkfs.ocfs2`"
+MOUNT="${SUDO} `which mount`"
+UMOUNT="${SUDO} `which umount`"
 
 # log_message message
 log_message()
@@ -153,6 +158,7 @@ do_mount() {
 		${ECHO} "ERROR: mount -o ${mountopts} ${device} ${mountpoint}"
 		exit 1
 	fi
+	${SUDO} ${CHOWN} -R ${USERID} ${mountpoint}
 }
 
 # do_umount ${MOUNTPOINT}
@@ -178,11 +184,13 @@ do_mkdir() {
 		exit 1
 	fi
 
-	${MKDIR} -p $1
+	${SUDO} ${MKDIR} -p $1
 	if [ $? -ne 0 ]; then
 		${ECHO} "ERROR: mkdir $1"
 		exit 1
 	fi
+
+	${SUDO} ${CHOWN} -R ${USERID} $1
 }
 
 # run_aiostress ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
