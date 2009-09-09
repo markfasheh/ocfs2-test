@@ -113,6 +113,7 @@ rm -rf "$RPM_BUILD_ROOT"
 %{_installdir}/bin/open_delete.py
 %{_installdir}/bin/o2tf.py
 %{_installdir}/bin/single_run.sh
+%{_installdir}/bin/single_run-WIP.sh
 %{_installdir}/bin/remote_mount.py
 %{_installdir}/bin/remote_umount.py
 %{_installdir}/bin/command.py

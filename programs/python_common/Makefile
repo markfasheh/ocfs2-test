@@ -14,6 +14,7 @@ DIST_FILES = 	config_py.skel \
 		setup.sh \
 		o2tf.py \
 		single_run.sh \
+		single_run-WIP.sh \
 		multiple_run.sh \
 		remote_mount.py \
 		remote_umount.py \
@@ -24,6 +25,7 @@ BIN_EXTRA = 	config_py.skel \
 		config_shell.skel \
 		o2tf.py \
 		single_run.sh \
+		single_run-WIP.sh \
 		remote_mount.py \
 		remote_umount.py \
 		command.py	\
