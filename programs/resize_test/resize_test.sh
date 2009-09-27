@@ -187,6 +187,7 @@ do_tunefs() {
     ${TUNEFS} -v -S ${device} ${blk} >>${out} 2>&1
 
     if [ $? -eq 0 ]; then
+	 sync
 	 g_size=`${DEBUGFS} -R "stat //global_bitmap" ${device} 2>/dev/null | awk '/Size:/ {print $8;}'`
 	 blocks=$((${g_size}/${blocksz}))
 	 if [ -z ${blk} ];then
