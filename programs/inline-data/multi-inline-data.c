@@ -119,7 +119,7 @@ extern int is_file_inlined(char *dirent_name, unsigned long *i_size,
 
 static void usage(void)
 {
-	printf("Usage: inline-data [-i <iteration>] "
+	printf("Usage: multi-inline-data [-i <iteration>] "
 	       "<-d <device>> <mount_point>\n"
 	       "Run a series of tests intended to verify I/O to and from\n"
 	       "files/dirs with inline data.\n\n"
@@ -156,7 +156,7 @@ static int parse_opts(int argc, char **argv)
 {
 	int c;
 	while (1) {
-		c = getopt(argc, argv, "D:d:I:i:C:c:M:m:");
+		c = getopt(argc, argv, "D:d:I:i:");
 		if (c == -1)
 			break;
 		switch (c) {

@@ -41,8 +41,8 @@ REMOTE_MOUNT_BIN="${BINDIR}/remote_mount.py"
 UMOUNT_BIN="`which sudo` -u root `which umount`"
 REMOTE_UMOUNT_BIN="${BINDIR}/remote_umount.py"
 MKFS_BIN="`which sudo` -u root `which mkfs.ocfs2`"
-INLINE_DATA_BIN="`which sudo` -u root ${BINDIR}/multi-inline-data"
-INLINE_DIRS_BIN="`which sudo` -u root ${BINDIR}/multi-inline-dirs"
+INLINE_DATA_BIN="${BINDIR}/multi-inline-data"
+INLINE_DIRS_BIN="${BINDIR}/multi-inline-dirs"
 DEFAULT_LOG="multiple-inline-data-test-logs"
 LOG_OUT_DIR=
 DATA_LOG_FILE=
@@ -56,14 +56,13 @@ CLUSTERSIZE=
 BLOCKNUMS=
 
 TMP_DIR=/tmp
-DEFAULT_HOSTFILE=".openmpi_hostfile"
 DEFAULT_RANKS=4
 
 declare -i MPI_RANKS
 MPI_HOSTS=
 MPI_HOSTFILE=
 MPI_ACCESS_METHOD="ssh"
-MPI_PLS_AGENT_ARG="-mca pls_rsh_agent ssh:rsh"
+MPI_PLS_AGENT_ARG="-mca plm_rsh_agent ssh:rsh"
 
 set -o pipefail
 
@@ -161,38 +160,13 @@ f_getoptions()
 
 }
 
-f_create_hostfile()
-{
-	MPI_HOSTFILE="${TMP_DIR}/${DEFAULT_HOSTFILE}"
-        TMP_FILE="${TMP_DIR}/.tmp_openmpi_hostfile_$$"
-
-        echo ${MPI_HOSTS}|sed -e 's/,/\n/g'>$TMP_FILE
-
-        if [ -f "$MPI_HOSTFILE" ];then
-               ${RM} -rf ${MPI_HOSTFILE}
-        fi
-
-        while read line
-        do
-                if [ -z $line ];then
-                        continue
-                fi
-
-                echo "$line">>$MPI_HOSTFILE
-
-        done<$TMP_FILE
-
-
-        ${RM} -rf $TMP_FILE
-}
-
 f_setup()
 {
 
         f_getoptions $*
 
 	if [ "$MPI_ACCESS_METHOD" = "rsh" ];then
-                MPI_PLS_AGENT_ARG="-mca pls_rsh_agent rsh:ssh"
+                MPI_PLS_AGENT_ARG="-mca plm_rsh_agent rsh:ssh"
                 REMOTE_SH_BIN=${RSH_BIN}
         fi
 
@@ -225,10 +199,7 @@ f_setup()
 
 	if [ -z "$MPI_HOSTS" ];then
 		f_usage
-        else
-		f_create_hostfile
-        fi
-
+	fi
 }
 
 f_do_mkfs_and_mount()
@@ -241,14 +212,6 @@ f_do_mkfs_and_mount()
 	echo_status ${RET} |tee -a ${RUN_LOG_FILE}
 	exit_or_not ${RET}
 
-#	while read node_line ; do
-#		host_node=`echo ${node_line}|${AWK_BIN} '{print $1}'`
-#		echo -n "Mounting device to ${MOUNT_POINT} on ${host_node}:"|tee -a ${RUN_LOG_FILE}
-#		RET=$(${REMOTE_SH_BIN} -n ${host_node} "sudo /bin/mount -t ocfs2 -o rw,nointr ${OCFS2_DEVICE} ${MOUNT_POINT};echo \$?" 2>>${RUN_LOG_FILE})
-#		echo_status ${RET} |tee -a ${RUN_LOG_FILE}
-#		exit_or_not ${RET}
-#			
-#	done<${MPI_HOSTFILE}
 	echo -n "Mounting device ${OCFS2_DEVICE} to nodes(${MPI_HOSTS}):"|tee -a ${RUN_LOG_FILE}
         ${REMOTE_MOUNT_BIN} -l ocfs2-inline-test -m ${MOUNT_POINT} -n ${MPI_HOSTS}>>${RUN_LOG_FILE} 2>&1
         RET=$?
@@ -262,23 +225,12 @@ f_do_mkfs_and_mount()
 
 f_do_umount()
 {
-#	while read node_line;do
-#		host_node=`echo ${node_line}|awk '{print $1}'`
-#		echo -ne "Unmounting device from ${MOUNT_POINT} on ${host_node}:"|tee -a ${RUN_LOG_FILE}
-#		RET=$(${REMOTE_SH_BIN} -n ${host_node} "sudo /bin/umount ${MOUNT_POINT};echo \$?" 2>>${RUN_LOG_FILE})
-#		echo_status ${RET} |tee -a ${RUN_LOG_FILE}
-#		exit_or_not ${RET}
-#		
-#	done<${MPI_HOSTFILE}
-
 	echo -n "Umounting device ${OCFS2_DEVICE} from nodes(${MPI_HOSTS}):"|tee -a ${RUN_LOG_FILE}
         ${REMOTE_UMOUNT_BIN} -m ${MOUNT_POINT} -n ${MPI_HOSTS}>>${RUN_LOG_FILE} 2>&1
         RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
-
 }
-
 
 f_run_data_test()
 {
@@ -290,7 +242,7 @@ f_run_data_test()
         echo "==========================================================">>${DATA_LOG_FILE}
 	echo -e "Testing Binary:\t\t${INLINE_DATA_BIN} -i 1 -d ${OCFS2_DEVICE} ${MOUNT_POINT}">>${DATA_LOG_FILE}
 
-	${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --hostfile ${MPI_HOSTFILE} ${INLINE_DATA_BIN} -i 1 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DATA_LOG_FILE} 2>&1
+	${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS} ${INLINE_DATA_BIN} -i 1 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DATA_LOG_FILE} 2>&1
 	RET=$?
 	echo_status ${RET} |tee -a ${RUN_LOG_FILE}
 	exit_or_not ${RET}
@@ -302,9 +254,9 @@ f_run_data_test()
         echo -ne "Stress Test For Regular File Among Nodes:">> ${DATA_LOG_FILE}             
         echo >>${DATA_LOG_FILE}
         echo "==========================================================">>${DATA_LOG_FILE}
-	echo -e "Testing Binary:\t\t${INLINE_DATA_BIN} -i 50 -d ${OCFS2_DEVICE} ${MOUNT_POINT}">>${DATA_LOG_FILE}
+	echo -e "Testing Binary:\t\t${INLINE_DATA_BIN} -i 200 -d ${OCFS2_DEVICE} ${MOUNT_POINT}">>${DATA_LOG_FILE}
 
-        ${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --hostfile ${MPI_HOSTFILE} ${INLINE_DATA_BIN} -i 200  -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DATA_LOG_FILE} 2>&1
+        ${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS} ${INLINE_DATA_BIN} -i 200 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DATA_LOG_FILE} 2>&1
 	RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -321,7 +273,7 @@ f_run_dirs_test()
         echo "==========================================================">>${DIRS_LOG_FILE}
 	echo -e "Testing Binary:\t\t${INLINE_DIRS_BIN} -i 1 -s 20 -d ${OCFS2_DEVICE} ${MOUNT_POINT}">>${DIRS_LOG_FILE}
 
-	${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --hostfile ${MPI_HOSTFILE}  ${INLINE_DIRS_BIN} -i 1 -s 20 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
+	${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS}  ${INLINE_DIRS_BIN} -i 1 -s 20 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
 	RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -335,7 +287,7 @@ f_run_dirs_test()
         echo "==========================================================">>${DIRS_LOG_FILE}
 	echo -e "Testing Binary:\t\t${INLINE_DIRS_BIN} -i 1 -s 100 -d ${OCFS2_DEVICE} ${MOUNT_POINT}">>${DIRS_LOG_FILE}
 
-        ${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --hostfile ${MPI_HOSTFILE}  ${INLINE_DIRS_BIN} -i 1 -s 100 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
+        ${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS}  ${INLINE_DIRS_BIN} -i 1 -s 100 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
 	RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -349,7 +301,7 @@ f_run_dirs_test()
         echo "==========================================================">>${DIRS_LOG_FILE}
 	echo -e "Testing Binary:\t\t${INLINE_DIRS_BIN} -i 5 -s 20 -d ${OCFS2_DEVICE} ${MOUNT_POINT}">>${DIRS_LOG_FILE}
 
-        ${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -mca btl_tcp_if_include eth0 -np ${MPI_RANKS} --hostfile ${MPI_HOSTFILE}  ${INLINE_DIRS_BIN} -i 1 -s 20 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
+        ${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS}  ${INLINE_DIRS_BIN} -i 5 -s 20 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
 	RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}

@@ -127,7 +127,7 @@ static inline char rand_char(void)
 
 static void usage(void)
 {
-	printf("Usage: inline-dirs [-i <iteration>] [-s operated_entries] "
+	printf("Usage: multi-inline-dirs [-i <iteration>] [-s operated_entries] "
 	       "<-d <device>> <mount_point>\n"
 	       "Run a series of tests intended to verify I/O to and from\n"
 	       "dirs with inline data.\n\n"
@@ -165,7 +165,7 @@ static int parse_opts(int argc, char **argv)
 {
 	int c;
 	while (1) {
-		c = getopt(argc, argv, "D:d:I:i:C:c:M:m:S:s:");
+		c = getopt(argc, argv, "D:d:I:i:S:s:");
 		if (c == -1)
 			break;
 		switch (c) {
