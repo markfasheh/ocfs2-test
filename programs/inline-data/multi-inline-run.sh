@@ -50,6 +50,7 @@ DIRS_LOG_FILE=
 RUN_LOG_FILE=
 MOUNT_POINT=
 OCFS2_DEVICE=
+OCFS2_UUID=
 
 BLOCKSIZE=
 CLUSTERSIZE=
@@ -200,6 +201,8 @@ f_setup()
 	if [ -z "$MPI_HOSTS" ];then
 		f_usage
 	fi
+
+	OCFS2_UUID=`blkid |grep ${OCFS2_DEVICE}|cut -d' ' -f3|cut -d'"' -f2`
 }
 
 f_do_mkfs_and_mount()
@@ -240,9 +243,9 @@ f_run_data_test()
         echo -ne "Functionality Test For Regular File Among Nodes:">> ${DATA_LOG_FILE}
         echo >>${DATA_LOG_FILE}
         echo "==========================================================">>${DATA_LOG_FILE}
-	echo -e "Testing Binary:\t\t${INLINE_DATA_BIN} -i 1 -d ${OCFS2_DEVICE} ${MOUNT_POINT}">>${DATA_LOG_FILE}
+	echo -e "Testing Binary:\t\t${INLINE_DATA_BIN} -i 1 -u ${OCFS2_UUID} ${MOUNT_POINT}">>${DATA_LOG_FILE}
 
-	${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS} ${INLINE_DATA_BIN} -i 1 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DATA_LOG_FILE} 2>&1
+	${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS} ${INLINE_DATA_BIN} -i 1 -u ${OCFS2_UUID} ${MOUNT_POINT}>>${DATA_LOG_FILE} 2>&1
 	RET=$?
 	echo_status ${RET} |tee -a ${RUN_LOG_FILE}
 	exit_or_not ${RET}
@@ -254,9 +257,9 @@ f_run_data_test()
         echo -ne "Stress Test For Regular File Among Nodes:">> ${DATA_LOG_FILE}             
         echo >>${DATA_LOG_FILE}
         echo "==========================================================">>${DATA_LOG_FILE}
-	echo -e "Testing Binary:\t\t${INLINE_DATA_BIN} -i 200 -d ${OCFS2_DEVICE} ${MOUNT_POINT}">>${DATA_LOG_FILE}
+	echo -e "Testing Binary:\t\t${INLINE_DATA_BIN} -i 200 -u ${OCFS2_UUID} ${MOUNT_POINT}">>${DATA_LOG_FILE}
 
-        ${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS} ${INLINE_DATA_BIN} -i 200 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DATA_LOG_FILE} 2>&1
+        ${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS} ${INLINE_DATA_BIN} -i 200 -u ${OCFS2_UUID} ${MOUNT_POINT}>>${DATA_LOG_FILE} 2>&1
 	RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -271,9 +274,9 @@ f_run_dirs_test()
         echo -ne "Functionality Test For Directory Among Nodes:">> ${DIRS_LOG_FILE}
         echo >>${DIRS_LOG_FILE}
         echo "==========================================================">>${DIRS_LOG_FILE}
-	echo -e "Testing Binary:\t\t${INLINE_DIRS_BIN} -i 1 -s 20 -d ${OCFS2_DEVICE} ${MOUNT_POINT}">>${DIRS_LOG_FILE}
+	echo -e "Testing Binary:\t\t${INLINE_DIRS_BIN} -i 1 -s 20 -u ${OCFS2_UUID} ${MOUNT_POINT}">>${DIRS_LOG_FILE}
 
-	${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS}  ${INLINE_DIRS_BIN} -i 1 -s 20 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
+	${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS}  ${INLINE_DIRS_BIN} -i 1 -s 20 -u ${OCFS2_UUID} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
 	RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -285,9 +288,9 @@ f_run_dirs_test()
         echo -ne "Stress Test I Test For Directory Among Nodes:">> ${DIRS_LOG_FILE}
         echo >>${DIRS_LOG_FILE}
         echo "==========================================================">>${DIRS_LOG_FILE}
-	echo -e "Testing Binary:\t\t${INLINE_DIRS_BIN} -i 1 -s 100 -d ${OCFS2_DEVICE} ${MOUNT_POINT}">>${DIRS_LOG_FILE}
+	echo -e "Testing Binary:\t\t${INLINE_DIRS_BIN} -i 1 -s 100 -u ${OCFS2_UUID} ${MOUNT_POINT}">>${DIRS_LOG_FILE}
 
-        ${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS}  ${INLINE_DIRS_BIN} -i 1 -s 100 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
+        ${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS}  ${INLINE_DIRS_BIN} -i 1 -s 100 -u ${OCFS2_UUID} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
 	RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -299,9 +302,9 @@ f_run_dirs_test()
         echo -ne "Stress Test II Test For Directory Among Nodes:">> ${DIRS_LOG_FILE}
         echo >>${DIRS_LOG_FILE}
         echo "==========================================================">>${DIRS_LOG_FILE}
-	echo -e "Testing Binary:\t\t${INLINE_DIRS_BIN} -i 5 -s 20 -d ${OCFS2_DEVICE} ${MOUNT_POINT}">>${DIRS_LOG_FILE}
+	echo -e "Testing Binary:\t\t${INLINE_DIRS_BIN} -i 5 -s 20 -u ${OCFS2_UUID} ${MOUNT_POINT}">>${DIRS_LOG_FILE}
 
-        ${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS}  ${INLINE_DIRS_BIN} -i 5 -s 20 -d ${OCFS2_DEVICE} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
+        ${SUDO} ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS}  ${INLINE_DIRS_BIN} -i 5 -s 20 -u ${OCFS2_UUID} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
 	RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}

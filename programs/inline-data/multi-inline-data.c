@@ -70,6 +70,7 @@
 
 static char *prog;
 static char device[100];
+static char uuid[100];
 
 ocfs2_filesys *fs;
 struct ocfs2_super_block *ocfs2_sb;
@@ -113,6 +114,7 @@ extern int verify_pattern(int size, char *buf);
 extern int __verify_pattern_fd(int fd, unsigned int size, int direct_read);
 extern int verify_pattern_fd(int fd, unsigned int size);
 extern int verify_pattern_mmap(int fd, unsigned int size);
+extern int uuid2dev(const char *uuid, char *dev);
 extern int open_ocfs2_volume(char *device_name);
 extern int is_file_inlined(char *dirent_name, unsigned long *i_size,
 			   unsigned int *id_count);
@@ -120,11 +122,11 @@ extern int is_file_inlined(char *dirent_name, unsigned long *i_size,
 static void usage(void)
 {
 	printf("Usage: multi-inline-data [-i <iteration>] "
-	       "<-d <device>> <mount_point>\n"
+	       "<-u <uuid>> <mount_point>\n"
 	       "Run a series of tests intended to verify I/O to and from\n"
 	       "files/dirs with inline data.\n\n"
 	       "iteration specify the running times.\n"
-	       "device and mount_point are mandatory.\n");
+	       "uuid and mount_point are mandatory.\n");
 
 	MPI_Finalize();
 
@@ -156,7 +158,7 @@ static int parse_opts(int argc, char **argv)
 {
 	int c;
 	while (1) {
-		c = getopt(argc, argv, "D:d:I:i:");
+		c = getopt(argc, argv, "U:u:I:i:");
 		if (c == -1)
 			break;
 		switch (c) {
@@ -164,16 +166,16 @@ static int parse_opts(int argc, char **argv)
 		case 'I':
 			iteration = atol(optarg);
 			break;
-		case 'd':
-		case 'D':
-			strcpy(device, optarg);
+		case 'u':
+		case 'U':
+			strcpy(uuid, optarg);
 			break;
 		default:
 			break;
 		}
 	}
 
-	if (strcmp(device, "") == 0)
+	if (strcmp(uuid, "") == 0)
 		return EINVAL;
 
 	if (argc - optind != 1)
@@ -182,6 +184,11 @@ static int parse_opts(int argc, char **argv)
 	strcpy(mount_point, argv[optind]);
 	if (mount_point[strlen(mount_point) - 1] == '/')
 		 mount_point[strlen(mount_point) - 1] = '\0';
+
+	memset(device, 0, 100);
+
+	if (uuid2dev(uuid, device))
+		abort_printf("Failed to get device name from uuid!\n");
 
 	return 0;
 

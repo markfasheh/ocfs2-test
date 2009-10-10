@@ -62,7 +62,6 @@ extern char mount_point[OCFS2_MAX_FILENAME_LEN];
 extern char work_place[OCFS2_MAX_FILENAME_LEN];
 extern char file_name[OCFS2_MAX_FILENAME_LEN];
 
-
 unsigned long get_rand(unsigned long min, unsigned long max)
 {
 	if (min == 0 && max == 0)
@@ -320,6 +319,27 @@ int verify_pattern_mmap(int fd, unsigned int size)
 	ret = verify_pattern(size, region);
 
 	munmap(region, mmap_size);
+
+	return 0;
+}
+
+int uuid2dev(const char *uuid, char *dev)
+{
+	FILE *df;
+	char cmd[300];
+
+	snprintf(cmd, 300, "blkid |grep %s|cut -d':' -f1", uuid);
+
+	df = popen(cmd, "r");
+
+	if (df == NULL) {
+		fprintf(stderr, "popen failed to get dev name.\n");
+		return -1;
+	}
+
+	fscanf(df, "%s\n", dev);
+
+	pclose(df);
 
 	return 0;
 }

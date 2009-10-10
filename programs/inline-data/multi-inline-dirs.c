@@ -71,6 +71,7 @@ struct my_dirent {
 
 static char *prog;
 static char device[100];
+static char uuid[100];
 
 static ocfs2_filesys *fs;
 static struct ocfs2_super_block *ocfs2_sb;
@@ -128,13 +129,13 @@ static inline char rand_char(void)
 static void usage(void)
 {
 	printf("Usage: multi-inline-dirs [-i <iteration>] [-s operated_entries] "
-	       "<-d <device>> <mount_point>\n"
+	       "<-u <uuid>> <mount_point>\n"
 	       "Run a series of tests intended to verify I/O to and from\n"
 	       "dirs with inline data.\n\n"
 	       "iteration specify the running times.\n"
 	       "operated_dir_entries specify the entires number to be "
 	       "operated,such as random create/unlink/rename.\n"
-	       "device and mount_point are mandatory.\n");
+	       "uuid and mount_point are mandatory.\n");
 
 	MPI_Finalize();
 	exit(1);
@@ -165,7 +166,7 @@ static int parse_opts(int argc, char **argv)
 {
 	int c;
 	while (1) {
-		c = getopt(argc, argv, "D:d:I:i:S:s:");
+		c = getopt(argc, argv, "U:u:I:i:S:s:");
 		if (c == -1)
 			break;
 		switch (c) {
@@ -173,9 +174,9 @@ static int parse_opts(int argc, char **argv)
 		case 'I':
 			iteration = atol(optarg);
 			break;
-		case 'd':
-		case 'D':
-			strcpy(device, optarg);
+		case 'u':
+		case 'U':
+			strcpy(uuid, optarg);
 			break;
 		case 's':
 		case 'S':
@@ -185,7 +186,7 @@ static int parse_opts(int argc, char **argv)
 		}
 	}
 
-	if (strcmp(device, "") == 0)
+	if (strcmp(uuid, "") == 0)
 		return EINVAL;
 
 	if (argc - optind != 1)
@@ -1123,6 +1124,25 @@ static void run_large_dir_tests(void)
 		abort_printf("MPI_Barrier failed: %d\n", ret);
 }
 
+static int uuid2dev(const char *uuid, char *dev)
+{
+	FILE *df;
+	char cmd[300];
+
+	snprintf(cmd, 300, "blkid |grep %s|cut -d':' -f1", uuid);
+
+	df = popen(cmd, "r");
+	if (df == NULL) {
+		fprintf(stderr, "popen failed to get dev name.\n");
+		return -1;
+	}
+
+	fscanf(df, "%s\n", dev);
+
+	pclose(df);
+	return 0;
+}
+
 static int open_ocfs2_volume(char *device_name)
 {
 	int open_flags = OCFS2_FLAG_HEARTBEAT_DEV_OK | OCFS2_FLAG_RO;
@@ -1242,6 +1262,11 @@ static void setup(int argc, char *argv[])
 
 	if (parse_opts(argc, argv))
 		usage();
+
+	memset(device, 0, 100);
+
+	if (uuid2dev(uuid, device))
+		abort_printf("Failed to get device name from uuid!\n");
 
 	ret = open_ocfs2_volume(device);
 	if (ret < 0)
