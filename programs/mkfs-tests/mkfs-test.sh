@@ -235,9 +235,9 @@ do_bitmap_test() {
 	do_consume_and_delete 1
 }
 
-MKFS=`which mkfs.ocfs2`
-FSCK=`which fsck.ocfs2`
-DEBUGFS=`which debugfs.ocfs2`
+MKFS="`which sudo` -u root `which mkfs.ocfs2`"
+FSCK="`which sudo` -u root `which fsck.ocfs2`"
+DEBUGFS="`which sudo` -u root `which debugfs.ocfs2`"
 GREP=`which grep`
 DATE=`which date`
 AWK=`which awk`

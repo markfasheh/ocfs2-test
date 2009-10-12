@@ -25,13 +25,13 @@
 
 . `dirname ${0}`/config.sh
 
-MKFS_BIN=`which mkfs.ocfs2`
-FSCK_BIN=`which fsck.ocfs2`
-DEBUGFS_BIN=`which debugfs.ocfs2`
-TUNEFS_BIN=`which tunefs.ocfs2`
-MOUNTED_BIN=`which mounted.ocfs2`
-MOUNT_BIN=`which mount.ocfs2`
-UMOUNT_BIN=`which umount`
+MKFS_BIN="`which sudo` -u root `which mkfs.ocfs2`"
+FSCK_BIN="`which sudo` -u root `which fsck.ocfs2`"
+DEBUGFS_BIN="`which sudo` -u root `which debugfs.ocfs2`"
+TUNEFS_BIN="`which sudo` -u root `which tunefs.ocfs2`"
+MOUNTED_BIN="`which sudo` -u root `which mounted.ocfs2`"
+MOUNT_BIN="`which sudo` -u root `which mount.ocfs2`"
+UMOUNT_BIN="`which sudo` -u root `which umount`"
 TEE_BIN=`which tee`
 MKDIR_BIN=`which mkdir`
 RM_BIN=`which rm`
