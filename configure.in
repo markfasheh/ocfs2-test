@@ -135,6 +135,15 @@ OCFS2_CHECK_HEADERS([splice() in bits/fcntl.h], bits/fcntl.h,
   , splice_compat_header="splice.h", [splice (int __fdin])
 API_COMPAT_HEADERS="$API_COMPAT_HEADERS $splice_compat_header"
 
+NO_REFLINK=
+OCFS2_CHECK_HEADERS([reflink() in unistd.h], unistd.h, ,
+  NO_REFLINK=yes, [reflink])
+AC_SUBST(NO_REFLINK)
+
+if test "x$NO_REFLINK" = "xyes"; then
+API_COMPAT_HEADERS="$API_COMPAT_HEADERS reflink.h"
+fi
+
 for h in $API_COMPAT_HEADERS; do
   API_COMPAT_CFLAGS="$API_COMPAT_CFLAGS -include \$(TOPDIR)/api-compat/include/$h"
 done
