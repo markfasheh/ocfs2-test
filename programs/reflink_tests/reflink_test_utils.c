@@ -532,7 +532,7 @@ int verify_pattern(char *buf, unsigned long offset, unsigned long size)
 
 int verify_orig_file(char *orig)
 {
-	int ret, fd, o_ret;
+	int ret = 0, fd, o_ret;
 	unsigned long readed, offset = 0;
 	unsigned long verify_size = 0;
 	char buf[HUNK_SIZE];

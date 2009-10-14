@@ -46,8 +46,8 @@ extern char value_sz[6];
 extern char value_sz_get[6];
 extern char *name_get;
 
-extern open_rw_flags;
-extern open_ro_flags;
+extern int open_rw_flags;
+extern int open_ro_flags;
 
 void xattr_name_generator(unsigned long xattr_no,
 			  enum EA_NAMESPACE_CLASS ea_nm,

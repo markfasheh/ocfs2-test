@@ -746,7 +746,6 @@ static int directio_test(void)
 
 	MPI_Barrier_Sync();
 
-bail:
 	if (rank) {
 
 		ret = do_unlink(dest);

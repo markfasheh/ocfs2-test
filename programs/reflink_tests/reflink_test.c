@@ -1771,7 +1771,7 @@ static int holes_fill_test(void)
 static int directio_test(void)
 {
 
-	int i, ret, o_flags_rw, o_flags_ro;
+	int ret, o_flags_rw, o_flags_ro;
 	int sub_testno = 1;
 
 	unsigned long align_slice = 512;
