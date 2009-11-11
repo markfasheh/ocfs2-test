@@ -66,6 +66,13 @@ WORK_PLACE=
 
 MOUNT_OPTS=
 
+DSCV_TEST=
+LISTENER_ADDR=
+LISTENER_PORT=
+
+VERI_TEST=
+VERI_LOG=
+
 REFLINK_TEST_BIN="${BINDIR}/reflink_test"
 FILL_HOLES_BIN="${BINDIR}/fill_holes"
 VERIFY_HOLES_BIN="${BINDIR}/verify_holes"
@@ -85,11 +92,13 @@ set -o pipefail
 ################################################################################
 function f_usage()
 {
-        echo "usage: `basename ${0}` [-W] [-o logdir] <-d device>\
- <mountpoint path>"
+        echo "usage: `basename ${0}` [-D <-a remote_listener_addr> <-p port>] \
+[-v verify_log] [-W] [-o logdir] <-d device> <mountpoint path>"
         echo "       -o output directory for the logs"
         echo "       -d block device name used for ocfs2 volume"
         echo "       -W enable data=writeback mode"
+	echo "       -D enable destructive test,it will crash the testing node,\
+be cautious, you need to specify listener addr and port then"
         echo "       <mountpoint path> specify the testing mounting point."
         exit 1;
 
@@ -102,11 +111,15 @@ function f_getoptions()
                 exit 1
          fi
 
-         while getopts "o:Whd:" options; do
+         while getopts "o:WDhd:a:p:v:" options; do
                 case $options in
                 o ) LOG_DIR="$OPTARG";;
                 d ) DEVICE="$OPTARG";;
 		W ) MOUNT_OPTS="data=writeback";;
+		D ) DSCV_TEST="1";;
+		a ) LISTENER_ADDR="$OPTARG";;
+		p ) LISTENER_PORT="$OPTARG";;
+		v ) VERI_LOG="$OPTARG";;
                 h ) f_usage;;
                 * ) f_usage;;
                 esac
@@ -135,6 +148,22 @@ function f_check()
                         fi
                 fi
         fi
+
+	if [ -n "${DSCV_TEST}" ];then
+		if [ -z "${LISTENER_ADDR}" -o -z "${LISTENER_PORT}" ];then
+			echo "You need to specify listener address and port in destructive test."
+			exit 1
+		fi
+	fi
+
+	if [ -n "${VERI_LOG}" ];then
+		if [ ! -f "${VERI_LOG}" ];then
+			echo "Please specify a legal verify log file."
+			exit 1
+		else
+			VERI_TEST="1"
+		fi
+	fi
 
         LOG_DIR=${LOG_DIR:-$DEFAULT_LOG}
 	${MKDIR_BIN} -p ${LOG_DIR} || exit 1
@@ -380,6 +409,31 @@ ${DEVICE} "refcount,xattr" ${JOURNALSIZE} ${BLOCKS}
 
 	WORK_PLACE=${MOUNT_POINT}/${WORK_PLACE_DIRENT}
 	${MKDIR_BIN} -p ${WORK_PLACE}
+
+	if [ -n "${VERI_TEST}" ];then
+	((TEST_NO++))
+	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Verify Test After Desctruction :"
+	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Verify Test After Desctruction, CMD:${SUDO} \
+${REFLINK_TEST_BIN} -i 1 -n 10 -p 10 -l 1638400 -d ${DEVICE} -w ${WORK_PLACE} -v ${VERI_LOG} "
+	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -p 10 -l 1638400 -d ${DEVICE} -w \
+${WORK_PLACE} -v ${VERI_LOG} >>${LOG_FILE} 2>&1
+        RET=$?
+        f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
+	exit ${RET}
+	fi
+
+	if [ -n "${DSCV_TEST}" ];then
+	((TEST_NO++))
+	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Destructive Test For DirectIO:"
+	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Destructive Test For DirectIO, CMD:${SUDO} \
+${REFLINK_TEST_BIN} -i 1 -n 10 -p 10 -l 1638400 -d ${DEVICE} -w ${WORK_PLACE} \
+-D 10 -a ${LISTENER_ADDR} -P ${LISTENER_PORT} "
+	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -p 10 -l 1638400 -d ${DEVICE} -w \
+${WORK_PLACE} -D 10 -a ${LISTENER_ADDR} -p ${LISTENER_ADDR} >>${LOG_FILE} 2>&1
+        RET=$?
+        f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
+	exit ${RET}
+	fi
 
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Basic Fucntional Test:"

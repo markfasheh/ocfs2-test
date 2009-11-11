@@ -33,6 +33,7 @@
 #include <sys/ioctl.h>
 #include <inttypes.h>
 #include <linux/types.h>
+#include <sys/time.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,7 +41,14 @@
 #include <assert.h>
 #include <getopt.h>
 
+#include <sys/socket.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 #include <ocfs2/ocfs2.h>
+#include <ocfs2/byteorder.h>
+#include "crc32table.h"
 
 #define OCFS2_MAX_FILENAME_LEN	255
 #define FILE_RW_FLAGS		(O_CREAT|O_RDWR)
@@ -66,6 +74,8 @@
 #define HOLE_TEST		0x00000200
 #define ODCT_TEST		0x00000400
 #define INLN_TEST		0x00000800
+#define DSCV_TEST		0x00001000
+#define VERI_TEST		0x00002000
 
 #define MPI_RET_SUCCESS		0
 #define MPI_RET_FAILED		1
@@ -74,10 +84,25 @@
 #define RAND_CHAR_START 'A'
 #define MAGIC_HOLE_CHAR (RAND_CHAR_START - 1)
 
+#define CHUNK_SIZE	(1024*8)
+#define HOSTNAME_LEN	256
+
 struct write_unit {
 	char w_char;
 	unsigned long w_offset;
 	unsigned int  w_len;
+};
+
+struct dest_write_unit{
+	unsigned long d_chunk_no;
+	unsigned long long d_timestamp;
+	uint32_t d_checksum;
+	char d_char;
+};
+
+struct dest_logs {
+	char filename[PATH_MAX];
+	unsigned long index;
 };
 
 char rand_char(void);
@@ -97,6 +122,7 @@ int mmap_write_at_file(char *pathname, const void *buf, size_t count,
 int fill_pattern(unsigned long size);
 int prep_orig_file(char *file_name, unsigned long size, int once);
 int prep_orig_file_dio(char *file_name, unsigned long size);
+int prep_orig_file_in_chunks(char *file_name, unsigned long chunks);
 int verify_pattern(char *buf, unsigned long offset, unsigned long size);
 int verify_orig_file(char *orig);
 
@@ -124,4 +150,19 @@ void prep_rand_write_unit(struct write_unit *wu);
 int do_write(int fd, struct write_unit *wu);
 int do_write_file(char *fname, struct write_unit *wu);
 
+unsigned long long get_time_microseconds(void);
+void prep_rand_dest_write_unit(struct dest_write_unit *dwu,
+			       unsigned long chunk_no);
+int fill_chunk_pattern(char *pattern, struct dest_write_unit *dwu);
+int dump_pattern(char *pattern, struct dest_write_unit *dwu);
+int verify_chunk_pattern(char *pattern, struct dest_write_unit *dwu);
+int do_write_chunk(int fd, struct dest_write_unit *dwu);
+/*
+int do_write_chunk_file(char *fname, struct dest_write_unit *du);
+*/
+int init_sock(char *serv, int port);
+long get_verify_logs_num(char *log);
+int verify_dest_file(char *log, struct dest_logs d_log, unsigned long chunk_no);
+int verify_dest_files(char *log, char *orig, unsigned long chunk_no);
+uint32_t crc32_checksum(uint32_t crc, char *p, size_t len);
 #endif

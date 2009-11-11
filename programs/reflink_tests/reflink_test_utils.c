@@ -41,6 +41,55 @@ extern struct ocfs2_super_block *ocfs2_sb;
 extern char *prog;
 
 static char buf_dio[DIRECTIO_SLICE] __attribute__ ((aligned(DIRECTIO_SLICE)));
+static char chunk_pattern[CHUNK_SIZE] __attribute__ ((aligned(DIRECTIO_SLICE)));
+
+uint32_t crc32_checksum(uint32_t crc, char *p, size_t len)
+{
+	const uint32_t      *b = (uint32_t *)p;
+	const uint32_t      *tab = crc32table_le;
+
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+# define DO_CRC(x) crc = tab[(crc ^ (x)) & 255] ^ (crc >> 8)
+#else
+# define DO_CRC(x) crc = tab[((crc >> 24) ^ (x)) & 255] ^ (crc << 8)
+#endif
+
+	crc = cpu_to_le32(crc);
+	/* Align it */
+	if (((long)b)&3 && len) {
+		do {
+			uint8_t *p = (uint8_t *)b;
+			DO_CRC(*p++);
+			b = (void *)p;
+		} while ((--len) && ((long)b)&3);
+	}
+	if (len >= 4) {
+		/* load data 32 bits wide, xor data 32 bits wide. */
+		size_t save_len = len & 3;
+		len = len >> 2;
+		--b; /* use pre increment below(*++b) for speed */
+		do {
+			crc ^= *++b;
+			DO_CRC(0);
+			DO_CRC(0);
+			DO_CRC(0);
+			DO_CRC(0);
+		} while (--len);
+		b++; /* point to next byte(s) */
+		len = save_len;
+	}
+	/* And the last few bytes */
+	if (len) {
+		do {
+			uint8_t *p = (uint8_t *)b;
+			DO_CRC(*p++);
+			b = (void *)p;
+		} while (--len);
+	}
+
+	return le32_to_cpu(crc);
+#undef DO_CRC
+}
 
 unsigned long get_rand(unsigned long min, unsigned long max)
 {
@@ -461,6 +510,139 @@ int prep_orig_file_dio(char *file_name, unsigned long size)
 	}
 
 	close(fd);
+	return 0;
+}
+
+int fill_chunk_pattern(char *pattern, struct dest_write_unit *dwu)
+{
+	unsigned long mem_offset = 0;
+	uint32_t checksum = 0;
+
+	memset(pattern, 0, CHUNK_SIZE);
+	mem_offset = 0;
+
+	memmove(pattern , &dwu->d_chunk_no, sizeof(unsigned long));
+	mem_offset += sizeof(unsigned long);
+	memmove(pattern + mem_offset, &dwu->d_timestamp,
+		sizeof(unsigned long long));
+	mem_offset += sizeof(unsigned long long);
+	/*
+	memmove(pattern + mem_offset, &checksum, sizeof(unsigned long));
+	*/
+	mem_offset += sizeof(uint32_t);
+
+	memset(pattern + mem_offset, dwu->d_char, CHUNK_SIZE - mem_offset * 2);
+
+	checksum = crc32_checksum(~0, pattern + mem_offset,
+				  (size_t)CHUNK_SIZE - mem_offset * 2);
+
+	mem_offset = CHUNK_SIZE - mem_offset;
+
+	memmove(pattern + mem_offset, &checksum, sizeof(uint32_t));
+	mem_offset += sizeof(uint32_t);
+	memmove(pattern + mem_offset, &dwu->d_timestamp,
+		sizeof(unsigned long long));
+	mem_offset += sizeof(unsigned long long);
+	memmove(pattern + mem_offset, &dwu->d_chunk_no, sizeof(unsigned long));
+
+	mem_offset = sizeof(unsigned long) + sizeof(unsigned long long);
+	memmove(pattern + mem_offset, &checksum, sizeof(uint32_t));
+
+	dwu->d_checksum = checksum;
+
+	return 0;
+}
+
+int dump_pattern(char *pattern, struct dest_write_unit *dwu)
+{
+	unsigned long mem_offset = 0;
+
+	memset(dwu, 0, sizeof(struct dest_write_unit));
+
+	memmove(&dwu->d_chunk_no, pattern, sizeof(unsigned long));
+	mem_offset += sizeof(unsigned long);
+	memmove(&dwu->d_timestamp, pattern + mem_offset,
+		sizeof(unsigned long long));
+	mem_offset += sizeof(unsigned long long);
+	memmove(&dwu->d_checksum, pattern + mem_offset, sizeof(uint32_t));
+	mem_offset += sizeof(uint32_t);
+
+	memmove(&dwu->d_char, pattern + mem_offset, 1);
+	mem_offset = CHUNK_SIZE - mem_offset;
+
+	memmove(&dwu->d_checksum, pattern + mem_offset, sizeof(uint32_t));
+	mem_offset += sizeof(uint32_t);
+	memmove(&dwu->d_timestamp, pattern + mem_offset,
+		sizeof(unsigned long long));
+	mem_offset += sizeof(unsigned long long);
+	memmove(&dwu->d_chunk_no, pattern + mem_offset, sizeof(unsigned long));
+
+	return 0;
+}
+
+int verify_chunk_pattern(char *pattern, struct dest_write_unit *dwu)
+{
+	char tmp_pattern[CHUNK_SIZE];
+
+	fill_chunk_pattern(tmp_pattern, dwu);
+
+	return !memcmp(pattern, tmp_pattern, CHUNK_SIZE);
+}
+
+int prep_orig_file_in_chunks(char *file_name, unsigned long chunks)
+{
+
+	int fd, ret, o_ret, flags;
+	unsigned long offset = 0;
+	unsigned long size = CHUNK_SIZE * chunks, chunk_no = 0;
+	struct dest_write_unit dwu;
+
+	if ((CHUNK_SIZE % DIRECTIO_SLICE) != 0) {
+
+		fprintf(stderr, "File size in destructive tests is expected to "
+			"be %d aligned, your chunk size %d is not allowed.\n",
+			DIRECTIO_SLICE, CHUNK_SIZE);
+		return -1;
+	}
+
+	flags = FILE_RW_FLAGS;
+
+	fd = open64(file_name, flags, FILE_MODE);
+
+	if (fd < 0) {
+		o_ret = fd;
+		fd = errno;
+		fprintf(stderr, "create file %s failed:%d:%s\n", file_name, fd,
+			strerror(fd));
+		fd = o_ret;
+		return fd;
+	}
+
+	/*
+	 * Original file for desctrutive tests, it consists of chunks.
+	 * Each chunks consists of following parts:
+	 * chunkno + timestamp + checksum + random chars
+	 * + checksum + timestamp + chunkno
+	 *
+	*/
+
+	while (offset < size) {
+
+		memset(&dwu, 0, sizeof(struct dest_write_unit));
+		dwu.d_chunk_no = chunk_no;
+		fill_chunk_pattern(chunk_pattern, &dwu);
+
+		ret = write_at(fd, chunk_pattern, CHUNK_SIZE, offset);
+		if (ret < 0)
+			return ret;
+
+		chunk_no++;
+		offset += CHUNK_SIZE;
+	}
+
+	fsync(fd);
+	close(fd);
+
 	return 0;
 }
 
@@ -1276,6 +1458,301 @@ int do_write_file(char *fname, struct write_unit *wu)
 	ret = do_write(fd, wu);
 
 	close(fd);
+
+	return ret;
+}
+
+unsigned long long get_time_microseconds(void)
+{
+	unsigned long long curtime_ms = 0;
+	struct timeval curtime;
+
+	gettimeofday(&curtime, NULL);
+
+	curtime_ms = (unsigned long long)curtime.tv_sec * 1000000 +
+					 curtime.tv_usec;
+
+	return curtime_ms;
+}
+
+void prep_rand_dest_write_unit(struct dest_write_unit *dwu,
+			       unsigned long chunk_no)
+{
+	char tmp_pattern[CHUNK_SIZE];
+
+	dwu->d_char = rand_char();
+	dwu->d_chunk_no = chunk_no;
+	dwu->d_timestamp = get_time_microseconds();
+
+	fill_chunk_pattern(tmp_pattern, dwu);
+}
+
+int do_write_chunk(int fd, struct dest_write_unit *dwu)
+{
+	int ret;
+	size_t count = CHUNK_SIZE;
+	off_t offset = CHUNK_SIZE * dwu->d_chunk_no;
+
+	fill_chunk_pattern(chunk_pattern, dwu);
+
+	ret = write_at(fd, chunk_pattern, count, offset);
+	if (ret < 0)
+		return ret;
+
+	return 0;
+}
+
+int init_sock(char *serv, int port)
+{
+	int sockfd;
+	struct sockaddr_in servaddr;
+
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	bzero(&servaddr, sizeof(struct sockaddr_in));
+	servaddr.sin_family = AF_INET;
+	servaddr.sin_port = htons(port);
+	inet_pton(AF_INET, serv, &servaddr.sin_addr);
+
+	connect(sockfd, (struct sockaddr *)&servaddr, sizeof(servaddr));
+
+	return sockfd;
+}
+
+long get_verify_logs_num(char *log)
+{
+	FILE *logfile;
+	long num_logs = 1;
+	int ret;
+	char arg1[100], arg2[100], arg3[100], arg4[100];
+
+	logfile = fopen(log, "r");
+	if (!logfile) {
+		fprintf(stderr, "Error %d opening dest log: %s\n", errno,
+			strerror(errno));
+		num_logs = -1;
+		goto bail;
+	}
+
+	while (!feof(logfile)) {
+
+		ret = fscanf(logfile, "%s\t%s\t%s\t%s\n", arg1, arg2,
+			     arg3, arg4);
+		if (ret != 4) {
+			fprintf(stderr, "input failure from dest log, ret "
+				"%d, %d %s\n", ret, errno, strerror(errno));
+			num_logs = -1;
+			goto bail;
+		}
+
+		if (strcmp(arg1, "Reflink:"))
+			continue;
+		else
+			num_logs++;
+	}
+
+bail:
+	if (logfile)
+		fclose(logfile);
+
+	return num_logs;
+}
+
+int verify_dest_file(char *log, struct dest_logs d_log, unsigned long chunk_no)
+{
+	FILE *logfile;
+	struct dest_write_unit *dwus, dwu;
+	unsigned long i, t_bytes = sizeof(struct dest_write_unit) * chunk_no;
+	unsigned long record_index = 0;
+	int fd = 0, ret = 0, o_ret;
+	char arg1[100], arg2[100], arg3[100], arg4[100];
+
+	memset(&dwu, 0, sizeof(struct dest_write_unit));
+
+	dwus = (struct dest_write_unit *)malloc(t_bytes);
+	memset(dwus, 0, t_bytes);
+
+	for (i = 0; i < chunk_no; i++)
+		dwus[i].d_chunk_no = i;
+
+	logfile = fopen(log, "r");
+	if (!logfile) {
+		fprintf(stderr, "Error %d opening dest log: %s\n", errno,
+			strerror(errno));
+		ret = -EINVAL;
+		goto bail;
+	}
+
+	while (!feof(logfile)) {
+
+		ret = fscanf(logfile, "%s\t%s\t%s\t%s\n", arg1, arg2,
+			     arg3, arg4);
+		if (ret != 4) {
+			fprintf(stderr, "input failure from dest log, ret "
+				"%d, %d %s\n", ret, errno, strerror(errno));
+			ret = -EINVAL;
+			goto bail;
+		}
+
+		if (!strcmp(arg1, "Reflink:"))
+			continue;
+		else {
+			dwu.d_chunk_no = atol(arg1);
+			dwu.d_timestamp = atoll(arg2);
+			dwu.d_checksum = atoi(arg3);
+			dwu.d_char = arg4[0];
+
+			record_index++;
+		}
+
+		if (dwu.d_timestamp >= dwus[dwu.d_chunk_no].d_timestamp) {
+
+			memmove(&dwus[dwu.d_chunk_no], &dwu,
+				sizeof(struct dest_write_unit));
+		}
+
+		if (record_index == d_log.index)
+			break;
+
+	}
+
+	fd = open64(d_log.filename, open_ro_flags, FILE_MODE);
+	if (fd < 0) {
+		ret = fd;
+		fd = errno;
+		fprintf(stderr, "open file %s failed:%d:%s\n",
+			d_log.filename, fd, strerror(fd));
+		goto bail;
+	}
+
+	fprintf(stdout, "Verify file %s :", d_log.filename);
+
+	for (i = 0; i < chunk_no; i++) {
+
+		ret = pread(fd, chunk_pattern, CHUNK_SIZE, CHUNK_SIZE * i);
+		if (ret < 0) {
+			o_ret = ret;
+			ret = errno;
+			fprintf(stderr, "read failed:%d:%s\n", ret,
+				strerror(ret));
+			ret = o_ret;
+			goto bail;
+		}
+
+		/*
+		dump_pattern(chunk_pattern, &dwu);
+		fprintf(stdout, "#%lu\t%llu\t%d\t%c\n", dwus[i].d_chunk_no,
+			dwus[i].d_timestamp, dwus[i].d_checksum,
+			dwus[i].d_char);
+		*/
+
+		/*
+		dump_pattern(chunk_pattern, &dwu);
+		fprintf(stdout, "#%lu\t%llu\t%d\t%c\n", dwu.d_chunk_no,
+			dwu.d_timestamp, dwu.d_checksum, dwu.d_char);
+		*/
+
+		if (!verify_chunk_pattern(chunk_pattern, &dwus[i])) {
+
+			dump_pattern(chunk_pattern, &dwu);
+			fprintf(stderr, "Inconsistent chunk found in file %s!\n"
+				"Expected:\tchunkno(%ld)\ttimestmp(%llu)\t"
+				"chksum(%d)\tchar(%c)\nFound   :\tchunkno"
+				"(%ld)\ttimestmp(%llu)\tchksum(%d)\tchar(%c)\n",
+				d_log.filename,
+				dwus[i].d_chunk_no, dwus[i].d_timestamp,
+				dwus[i].d_checksum, dwus[i].d_char,
+				dwu.d_chunk_no, dwu.d_timestamp,
+				dwu.d_checksum, dwu.d_char);
+			ret = -1;
+			goto bail;
+
+		}
+	}
+
+	fprintf(stdout, "Pass\n");
+
+bail:
+	if (dwus)
+		free(dwus);
+
+	if (logfile)
+		fclose(logfile);
+
+	if (fd)
+		close(fd);
+
+	return ret;
+}
+
+int verify_dest_files(char *log, char *orig, unsigned long chunk_no)
+{
+	unsigned long record_index = 0, log_index = 0, i;
+	long log_nums;
+	int ret = 0;
+
+	struct dest_logs *logs = NULL;
+	FILE *logfile = NULL;
+	char arg1[100], arg2[100], arg3[100], arg4[100];
+
+	log_nums = get_verify_logs_num(log);
+	if (log_nums < 0) {
+		ret = log_nums;
+		goto bail;
+	}
+
+	logs = (struct dest_logs *)malloc(sizeof(struct dest_logs) * log_nums);
+
+	strncpy(logs[0].filename, orig, PATH_MAX);
+
+	logfile = fopen(log, "r");
+	if (!logfile) {
+		fprintf(stderr, "Error %d opening dest log: %s\n", errno,
+			strerror(errno));
+		ret = -EINVAL;
+		goto bail;
+	}
+
+	while (!feof(logfile)) {
+
+		ret = fscanf(logfile, "%s\t%s\t%s\t%s\n", arg1, arg2,
+			     arg3, arg4);
+		if (ret != 4) {
+			fprintf(stderr, "input failure from dest log, ret "
+				"%d, %d %s\n", ret, errno, strerror(errno));
+			ret = -EINVAL;
+			goto bail;
+		}
+
+		if (strcmp(arg1, "Reflink:")) {
+			record_index++;
+			continue;
+		} else {
+			log_index++;
+			strncpy(logs[log_index].filename, arg4, PATH_MAX);
+			logs[log_index].index = record_index;
+			/*
+			printf(" #%lu log: %s, index = %lu\n",log_index, arg4, record_index);
+			*/
+		}
+	}
+
+	logs[0].index = record_index;
+
+	for (i = 0; i < log_nums; i++) {
+		ret = verify_dest_file(log, logs[i], chunk_no);
+		if (ret < 0) {
+			ret = -1;
+			goto bail;
+		}
+	}
+
+bail:
+	if (logfile)
+		fclose(logfile);
+
+	if (logs)
+
+		free(logs);
 
 	return ret;
 }

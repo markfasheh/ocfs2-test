@@ -50,8 +50,13 @@ static char ref_path[PATH_MAX];
 static char fh_log_orig[PATH_MAX];
 static char fh_log_dest[PATH_MAX];
 
+static char dest_log_path[PATH_MAX];
+
+static char lsnr_addr[HOSTNAME_LEN];
+
 static int iteration = 1;
 static int testno = 1;
+static unsigned long port = 9999;
 
 static unsigned long ref_counts = 10;
 static unsigned long ref_trees = 10;
@@ -103,7 +108,7 @@ static void usage(void)
 	printf("Usage: reflink_tests [-i iteration] <-n ref_counts> "
 	       "<-p refcount_tree_pairs> <-l file_size> <-d disk> "
 	       "<-w workplace> -f -b [-c conc_procs] -m -s -r [-x xattr_nums]"
-	       " [-h holes_num] [-o holes_filling_log] -O -I\n\n"
+	       " [-h holes_num] [-o holes_filling_log] -O -D <child_nums> -I\n\n"
 	       "-f enable basic feature test.\n"
 	       "-b enable boundary test.\n"
 	       "-c enable concurrent tests with conc_procs processes.\n"
@@ -111,12 +116,16 @@ static void usage(void)
 	       "-r enable random test.\n"
 	       "-s enable stress test.\n"
 	       "-O enable O_DIRECT test.\n"
+	       "-D enable destructive test.\n"
+	       "-v enable verification for destructive test.\n"
 	       "-I enable inline-data test.\n"
 	       "-x enable combination test with xattr.\n"
 	       "-h enable holes punching and filling tests.\n"
 	       "-o specify logfile for holes filling tests,it takes effect"
 	       " when -h enabled.\n"
 	       "-p specify number of refcount trees in fs.\n"
+	       "-a specify listener's ip addr for destructive test.\n"
+	       "-P specify listener's listening port for destructive test.\n"
 	       "iteration specify the running times.\n"
 	       "ref_counts specify the reflinks number for one shared inode.\n"
 	       "refcount_tree_pairs specify the refcount tree numbers in fs.\n"
@@ -133,7 +142,7 @@ static int parse_opts(int argc, char **argv)
 	while (1) {
 		c = getopt(argc, argv,
 			   "i:d:w:IOfFbBsSrRmMW:n:N:"
-			   "l:L:c:C:p:P:x:X:h:H:o:");
+			   "l:L:c:C:p:x:X:h:H:o:v:a:P:D:");
 		if (c == -1)
 			break;
 
@@ -146,7 +155,6 @@ static int parse_opts(int argc, char **argv)
 			ref_counts = atol(optarg);
 			break;
 		case 'p':
-		case 'P':
 			ref_trees = atol(optarg);
 			break;
 		case 'l':
@@ -159,6 +167,10 @@ static int parse_opts(int argc, char **argv)
 		case 'O':
 			test_flags |= ODCT_TEST;
 			break;
+		case 'D':
+			test_flags |= DSCV_TEST;
+			child_nums = atol(optarg);
+			break;
 		case 'I':
 			test_flags |= INLN_TEST;
 			xattr_nums = 100;
@@ -169,6 +181,13 @@ static int parse_opts(int argc, char **argv)
 			break;
 		case 'o':
 			strcpy(fh_log_orig, optarg);
+			break;
+		case 'v':
+			strcpy(dest_log_path, optarg);
+			test_flags |= VERI_TEST;
+			break;
+		case 'a':
+			strcpy(lsnr_addr, optarg);
 			break;
 		case 'f':
 		case 'F':
@@ -204,6 +223,8 @@ static int parse_opts(int argc, char **argv)
 		case 'H':
 			test_flags |= HOLE_TEST;
 			hole_nums = atol(optarg);
+		case 'P':
+			port = atol(optarg);
 		default:
 			break;
 		}
@@ -214,6 +235,10 @@ static int parse_opts(int argc, char **argv)
 
 	if (strcmp(device, "") == 0)
 		return EINVAL;
+
+	if (test_flags & DSCV_TEST)
+		if (strcmp(lsnr_addr, "") == 0)
+			return EINVAL;
 
 	return 0;
 }
@@ -890,7 +915,7 @@ static int concurrent_test()
 
 	signal(SIGCHLD, sigchld_handler);
 
-	 for (i = 0; i < child_nums; i++) {
+	for (i = 0; i < child_nums; i++) {
 
 		pid = fork();
 
@@ -1768,6 +1793,200 @@ static int holes_fill_test(void)
 	return 0;
 }
 
+static int destructive_test(void)
+{
+	int o_flags_rw, o_flags_ro, sockfd, i, j, status;
+	int ret, o_ret, fd, rc, sub_testno = 1;
+	char log_rec[1024], dest[PATH_MAX];
+
+	struct dest_write_unit dwu;
+
+	unsigned long align_slice = CHUNK_SIZE;
+	unsigned long align_filesz = align_slice;
+	unsigned long chunk_no = 0;
+
+	pid_t pid;
+
+	while (align_filesz < file_size)
+		align_filesz += CHUNK_SIZE;
+
+	chunk_no = file_size / CHUNK_SIZE;
+
+	printf("Test %d: Destructive reflink test.\n", testno);
+
+	o_flags_rw = open_rw_flags;
+	o_flags_ro = open_ro_flags;
+
+	open_rw_flags |= O_DIRECT;
+	open_ro_flags |= O_DIRECT;
+
+	snprintf(orig_path, PATH_MAX, "%s/original_destructive_refile",
+		 workplace);
+
+	printf("  *SubTest %d: Prepare original file in %ld chunks.\n",
+	       sub_testno++, chunk_no);
+
+	ret = prep_orig_file_in_chunks(orig_path, chunk_no);
+	should_exit(ret);
+
+	printf("  *SubTest %d: Do reflinks to reflink the extents.\n",
+	       sub_testno++);
+
+	ret = do_reflinks(orig_path, orig_path, ref_counts, 0);
+	should_exit(ret);
+
+	sync();
+
+	/*flush out the father's i/o buffer*/
+	fflush(stderr);
+	fflush(stdout);
+
+	signal(SIGCHLD, sigchld_handler);
+
+	printf("  *SubTest %d: Init socket for msg sending\n", sub_testno++);
+
+	sockfd = init_sock(lsnr_addr, port);
+
+	printf("  *SubTest %d: Fork %lu children to write in chunks.\n",
+	       sub_testno++, child_nums);
+
+	fd  = open64(orig_path, open_rw_flags);
+	if (fd < 0) {
+		o_ret = fd;
+		fd = errno;
+		fprintf(stderr, "open file %s failed:%d:%s\n", orig_path, fd,
+			strerror(fd));
+		fd = o_ret;
+		return fd;
+	}
+
+	for (i = 0; i < child_nums; i++) {
+
+		pid = fork();
+
+		if (pid < 0) {
+			fprintf(stderr, "Fork process error!\n");
+			return pid;
+		}
+
+		/* child to do CoW*/
+		if (pid == 0) {
+
+			srand(getpid());
+
+			for (j = 0; j < chunk_no; j++) {
+
+				memset(log_rec, 0, sizeof(log_rec));
+				prep_rand_dest_write_unit(&dwu, get_rand(0,
+							  chunk_no - 1));
+				snprintf(log_rec, sizeof(log_rec), "%lu\t%llu"
+					 "\t%d\t%c\n", dwu.d_chunk_no,
+					 dwu.d_timestamp, dwu.d_checksum,
+					 dwu.d_char);
+
+				ret = do_write_chunk(fd, &dwu);
+				if (ret)
+					return -1;
+				write(sockfd, log_rec, strlen(log_rec) + 1);
+
+				if (get_rand(0, 1)) {
+					snprintf(dest, PATH_MAX,
+						 "%s_target_%d_%d",
+						 orig_path, getpid(), j);
+					ret = reflink(orig_path, dest, 1);
+					should_exit(ret);
+					memset(log_rec, 0, sizeof(log_rec));
+					snprintf(log_rec, sizeof(log_rec),
+						 "Reflink:\t%s\t->\t%s\n",
+						 orig_path, dest);
+					write(sockfd, log_rec,
+					      strlen(log_rec) + 1);
+
+				}
+
+				/*
+				 * Are you ready to crash the machine?
+				*/
+
+				if ((j > 1) && (j < chunk_no - 1)) {
+					if (get_rand(1, chunk_no) == chunk_no / 2)
+						system("echo b>/proc/sysrq-trigger");
+				} else if (j == chunk_no - 1)
+						system("echo b>/proc/sysrq-trigger");
+
+				usleep(10000);
+			}
+
+			if (!fd)
+				close(fd);
+
+			if (!sockfd)
+				close(sockfd);
+
+			exit(0);
+		}
+
+		if (pid > 0)
+			child_pid_list[i] = pid;
+	}
+
+	signal(SIGINT, sigint_handler);
+	signal(SIGTERM, sigterm_handler);
+
+	/*father wait all children to leave*/
+	for (i = 0; i < child_nums; i++) {
+		ret = waitpid(child_pid_list[i], &status, 0);
+		rc = WEXITSTATUS(status);
+		if (rc) {
+			fprintf(stderr, "Child %d exits abnormally with "
+				"RC=%d\n", child_pid_list[i], rc);
+		}
+	}
+
+	open_rw_flags = o_flags_rw;
+	open_ro_flags = o_flags_ro;
+
+	/*
+	ret = do_unlinks(orig_path, ref_counts);
+	should_exit(ret);
+
+	ret = do_unlink(orig_path);
+	should_exit(ret);
+	*/
+
+	if (fd)
+		close(fd);
+
+	if (sockfd)
+		close(sockfd);
+
+	return 0;
+}
+
+static int verification_dest(void)
+{
+
+	unsigned long align_slice = CHUNK_SIZE;
+	unsigned long align_filesz = align_slice;
+	unsigned long chunk_no = 0;
+	int ret;
+
+	while (align_filesz < file_size)
+		align_filesz += CHUNK_SIZE;
+
+	chunk_no = file_size / CHUNK_SIZE;
+
+	printf("Test %d: Verification for destructive test.\n", testno);
+
+	snprintf(orig_path, PATH_MAX, "%s/original_destructive_refile",
+		 workplace);
+
+	ret = verify_dest_files(dest_log_path, orig_path, chunk_no);
+	should_exit(ret);
+
+	return ret;
+}
+
 static int directio_test(void)
 {
 
@@ -2004,6 +2223,12 @@ static void run_test(void)
 
 		if (test_flags & INLN_TEST)
 			inline_test();
+
+		if (test_flags & DSCV_TEST)
+			destructive_test();
+
+		if (test_flags & VERI_TEST)
+			verification_dest();
 
 	}
 }
