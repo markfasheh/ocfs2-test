@@ -1597,6 +1597,12 @@ int verify_dest_file(char *log, struct dest_logs d_log, unsigned long chunk_no)
 			continue;
 		else {
 			dwu.d_chunk_no = atol(arg1);
+			if (dwu.d_chunk_no > chunk_no) {
+				fprintf(stderr, "Chunkno grabed from logfile "
+					"exceeds the filesize, you may probably"
+					" specify a too small filesize.\n");
+				return -1;
+			}
 			dwu.d_timestamp = atoll(arg2);
 			dwu.d_checksum = atoi(arg3);
 			dwu.d_char = arg4[0];
@@ -1636,6 +1642,12 @@ int verify_dest_file(char *log, struct dest_logs d_log, unsigned long chunk_no)
 				strerror(ret));
 			ret = o_ret;
 			goto bail;
+		}
+
+		if (ret < CHUNK_SIZE) {
+			fprintf(stderr, "Short read happened, you may probably"
+				" set too big filesize for verfiy_test.\n");
+			return -1;
 		}
 
 		/*
