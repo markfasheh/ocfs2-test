@@ -1768,3 +1768,60 @@ bail:
 
 	return ret;
 }
+
+int set_semvalue(int sem_id, int val)
+{
+	union semun sem_union;
+
+	sem_union.val = val;
+	if (semctl(sem_id, 0, SETVAL, sem_union) == -1) {
+		perror("semctl");
+		return -1;
+	}
+
+	return 0;
+}
+
+int semaphore_close(int sem_id)
+{
+	int ret = 0;
+
+	ret = semctl(sem_id, 1, IPC_RMID);
+	if (ret < 0) {
+		ret = errno;
+		fprintf(stderr, "semctl failed, %s.\n", strerror(ret));
+		return -1;
+	}
+
+	return ret;
+}
+
+int semaphore_p(int sem_id)
+{
+	struct sembuf sem_b;
+
+	sem_b.sem_num = 0;
+	sem_b.sem_op = -1; /* P() */
+	sem_b.sem_flg = SEM_UNDO;
+	if (semop(sem_id, &sem_b, 1) == -1) {
+		fprintf(stderr, "semaphore_p failed\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+int semaphore_v(int sem_id)
+{
+	struct sembuf sem_b;
+
+	sem_b.sem_num = 0;
+	sem_b.sem_op = 1; /* V() */
+	sem_b.sem_flg = SEM_UNDO;
+	if (semop(sem_id, &sem_b, 1) == -1) {
+		fprintf(stderr, "semaphore_v failed\n");
+		return -1;
+	}
+
+	return 0;
+}

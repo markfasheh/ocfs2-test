@@ -1807,6 +1807,23 @@ static int destructive_test(void)
 
 	pid_t pid;
 
+	int sem_id;
+	key_t sem_key = IPC_PRIVATE;
+
+	/*get and init semaphore*/
+	sem_id = semget(sem_key, 1, 0766 | IPC_CREAT);
+	if (sem_id < 0) {
+		sem_id = errno;
+		fprintf(stderr, "semget failed, %s.\n", strerror(sem_id));
+		return -1;
+	}
+
+	ret = set_semvalue(sem_id, 1);
+	if (ret < 0) {
+		fprintf(stderr, "Set semaphore value failed!\n");
+		return ret;
+	}
+
 	while (align_filesz < file_size)
 		align_filesz += CHUNK_SIZE;
 
@@ -1876,6 +1893,11 @@ static int destructive_test(void)
 
 			for (j = 0; j < chunk_no; j++) {
 
+				if (semaphore_p(sem_id) < 0) {
+					ret = -1;
+					goto child_bail;
+				}
+
 				memset(log_rec, 0, sizeof(log_rec));
 				prep_rand_dest_write_unit(&dwu, get_rand(0,
 							  chunk_no - 1));
@@ -1886,22 +1908,38 @@ static int destructive_test(void)
 
 				ret = do_write_chunk(fd, &dwu);
 				if (ret)
-					return -1;
+					goto child_bail;
 				write(sockfd, log_rec, strlen(log_rec) + 1);
 
+				if (semaphore_v(sem_id) < 0) {
+					ret = -1;
+					goto child_bail;
+				}
+
 				if (get_rand(0, 1)) {
+					
+					if (semaphore_p(sem_id) < 0) {
+						ret = -1;
+						goto child_bail;
+					}
+
 					snprintf(dest, PATH_MAX,
 						 "%s_target_%d_%d",
 						 orig_path, getpid(), j);
-					ret = reflink(orig_path, dest, 1);
-					should_exit(ret);
 					memset(log_rec, 0, sizeof(log_rec));
 					snprintf(log_rec, sizeof(log_rec),
 						 "Reflink:\t%s\t->\t%s\n",
 						 orig_path, dest);
+					ret = reflink(orig_path, dest, 1);
+					if (ret)
+						goto child_bail;
 					write(sockfd, log_rec,
 					      strlen(log_rec) + 1);
-
+					
+					if (semaphore_v(sem_id) < 0) {
+						ret = -1;
+						goto child_bail;
+					}
 				}
 
 				/*
@@ -1909,21 +1947,38 @@ static int destructive_test(void)
 				*/
 
 				if ((j > 1) && (j < chunk_no - 1)) {
-					if (get_rand(1, chunk_no) == chunk_no / 2)
+					if (get_rand(1, chunk_no) == chunk_no / 2) {
+
+						if (semaphore_p(sem_id) < 0) {
+							ret = -1;
+							goto child_bail;
+						}
+
 						system("echo b>/proc/sysrq-trigger");
-				} else if (j == chunk_no - 1)
+					}
+				} else if (j == chunk_no - 1) {
+
+						if (semaphore_p(sem_id) < 0) {
+							ret = -1;
+							goto child_bail;
+						}
+
 						system("echo b>/proc/sysrq-trigger");
+				}
 
 				usleep(10000);
 			}
-
-			if (!fd)
+child_bail:
+			if (fd)
 				close(fd);
 
-			if (!sockfd)
+			if (sockfd)
 				close(sockfd);
 
-			exit(0);
+			if (sem_id)
+				semaphore_close(sem_id);
+
+			exit(ret);
 		}
 
 		if (pid > 0)
@@ -1959,6 +2014,9 @@ static int destructive_test(void)
 
 	if (sockfd)
 		close(sockfd);
+
+	if (sem_id)
+		semaphore_close(sem_id);
 
 	return 0;
 }

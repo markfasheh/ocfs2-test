@@ -34,6 +34,7 @@
 #include <inttypes.h>
 #include <linux/types.h>
 #include <sys/time.h>
+#include <sys/sem.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -105,6 +106,13 @@ struct dest_logs {
 	unsigned long index;
 };
 
+union semun {
+	int val;                    /* value for SETVAL */
+	struct semid_ds *buf;       /* buffer for IPC_STAT, IPC_SET */
+	unsigned short int *array;  /* array for GETALL, SETALL */
+	struct seminfo *__buf;      /* buffer for IPC_INFO */
+};
+
 char rand_char(void);
 unsigned long get_rand(unsigned long min, unsigned long max);
 int get_rand_buf(char *buf, unsigned long size);
@@ -165,4 +173,11 @@ long get_verify_logs_num(char *log);
 int verify_dest_file(char *log, struct dest_logs d_log, unsigned long chunk_no);
 int verify_dest_files(char *log, char *orig, unsigned long chunk_no);
 uint32_t crc32_checksum(uint32_t crc, char *p, size_t len);
+
+/* Add utils for semaphore ops */
+int set_semvalue(int sem_id, int val);
+int semaphore_close(int sem_id);
+int semaphore_p(int sem_id);
+int semaphore_v(int sem_id);
+
 #endif
