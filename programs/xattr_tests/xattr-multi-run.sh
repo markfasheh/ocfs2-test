@@ -68,6 +68,7 @@ RUN_LOG_FILE=
 MOUNT_POINT=
 OCFS2_DEVICE=
 
+SLOTS=
 BLOCKSIZE=
 CLUSTERSIZE=
 BLOCKNUMS=
@@ -75,14 +76,12 @@ BLOCKNUMS=
 WORKPLACE=
 
 TMP_DIR=/tmp
-DEFAULT_HOSTFILE=".openmpi_hostfile"
 DEFAULT_RANKS=4
 
 declare -i MPI_RANKS
 MPI_HOSTS=
-MPI_HOSTFILE=
 MPI_ACCESS_METHOD="ssh"
-MPI_PLS_AGENT_ARG="-mca pls_rsh_agent ssh:rsh"
+MPI_PLS_AGENT_ARG="-mca plm_rsh_agent ssh:rsh"
 
 TEST_NO=0
 TEST_PASS=0
@@ -173,33 +172,7 @@ f_getoptions()
         done
 	shift $(($OPTIND -1))
 	MOUNT_POINT=${1}
-
 }
-
-f_create_hostfile()
-{
-        MPI_HOSTFILE="${TMP_DIR}/${DEFAULT_HOSTFILE}"
-	TMP_FILE="${TMP_DIR}/.tmp_openmpi_hostfile_$$"
-
-	echo ${MPI_HOSTS}|sed -e 's/,/\n/g'>$TMP_FILE
-
-        if [ -f "$MPI_HOSTFILE" ];then
-                ${RM} -rf ${MPI_HOSTFILE}
-        fi
-
-        while read line
-        do
-		if [ -z $line ];then
-			continue
-		fi
-
-                echo "$line">>$MPI_HOSTFILE
-
-        done<$TMP_FILE
-
-        ${RM} -rf $TMP_FILE
-}
-
 
 f_setup()
 {
@@ -211,7 +184,7 @@ f_setup()
 	f_getoptions $*
 	
 	if [ "$MPI_ACCESS_METHOD" = "rsh" ];then
-		MPI_PLS_AGENT_ARG="-mca pls_rsh_agent rsh:ssh"
+		MPI_PLS_AGENT_ARG="-mca plm_rsh_agent rsh:ssh"
 		REMOTE_SH_BIN=${RSH_BIN}
 	fi
 
@@ -244,10 +217,13 @@ f_setup()
 	
 	if [ -z "$MPI_HOSTS" ];then
 		f_usage
-	else
-		f_create_hostfile
-	fi
 
+	# Use number of testing nodes as the default slot number.
+	if [ -z "${SLOTS}" ];then
+		echo $MPI_HOSTS|sed -e 's/,/\n/g' >/tmp/$$
+		SLOTS=`cat /tmp/$$ |wc -l`
+		rm -f /tmp/$$
+	fi
 
 	${CHMOD_BIN} -R 777 ${MOUNT_POINT}
 
@@ -261,7 +237,7 @@ f_do_mkfs_and_mount()
 {
         echo -n "Mkfsing device(-b ${BLOCKSIZE} -C ${CLUSTERSIZE}): "|tee -a ${RUN_LOG_FILE}
 
-        echo y|${MKFS_BIN} --fs-features=xattr -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -N 2 -L ocfs2-xattr-multi-test ${OCFS2_DEVICE} ${BLOCKNUMS}>>${RUN_LOG_FILE} 2>&1
+        echo y|${MKFS_BIN} --fs-features=xattr -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -N ${SLOTS} -L ocfs2-xattr-multi-test ${OCFS2_DEVICE} ${BLOCKNUMS}>>${RUN_LOG_FILE} 2>&1
 
         RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
