@@ -53,7 +53,7 @@ fi
 
 BLOCKSIZE=
 CLUSTERSIZE=
-SLOTS=4
+SLOTS=
 JOURNALSIZE=0
 BLOCKS=0
 DEVICE=
@@ -74,7 +74,7 @@ DEFAULT_RANKS=4
 MPI_RANKS=
 MPI_HOSTS=
 MPI_ACCESS_METHOD="ssh"
-MPI_PLS_AGENT_ARG="-mca pls_rsh_agent ssh:rsh"
+MPI_PLS_AGENT_ARG="-mca plm_rsh_agent ssh:rsh"
 MPI_BTL_ARG="-mca btl tcp,self"
 MPI_BTL_IF_ARG=
 
@@ -135,7 +135,7 @@ function f_setup()
 	f_getoptions $*
 
 	if [ "$MPI_ACCESS_METHOD" = "rsh" ];then
-		MPI_PLS_AGENT_ARG="-mca pls_rsh_agent rsh:ssh"
+		MPI_PLS_AGENT_ARG="-mca plm_rsh_agent rsh:ssh"
 	fi
 
 	if [ -z "${MOUNT_POINT}" ];then
@@ -157,6 +157,12 @@ ${MOUNT_POINT}`"
 
 	if [ -z "$MPI_HOSTS" ];then
 		f_usage
+	fi
+
+	if [ -z "${SLOTS}" ];then
+		echo $MPI_HOSTS|sed -e 's/,/\n/g' >/tmp/$$
+		SLOTS=`cat /tmp/$$ |wc -l`
+		rm -f /tmp/$$
 	fi
 
 	MPI_RANKS=${MPI_RANKS:-$DEFAULT_RANKS}
