@@ -118,6 +118,7 @@ static void usage(void)
 	       "-O enable O_DIRECT test.\n"
 	       "-D enable destructive test.\n"
 	       "-v enable verification for destructive test.\n"
+	       "-H enable CoW verification test for punching holse.\n"
 	       "-I enable inline-data test.\n"
 	       "-x enable combination test with xattr.\n"
 	       "-h enable holes punching and filling tests.\n"
@@ -141,8 +142,8 @@ static int parse_opts(int argc, char **argv)
 
 	while (1) {
 		c = getopt(argc, argv,
-			   "i:d:w:IOfFbBsSrRmMW:n:N:"
-			   "l:L:c:C:p:x:X:h:H:o:v:a:P:D:");
+			   "i:d:w:IOfFbBsSrRHmMW:n:N:"
+			   "l:L:c:C:p:x:X:h:o:v:a:P:D:");
 		if (c == -1)
 			break;
 
@@ -220,11 +221,12 @@ static int parse_opts(int argc, char **argv)
 			xattr_nums = atol(optarg);
 			break;
 		case 'h':
-		case 'H':
 			test_flags |= HOLE_TEST;
 			hole_nums = atol(optarg);
 		case 'P':
 			port = atol(optarg);
+		case 'H':
+			test_flags |= PUNH_TEST;
 		default:
 			break;
 		}
@@ -2244,6 +2246,122 @@ static int inline_test(void)
 	return 0;
 }
 
+static int verify_punch_hole_cow_test(void)
+{
+	int ret = 0, fd;
+	int sub_testno = 1;
+	char *write_pattern = NULL;
+	char *read_pattern = NULL;
+
+	unsigned long i;
+	unsigned long long offset, len, read_size;
+	char dest[PATH_MAX];
+
+	printf("Test %d: Verify cow for punching holes.\n", testno++);
+
+        snprintf(orig_path, PATH_MAX, "%s/original_verify_cow_punch_hole_"
+		 "refile", workplace);
+
+	write_pattern = malloc(clustersize);
+	read_pattern = malloc(clustersize);
+
+	get_rand_buf(write_pattern, clustersize);
+	memset(read_pattern, 0, clustersize);
+
+	printf("  *SubTest %d: Prepare file.\n", sub_testno++);
+	ret = prep_orig_file_with_pattern(orig_path, file_size, clustersize,
+					  write_pattern, 0);
+	if (ret < 0)
+		goto bail;
+	printf("  *SubTest %d: Do %ld reflinks.\n", sub_testno++, ref_counts);
+	ret = do_reflinks(orig_path, orig_path, ref_counts, 0);
+	if (ret < 0)
+		goto bail;
+
+	printf("  *SubTest %d: Punching hole to original file.\n",
+	       sub_testno++);
+
+	fd = open_file(orig_path, O_RDWR);
+	if (fd < 0)
+		goto bail;
+
+	offset = 0;
+
+	while (offset < file_size) {
+
+		offset += get_rand(0, clustersize);
+		len = get_rand(clustersize, 2 * clustersize);
+		if ((offset + len) > file_size)
+			len = file_size - offset;
+
+		ret = punch_hole(fd, offset, len);
+		if (ret < 0) {
+			fprintf(stderr, "failed to punch hole from %llu to "
+				"%llu on %s\n", offset,
+				offset + len, orig_path);
+			close(fd);
+			goto bail;
+		}	
+
+		offset += len;
+	}
+	
+	close(fd);
+
+	printf("  *SubTest %d: Verify reflinks after punching holes.\n",
+	       sub_testno++);
+
+	for (i = 0; i < ref_counts; i++) {
+		snprintf(dest, PATH_MAX, "%sr%ld", orig_path, i);
+		fd = open_file(dest, O_RDONLY);
+		if (fd < 0)
+			goto bail;
+
+		offset = 0;
+		while (offset < file_size) {
+			if ((offset + clustersize) > file_size)
+				read_size = file_size - offset;
+			else
+				read_size = clustersize;
+                        ret = read_at(fd, read_pattern, read_size, offset);
+			if (ret < 0) {
+				close(fd);
+				goto bail;
+			}
+			if (memcmp(read_pattern, write_pattern, read_size)) {
+				fprintf(stderr, "Corrupted chunk found on "
+					"reflink %s: from %llu to %llu\n",
+					dest, offset, offset + read_size);
+				ret = -1;
+				close(fd);
+				goto bail;
+			}
+                        offset += read_size;
+                }
+
+		close(fd);
+
+	}
+
+	printf("  *SubTest %d: Unlinking reflinks and original file.\n",
+	       sub_testno++);
+
+	ret = do_unlinks(orig_path, ref_counts);
+	if (ret < 0)
+		goto bail;
+
+	ret = do_unlink(orig_path);
+
+bail:
+	if (write_pattern)
+		free(write_pattern);
+
+	if (read_pattern)
+		free(read_pattern);
+
+	return ret;
+}
+
 static void run_test(void)
 {
 	int i;
@@ -2287,6 +2405,9 @@ static void run_test(void)
 
 		if (test_flags & VERI_TEST)
 			verification_dest();
+
+		if (test_flags & PUNH_TEST)
+			verify_punch_hole_cow_test();
 
 	}
 }

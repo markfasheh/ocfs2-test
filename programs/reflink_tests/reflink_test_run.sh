@@ -533,6 +533,24 @@ ${WORK_PLACE} -D >>${LOG_FILE} 2>&1
         f_exit_or_not ${RET}
 
 	((TEST_NO++))
+	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Verificationl CoW Test On \
+Punching Holes:"
+	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Verification CoW Test On Punching \
+Holes, CMD:${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 3276800 -d ${DEVICE} \
+-w ${WORK_PLACE} -H "
+	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 3276800 -d ${DEVICE} -w \
+${WORK_PLACE} -H >>${LOG_FILE} 2>&1
+	RET=$?
+	f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
+	f_exit_or_not ${RET}
+	((TEST_PASS++))
+	f_LogMsg ${LOG_FILE} "Cleanup working place"
+	${SUDO} ${CHMOD_BIN} -R 777 ${MOUNT_POINT}  >>${LOG_FILE} 2>&1
+	${RM_BIN} -rf ${WORK_PLACE}/* >>${LOG_FILE} 2>&1
+	RET=$?
+	f_exit_or_not ${RET}
+
+	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Bash & Tools Utility Test:"
 	f_reflink_bash_utils_test 100 104857600 >>${LOG_FILE} 2>&1
         RET=$?

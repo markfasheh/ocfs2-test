@@ -77,6 +77,7 @@
 #define INLN_TEST		0x00000800
 #define DSCV_TEST		0x00001000
 #define VERI_TEST		0x00002000
+#define PUNH_TEST		0x00004000
 
 #define MPI_RET_SUCCESS		0
 #define MPI_RET_FAILED		1
@@ -131,6 +132,9 @@ int fill_pattern(unsigned long size);
 int prep_orig_file(char *file_name, unsigned long size, int once);
 int prep_orig_file_dio(char *file_name, unsigned long size);
 int prep_orig_file_in_chunks(char *file_name, unsigned long chunks);
+int prep_orig_file_with_pattern(char *file_name, unsigned long size,
+				unsigned long chunk_size, char *pattern_buf,
+				int once);
 int verify_pattern(char *buf, unsigned long offset, unsigned long size);
 int verify_orig_file(char *orig);
 
@@ -179,5 +183,8 @@ int set_semvalue(int sem_id, int val);
 int semaphore_close(int sem_id);
 int semaphore_p(int sem_id);
 int semaphore_v(int sem_id);
+
+int open_file(const char *filename, int flags);
+int punch_hole(int fd, uint64_t start, uint64_t len);
 
 #endif

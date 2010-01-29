@@ -461,6 +461,70 @@ int prep_orig_file(char *file_name, unsigned long size, int once)
 	return 0;
 }
 
+int prep_orig_file_with_pattern(char *file_name, unsigned long size,
+				unsigned long chunk_size, char *pattern_buf,
+				int once)
+{
+	int fd, fdt, ret, o_ret;
+	unsigned long offset = 0, write_size = 0;
+	char tmp_path[PATH_MAX];
+
+	fd = open64(file_name, open_rw_flags, FILE_MODE);
+	if (fd < 0) {
+		o_ret = fd;
+		fd = errno;
+		fprintf(stderr, "create file %s failed:%d:%s\n", file_name, fd,
+			strerror(fd));
+		fd = o_ret;
+		return fd;
+	}
+
+	if (once) {
+
+		while (offset < size) {
+			if ((offset + chunk_size) > size)
+				write_size = size - offset;
+			else
+				write_size = chunk_size;
+
+			ret = write_at(fd, pattern_buf, write_size, offset);
+			if (ret < 0)
+				return ret;
+
+			offset += write_size;
+		}
+	} else {
+		snprintf(tmp_path, PATH_MAX, "%s-tmp-file", file_name);
+		fdt = open64(tmp_path, open_rw_flags, FILE_MODE);
+
+		unlink(tmp_path);
+
+		while (offset < size) {
+
+			if ((offset + chunk_size) > size)
+				write_size = size - offset;
+			else
+				write_size = chunk_size;
+
+			ret = write_at(fd, pattern_buf, write_size, offset);
+			if (ret < 0)
+				return ret;
+
+			ret = write_at(fdt, pattern_buf, write_size, offset);
+			if (ret < 0)
+				return ret;
+
+			offset += write_size;
+		}
+
+		close(fdt);
+
+	}
+
+	close(fd);
+	return 0;
+}
+
 int prep_orig_file_dio(char *file_name, unsigned long size)
 {
 	int fd, ret, o_ret, flags;
@@ -1824,4 +1888,43 @@ int semaphore_v(int sem_id)
 	}
 
 	return 0;
+}
+
+int open_file(const char *filename, int flags)
+{
+	int fd, ret, o_ret;
+
+	fd = open64(filename, open_rw_flags, FILE_MODE);
+	if (fd < 0) {
+		o_ret = fd;
+		fd = errno;
+		fprintf(stderr, "open file %s failed:%d:%s\n", filename, fd,
+			strerror(fd));
+		fd = o_ret;
+		return -1;
+	}
+
+	return fd;
+}
+
+
+int punch_hole(int fd, uint64_t start, uint64_t len)
+{
+	int ret;
+	struct ocfs2_space_resv sr;
+
+	memset(&sr, 0, sizeof(sr));
+	sr.l_whence = 0;
+	sr.l_start = start;
+	sr.l_len = len;
+
+	ret = ioctl(fd, OCFS2_IOC_UNRESVSP64, &sr);
+	if (ret == -1) {
+		fprintf(stderr, "ioctl error %d: \"%s\"\n",
+			errno, strerror(errno));
+		return -1;
+	}
+
+	return 0;
+
 }
