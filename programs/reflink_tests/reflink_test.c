@@ -108,7 +108,7 @@ static void usage(void)
 	printf("Usage: reflink_tests [-i iteration] <-n ref_counts> "
 	       "<-p refcount_tree_pairs> <-l file_size> <-d disk> "
 	       "<-w workplace> -f -b [-c conc_procs] -m -s -r [-x xattr_nums]"
-	       " [-h holes_num] [-o holes_filling_log] -O -D <child_nums> -I\n\n"
+	       " [-h holes_num] [-o holes_filling_log] -O -D <child_nums> -I -H -T\n\n"
 	       "-f enable basic feature test.\n"
 	       "-b enable boundary test.\n"
 	       "-c enable concurrent tests with conc_procs processes.\n"
@@ -118,7 +118,8 @@ static void usage(void)
 	       "-O enable O_DIRECT test.\n"
 	       "-D enable destructive test.\n"
 	       "-v enable verification for destructive test.\n"
-	       "-H enable CoW verification test for punching holse.\n"
+	       "-H enable CoW verification test for punching holes.\n"
+	       "-T enable CoW verification test for truncating.\n"
 	       "-I enable inline-data test.\n"
 	       "-x enable combination test with xattr.\n"
 	       "-h enable holes punching and filling tests.\n"
@@ -142,7 +143,7 @@ static int parse_opts(int argc, char **argv)
 
 	while (1) {
 		c = getopt(argc, argv,
-			   "i:d:w:IOfFbBsSrRHmMW:n:N:"
+			   "i:d:w:IOfFbBsSrRHTmMW:n:N:"
 			   "l:L:c:C:p:x:X:h:o:v:a:P:D:");
 		if (c == -1)
 			break;
@@ -227,6 +228,9 @@ static int parse_opts(int argc, char **argv)
 			port = atol(optarg);
 		case 'H':
 			test_flags |= PUNH_TEST;
+		case 'T':
+			test_flags |= TRUC_TEST;
+
 		default:
 			break;
 		}
@@ -2362,6 +2366,123 @@ bail:
 	return ret;
 }
 
+static int verify_truncate_cow_test(void)
+{
+	int ret = 0, fd;
+	int sub_testno = 1;
+	char *write_pattern = NULL;
+	char *read_pattern = NULL;
+
+	unsigned long i;
+	unsigned long long offset, read_size, new_size, len, trunc_size;
+	char dest[PATH_MAX];
+
+	printf("Test %d: Verify cow for truncating.\n", testno++);
+
+        snprintf(orig_path, PATH_MAX, "%s/original_verify_cow_truncate_"
+		 "refile", workplace);
+
+	write_pattern = malloc(clustersize);
+	read_pattern = malloc(clustersize);
+
+	get_rand_buf(write_pattern, clustersize);
+	memset(read_pattern, 0, clustersize);
+
+	printf("  *SubTest %d: Prepare file.\n", sub_testno++);
+	ret = prep_orig_file_with_pattern(orig_path, file_size, clustersize,
+					  write_pattern, 0);
+	if (ret < 0)
+		goto bail;
+
+	printf("  *SubTest %d: Do %ld reflinks.\n", sub_testno++, ref_counts);
+	ret = do_reflinks(orig_path, orig_path, ref_counts, 0);
+	if (ret < 0)
+		goto bail;
+
+	printf("  *SubTest %d: Truncating original file.\n",
+	       sub_testno++);
+
+	fd = open_file(orig_path, O_RDWR);
+	if (fd < 0)
+		goto bail;
+
+	new_size = file_size;
+
+	while (new_size >= 0) {
+
+		ret = ftruncate(fd, new_size);
+		if (ret < 0) {
+			fprintf(stderr, "failed to truncate file %d to %llu\n",
+				orig_path, new_size); 
+			close(fd);
+			goto bail;
+		}	
+
+		if (new_size == 0)
+			break;
+
+		trunc_size = get_rand(0, new_size);
+
+		new_size -= trunc_size;
+
+	}
+	
+	close(fd);
+
+	printf("  *SubTest %d: Verify reflinks after punching holes.\n",
+	       sub_testno++);
+
+	for (i = 0; i < ref_counts; i++) {
+		snprintf(dest, PATH_MAX, "%sr%ld", orig_path, i);
+		fd = open_file(dest, O_RDONLY);
+		if (fd < 0)
+			goto bail;
+
+		offset = 0;
+		while (offset < file_size) {
+			if ((offset + clustersize) > file_size)
+				read_size = file_size - offset;
+			else
+				read_size = clustersize;
+                        ret = read_at(fd, read_pattern, read_size, offset);
+			if (ret < 0) {
+				close(fd);
+				goto bail;
+			}
+			if (memcmp(read_pattern, write_pattern, read_size)) {
+				fprintf(stderr, "Corrupted chunk found on "
+					"reflink %s: from %llu to %llu\n",
+					dest, offset, offset + read_size);
+				ret = -1;
+				close(fd);
+				goto bail;
+			}
+                        offset += read_size;
+                }
+
+		close(fd);
+
+	}
+
+	printf("  *SubTest %d: Unlinking reflinks and original file.\n",
+	       sub_testno++);
+
+	ret = do_unlinks(orig_path, ref_counts);
+	if (ret < 0)
+		goto bail;
+
+	ret = do_unlink(orig_path);
+
+bail:
+	if (write_pattern)
+		free(write_pattern);
+
+	if (read_pattern)
+		free(read_pattern);
+
+	return ret;
+}
+
 static void run_test(void)
 {
 	int i;
@@ -2408,6 +2529,9 @@ static void run_test(void)
 
 		if (test_flags & PUNH_TEST)
 			verify_punch_hole_cow_test();
+
+		if (test_flags & TRUC_TEST)
+			verify_truncate_cow_test();
 
 	}
 }

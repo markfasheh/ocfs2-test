@@ -14,18 +14,22 @@
 #		3. Mmap test
 #
 #		4. DirectIO test
+#		
+#		5. CoW test on punching holes
+#		
+#		6. CoW test on truncating
 #
-#		5. Concurrent test
+#		7. Concurrent test
 #
-#		6. Boundary test
+#		8. Boundary test
 #
-#		7. Stress test
+#		9. Stress test
 #
-#		8. Inline-data test
+#		10. Inline-data test
 #
-#		9. Xattr combination test
+#		11. Xattr combination test
 #
-#		10. OracleVM simulation test
+#		12. OracleVM simulation test
 #
 #
 # Author:       Tristan Ye,     tristan.ye@oracle.com
@@ -540,6 +544,24 @@ Holes, CMD:${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 3276800 -d ${DEVICE} \
 -w ${WORK_PLACE} -H "
 	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 3276800 -d ${DEVICE} -w \
 ${WORK_PLACE} -H >>${LOG_FILE} 2>&1
+	RET=$?
+	f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
+	f_exit_or_not ${RET}
+	((TEST_PASS++))
+	f_LogMsg ${LOG_FILE} "Cleanup working place"
+	${SUDO} ${CHMOD_BIN} -R 777 ${MOUNT_POINT}  >>${LOG_FILE} 2>&1
+	${RM_BIN} -rf ${WORK_PLACE}/* >>${LOG_FILE} 2>&1
+	RET=$?
+	f_exit_or_not ${RET}
+
+	((TEST_NO++))
+	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Verificationl CoW Test On \
+Truncating:"
+	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Verification CoW Test On Truncating\
+, CMD:${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 3276800 -d ${DEVICE} \
+-w ${WORK_PLACE} -T "
+	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 3276800 -d ${DEVICE} -w \
+${WORK_PLACE} -T >>${LOG_FILE} 2>&1
 	RET=$?
 	f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
 	f_exit_or_not ${RET}
