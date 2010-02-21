@@ -217,6 +217,7 @@ f_setup()
 	
 	if [ -z "$MPI_HOSTS" ];then
 		f_usage
+	fi
 
 	# Use number of testing nodes as the default slot number.
 	if [ -z "${SLOTS}" ];then

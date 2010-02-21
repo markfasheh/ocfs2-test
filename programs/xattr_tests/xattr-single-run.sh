@@ -387,7 +387,7 @@ f_get_max_inline_size()
 	${SETXATTR} -n "user.test" -v "test" ${TMP_FILE}
 	sync
 
-	MAX_INLINE_XATTR=`${DEBUGFS_BIN} -R "stat ${DEBUG_TMP_FILE}" ${OCFS2_DEVICE} | grep Xattr | grep Inline | grep -i size | awk '{print $7}'`
+	MAX_INLINE_XATTR=`${DEBUGFS_BIN} -R "stat ${DEBUG_TMP_FILE}" ${OCFS2_DEVICE} | grep 'Extended Attributes Inline Size' | awk '{print $9}'`
 
 	${RM} -rf ${TMP_FILE}
 }
