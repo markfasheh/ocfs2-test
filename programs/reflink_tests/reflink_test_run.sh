@@ -523,9 +523,9 @@ ${WORK_PLACE} -c 100 >>${LOG_FILE} 2>&1
 	((TEST_NO++))
         f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] O_DIRECT Refcount Test:"
         f_LogMsg ${LOG_FILE} "[${TEST_NO}] O_DIRECT Refcount Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -D "
+${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -O "
         ${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w \
-${WORK_PLACE} -D >>${LOG_FILE} 2>&1
+${WORK_PLACE} -O >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
         f_exit_or_not ${RET}
