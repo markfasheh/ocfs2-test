@@ -25,13 +25,16 @@
 
 . `dirname ${0}`/config.sh
 
-MKFS_BIN="`which sudo` -u root `which mkfs.ocfs2`"
-FSCK_BIN="`which sudo` -u root `which fsck.ocfs2`"
-DEBUGFS_BIN="`which sudo` -u root `which debugfs.ocfs2`"
-TUNEFS_BIN="`which sudo` -u root `which tunefs.ocfs2`"
-MOUNTED_BIN="`which sudo` -u root `which mounted.ocfs2`"
-MOUNT_BIN="`which sudo` -u root `which mount.ocfs2`"
-UMOUNT_BIN="`which sudo` -u root `which umount`"
+MKFS_PATH=`which mkfs.ocfs2`
+FSCK_PATH=`which fsck.ocfs2`
+DEBUGFS_PATH=`which debugfs.ocfs2`
+TUNEFS_PATH=`which tunefs.ocfs2`
+MOUNTED_PATH=`which mounted.ocfs2`
+MOUNT_PATH=`which mount.ocfs2`
+UMOUNT_PATH=`which umount`
+
+MOUNT_BIN="`which sudo` -u root ${MOUNT_PATH}"
+UMOUNT_BIN="`which sudo` -u root ${UMOUNT_PATH}"
 TEE_BIN=`which tee`
 MKDIR_BIN=`which mkdir`
 RM_BIN=`which rm`
@@ -95,7 +98,7 @@ EOF
 function check_executes()
 {
 	LogMsg "checking the programs we need in the test...";
-	for PROGRAM in ${MKFS_BIN} ${FSCK_BIN} ${DEBUGFS_BIN} ${TUNEFS_BIN} $MOUNTED_BIN
+	for PROGRAM in ${MKFS_PATH} ${FSCK_PATH} ${DEBUGFS_PATH} ${TUNEFS_PATH} ${MOUNTED_PATH} ${MOUNT_PATH} ${UMOUNT_PATH}
 	do
 		which ${PROGRAM} 2>&1 >> ${LOGFILE}
 		if [ "$?" != "0" ]; then
@@ -680,16 +683,19 @@ do
 		LOG_DIR="${1#--log-dir=}"
 		;;
 	"--with-fsck="*)
-		FSCK_BIN="${1#--with-fsck=}"
+		FSCK_PATH="${1#--with-fsck=}"
 		;;
 	"--with-mkfs="*)
-		MKFS_BIN="${1#--with-mkfs=}"
+		MKFS_PATH="${1#--with-mkfs=}"
 		;;
 	"--with-debugfs="*)
-		DEBUGFS_BIN="${1#--with-debugfs=}"
+		DEBUGFS_PATH="${1#--with-debugfs=}"
 		;;
 	"--with-tunefs="*)
-		TUNEFS_BIN="${1#--with-tunefs=}"
+		TUNEFS_PATH="${1#--with-tunefs=}"
+		;;
+	"--with-mounted="*)
+		MOUNTED_PATH="${1#--with-mounted=}"
 		;;
 	*)
 		DEVICE="$1"
@@ -697,6 +703,12 @@ do
 	esac
 	shift
 done
+
+MKFS_BIN="`which sudo` -u root ${MKFS_PATH}"
+FSCK_BIN="`which sudo` -u root ${FSCK_PATH}"
+DEBUGFS_BIN="`which sudo` -u root ${DEBUGFS_PATH}"
+TUNEFS_BIN="`which sudo` -u root ${TUNEFS_PATH}"
+MOUNTED_BIN="`which sudo` -u root ${MOUNTED_PATH}"
 
 MKFSLOG=${LOG_DIR}/$$_mkfs.log
 FSCKLOG=${LOG_DIR}/$$_fsck.log
