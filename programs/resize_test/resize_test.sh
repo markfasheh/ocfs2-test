@@ -197,7 +197,7 @@ do_tunefs() {
 	 if [ "$((${blk}%${bpc}))" != "0" ];then
 		blk=$((${blk}+${bpc}-$((${blk}%${bpc}))))
 		if [ ${blk} -gt ${partsz} ]; then
-			${blk}=$((${blk}-${bpc}))
+			blk=$((${blk}-${bpc}))
 		fi
 	 fi
 	 if [ "${blocks}" != "${blk}" ]; then
