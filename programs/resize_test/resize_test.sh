@@ -236,7 +236,7 @@ normal_resize_test() {
 		dbgout=${outdir}/${YMD}.dbg
 
 		blocks=$[${blocks}+${incblk}]
-		if [ ${blocks} -gt ${partsz} ]
+		if [ ${blocks} -ge ${partsz} ]
 		then
 			blocks=0
 		fi
@@ -306,6 +306,9 @@ do_backup_test() {
 	fi
 	
 	do_mount
+	if [ ${end} -ge ${partsz} ];then
+		end=0
+	fi
 	do_tunefs ${tuneout} ${end}
 	do_umount
 	do_fsck ${fsckout}
@@ -362,7 +365,7 @@ online_boundary_test() {
 	echo "y"|${MKFS} -b ${blocksz} -C ${clustsz} -N 4 -L ${label} ${device} ${start} >/dev/null
 
 	do_mount
-	do_tunefs ${tuneout} ${partsz}
+	do_tunefs ${tuneout} 0
 	do_umount
 	do_fsck ${fsckout}
 
