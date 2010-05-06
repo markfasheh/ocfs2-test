@@ -1366,7 +1366,7 @@ int open_ocfs2_volume(char *device_name)
 
 	blocksize = 1 << ocfs2_sb->s_blocksize_bits;
 	clustersize = 1 << ocfs2_sb->s_clustersize_bits;
-	max_inline_size = ocfs2_max_inline_data(blocksize);
+	max_inline_size = ocfs2_max_inline_data_with_xattr(blocksize, NULL);
 
 	ocfs2_close(fs);
 

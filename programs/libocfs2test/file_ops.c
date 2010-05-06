@@ -353,7 +353,7 @@ int get_bs_cs(char *device_name, unsigned int *bs, unsigned long *cs,
 
 	*bs = fs->fs_blocksize;
 	*cs = fs->fs_clustersize;
-	*max_inline_sz = ocfs2_max_inline_data(*bs);
+	*max_inline_sz = ocfs2_max_inline_data_with_xattr(*bs, NULL);
 
 	ocfs2_close(fs);
 
