@@ -35,12 +35,20 @@
 int create_files(int writefd);
 int open_files(int readfd);
 
+char *workplace;
+
 int main(int argc, char **argv)
 {
 	int status = 0;
 	int comm[2];
 	int pid, readfd, writefd;
 
+	if ((argc < 2) || (strcmp(argv[1], "-h") == 0)) {
+		fprintf(stderr, "Usage: create_and_open <workdir>\n");
+		return 1;
+	}
+
+	workplace = argv[1];
 
 	status = pipe(comm);
 	if (status < 0) {
@@ -74,7 +82,7 @@ int create_files(int writefd)
 
 	for(i = 0; i < NUMFILES; i++) {
 		memset(buff, 0, NMMX);
-		snprintf(buff, NMMX-1, "testfile%d", i);
+		snprintf(buff, NMMX-1, "%s/testfile%d", workplace, i);
 
 		status = mknod(buff, S_IFREG|S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH,
 			       0);
@@ -95,7 +103,6 @@ int create_files(int writefd)
 			printf("Could not write buff to pipe, %d\n", status);
 			goto bail;
 		}
-//		printf("created \"%s\"\n", buff);
 	}
 
 	status = 0;
@@ -130,7 +137,6 @@ int open_files(int readfd)
 			printf("Could not open file \"%s\", %d", buff, tmpfd);
 			goto bail;
 		}
-//		printf("opened \"%s\"\n", buff);
 	}
 
 bail:
