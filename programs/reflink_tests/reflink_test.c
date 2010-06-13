@@ -465,7 +465,7 @@ static int basic_test()
 static int boundary_test()
 {
 	char dest[PATH_MAX];
-	char write_buf[HUNK_SIZE * 2];
+	char *write_buf = NULL;
 	unsigned long offset = 0, write_size = 0;
 	unsigned long extent_size = 0, write_pos = 0;
 
@@ -475,161 +475,214 @@ static int boundary_test()
 	snprintf(orig_path, PATH_MAX, "%s/original_bound_refile", workplace);
 	snprintf(dest, PATH_MAX, "%s_target", orig_path);
 
+	write_buf = (char *)malloc(HUNK_SIZE * 2);
+
 	printf("  *SubTest %d: CoW on extent 1 more byte than max_inline_sz.\n",
 	       sub_testno++);
 	ret = prep_orig_file(orig_path, max_inline_size + 1, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = reflink(orig_path, dest, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	offset = 0;
 	write_size = 1;
 	get_rand_buf(write_buf, 1);
 	ret = write_at_file(dest, write_buf, write_size, offset);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	truncate(dest, 0);
 	ret = do_unlink(dest);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	ret = reflink(orig_path, dest, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	offset = max_inline_size;
 	write_size = 1;
 	get_rand_buf(write_buf, write_size);
 	ret = write_at_file(dest, write_buf, write_size, offset);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	truncate(dest, 0);
 	ret = do_unlink(dest);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	ret = reflink(orig_path, dest, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	offset = get_rand(0, max_inline_size);
 	get_rand_buf(write_buf, write_size);
 	ret = write_at_file(dest, write_buf, write_size, offset);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	truncate(dest, max_inline_size);
 	ret = do_unlink(dest);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = verify_orig_file(orig_path);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	printf("  *SubTest %d: CoW on extent between max_inline_sz and 1M.\n",
 	       sub_testno++);
 	extent_size = get_rand(max_inline_size + 1, M_SIZE);
 	ret = prep_orig_file(orig_path, extent_size, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = reflink(orig_path, dest, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	offset = get_rand(0, extent_size - 1);
 	get_rand_buf(write_buf, write_size);
 	ret = write_at_file(dest, write_buf, write_size, offset);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = do_unlink(dest);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = verify_orig_file(orig_path);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	printf("  *SubTest %d: CoW on 1M extent.\n", sub_testno++);
 	ret = prep_orig_file(orig_path, M_SIZE, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = reflink(orig_path, dest, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	offset = get_rand(0, M_SIZE - 1);
 	get_rand_buf(write_buf, write_size);
 	ret = write_at_file(dest, write_buf, write_size, offset);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = do_unlink(dest);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = verify_orig_file(orig_path);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	printf("  *SubTest %d: CoW on contiguous 1G extent.\n", sub_testno++);
 	ret = prep_orig_file(orig_path, G_SIZE, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = reflink(orig_path, dest, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	offset = 0;
 	get_rand_buf(write_buf, write_size);
 	ret = write_at_file(dest, write_buf, write_size, offset);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = do_unlink(dest);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	ret = reflink(orig_path, dest, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	offset = G_SIZE - 1;
 	get_rand_buf(write_buf, write_size);
 	ret = write_at_file(dest, write_buf, write_size, offset);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = do_unlink(dest);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	ret = reflink(orig_path, dest, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	offset = get_rand(0, G_SIZE - 1);
 	get_rand_buf(write_buf, write_size);
 	ret = write_at_file(dest, write_buf, write_size, offset);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = do_unlink(dest);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	ret = reflink(orig_path, dest, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	offset = 0;
 	while (offset < G_SIZE) {
 		write_pos = get_rand(offset, offset + M_SIZE - 1);
 		ret = write_at_file(dest, write_buf, write_size, write_pos);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 		offset += M_SIZE;
 	}
 	ret = do_unlink(dest);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	printf("  *SubTest %d: CoW on incontiguous 1G extent.\n", sub_testno++);
 	ret = prep_orig_file(orig_path, G_SIZE, 0);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = reflink(orig_path, dest, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	offset = 0;
 	get_rand_buf(write_buf, write_size);
 	ret = write_at_file(dest, write_buf, write_size, offset);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = do_unlink(dest);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	ret = reflink(orig_path, dest, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	offset = G_SIZE - 1;
 	get_rand_buf(write_buf, write_size);
 	ret = write_at_file(dest, write_buf, write_size, offset);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = do_unlink(dest);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	ret = reflink(orig_path, dest, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	offset = get_rand(0, G_SIZE - 1);
 	get_rand_buf(write_buf, write_size);
 	ret = write_at_file(dest, write_buf, write_size, offset);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = do_unlink(dest);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	ret = reflink(orig_path, dest, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	offset = 0;
 	while (offset < G_SIZE) {
 		write_pos = get_rand(offset, offset + M_SIZE - 1);
 		get_rand_buf(write_buf, write_size);
 		ret = write_at_file(dest, write_buf, write_size, write_pos);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 		offset += M_SIZE;
 	}
 
 	ret = do_unlink(dest);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	ret = do_unlink(orig_path);
+bail:
+	if (write_buf)
+		free(write_buf);
+
 	should_exit(ret);
 
 	return 0;
@@ -638,15 +691,19 @@ static int boundary_test()
 static int stress_test()
 {
 	char dest[PATH_MAX], tmp_dest[PATH_MAX], tmp_orig[PATH_MAX];
-	char write_buf[HUNK_SIZE];
-	char pattern_buf[HUNK_SIZE * 2];
-	char verify_buf[HUNK_SIZE * 2];
+	char *write_buf = NULL;
+	char *pattern_buf = NULL;
+	char *verify_buf = NULL;
 	unsigned long offset = 0, write_size = 0;
 	unsigned long verify_size = 0, verify_offset = 0;
 	unsigned long i, j, interval = 0;
 	int ret;
 
 	int sub_testno = 1;
+
+	write_buf = (char *)malloc(HUNK_SIZE);
+	pattern_buf = (char *)malloc(HUNK_SIZE * 2);
+	verify_buf = (char *)malloc(HUNK_SIZE * 2);
 
 	printf("Test %d: Stress refcount test.\n", testno++);
 
@@ -658,9 +715,11 @@ static int stress_test()
 			 workplace, i);
 		snprintf(dest, PATH_MAX, "%s_target", orig_path);
 		ret = prep_orig_file(orig_path, max_inline_size + 1, 1);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 		ret = reflink(orig_path, dest, 1);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 	}
 
 	for (i = 0; i < ref_trees; i++) {
@@ -672,7 +731,8 @@ static int stress_test()
 		write_size = 1;
 		get_rand_buf(write_buf, write_size);
 		ret = write_at_file(dest, write_buf, write_size, offset);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 	}
 
 	for (i = 0; i < ref_trees; i++) {
@@ -680,9 +740,11 @@ static int stress_test()
 			 workplace, i);
 		snprintf(dest, PATH_MAX, "%s_target", orig_path);
 		ret = do_unlink(orig_path);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 		ret = do_unlink(dest);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 	}
 
 	fflush(stdout);
@@ -691,9 +753,11 @@ static int stress_test()
 	       "one refcount tree.\n", sub_testno++);
 	snprintf(orig_path, PATH_MAX, "%s/original_stress_refile", workplace);
 	ret = prep_orig_file(orig_path, max_inline_size + 1, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = do_reflinks(orig_path, orig_path, ref_counts, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	for (i = 0; i < ref_counts; i++) {
 
@@ -708,7 +772,8 @@ static int stress_test()
 			get_rand_buf(write_buf, write_size);
 			ret = write_at_file(dest, write_buf, write_size,
 					    offset);
-			should_exit(ret);
+			if (ret)
+				goto bail;
 			offset += write_size;
 		}
 
@@ -725,9 +790,11 @@ static int stress_test()
 	}
 
 	ret = do_unlinks(orig_path, ref_counts);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = do_unlink(orig_path);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	fflush(stdout);
 
@@ -737,9 +804,11 @@ static int stress_test()
 	snprintf(orig_path, PATH_MAX, "%s/original_stress_refile", workplace);
 	snprintf(dest, PATH_MAX, "%s_target", orig_path);
 	ret = prep_orig_file(orig_path, file_size, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = reflink(orig_path, dest, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	strcpy(tmp_dest, dest);
 	strcpy(tmp_orig, orig_path);
 
@@ -751,7 +820,8 @@ static int stress_test()
 
 		snprintf(dest, PATH_MAX, "%s_%ld", tmp_dest, i);
 		ret = reflink(orig_path, dest, 1);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 
 		write_size = get_rand(1, M_SIZE);
 		get_rand_buf(write_buf, write_size);
@@ -768,16 +838,19 @@ static int stress_test()
 
 		ret = read_at_file(orig_path, pattern_buf, verify_size,
 				   verify_offset);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 
 		ret = write_at_file(dest, write_buf, write_size, offset);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 
 		sync();
 
 		ret = read_at_file(orig_path, verify_buf, verify_size,
 				   verify_offset);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 
 		if (memcmp(pattern_buf, verify_buf, verify_size)) {
 			fprintf(stderr, "Verify original file date failed "
@@ -796,16 +869,19 @@ static int stress_test()
 		snprintf(dest, PATH_MAX, "%s_%ld", tmp_dest, j);
 
 		ret = do_unlink(dest);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 	}
 
 	strcpy(orig_path, tmp_orig);
 
 	ret = do_reflinks_at_random(orig_path, orig_path, ref_counts);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	ret = do_unlinks(orig_path, ref_counts);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	strcpy(dest, tmp_dest);
 	offset = 0;
@@ -816,16 +892,19 @@ static int stress_test()
 		write_size = get_rand(1, M_SIZE);
 		get_rand_buf(write_buf, write_size);
 		ret = write_at_file(dest, write_buf, write_size, offset);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 
 		offset = offset + write_size + interval;
 	}
 
 	ret = do_unlink(dest);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	ret = do_unlink(orig_path);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	fflush(stdout);
 
@@ -835,9 +914,11 @@ static int stress_test()
 	snprintf(orig_path, PATH_MAX, "%s/original_stress_refile", workplace);
 	snprintf(dest, PATH_MAX, "%s_target", orig_path);
 	ret = prep_orig_file(orig_path, file_size, 0);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = reflink(orig_path, dest, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	/*Then write original and target file randomly*/
 	offset = 0;
@@ -848,15 +929,27 @@ static int stress_test()
 		write_size = get_rand(1, M_SIZE);
 		get_rand_buf(write_buf, write_size);
 		ret = write_at_file(orig_path, write_buf, write_size, offset);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 
 		offset = offset + write_size + interval;
 	}
 
 	ret = do_unlink(dest);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	ret = do_unlink(orig_path);
+bail:
+	if (write_buf)
+		free(write_buf);
+
+	if (pattern_buf)
+		free(pattern_buf);
+
+	if (verify_buf)
+		free(verify_buf);
+
 	should_exit(ret);
 
 	return 0;
@@ -1154,10 +1247,12 @@ static int do_xattr_data_cows(char *ref_pfx, unsigned long iter, int ea_nums)
 	unsigned long i, j;
 	char dest[PATH_MAX];
 
-	int fd, ret, o_ret;
+	int fd, ret = 0;
 
 	unsigned long offset = 0, write_size = 0;
-	char write_buf[HUNK_SIZE];
+	char *write_buf = NULL;
+
+	write_buf = (char *)malloc(HUNK_SIZE);
 
 	for (i = 0; i < iter; i++) {
 
@@ -1165,12 +1260,11 @@ static int do_xattr_data_cows(char *ref_pfx, unsigned long iter, int ea_nums)
 
 		fd = open64(dest, open_rw_flags);
 		if (fd < 0) {
-			o_ret = fd;
-			fd = errno;
+			ret = errno;
 			fprintf(stderr, "open file %s failed:%d:%s\n",
-				dest, fd, strerror(fd));
-			fd = o_ret;
-			return fd;
+				dest, ret, strerror(ret));
+			ret = fd;
+			goto bail;
 		}
 
 		strcpy(filename, dest);
@@ -1189,13 +1283,16 @@ static int do_xattr_data_cows(char *ref_pfx, unsigned long iter, int ea_nums)
 
 			ret = add_or_update_ea(NORMAL, fd, XATTR_REPLACE,
 					       "update");
-			should_exit(ret);
+			if (ret)
+				goto bail;
 
 			if (xattr_value_sz > xattr_name_sz + 50) {
 				ret = read_ea(NORMAL, fd);
-				should_exit(ret);
+				if (ret)
+					goto bail;
 				ret = xattr_value_validator(j);
-				should_exit(ret);
+				if (ret)
+					goto bail;
 			}
 
 			/* Update file data*/
@@ -1210,14 +1307,20 @@ static int do_xattr_data_cows(char *ref_pfx, unsigned long iter, int ea_nums)
 
 			ret = write_at(fd, write_buf, write_size, offset);
 			if (ret < 0)
-				return ret;
+				goto bail;
 
 		}
 
 		close(fd);
 	}
 
-	return 0;
+bail:
+	if (write_buf)
+		free(write_buf);
+
+	should_exit(ret);
+
+	return ret;
 }
 
 static int do_xattr_reads(char *ref_pfx, unsigned long iter, int ea_nums)
@@ -2138,13 +2241,15 @@ static int directio_test(void)
 static int inline_test(void)
 {
 	char dest[PATH_MAX];
-	char write_buf[HUNK_SIZE];
+	char *write_buf = NULL;
 	unsigned long offset = 0, write_size = 0;
 	unsigned long i = 0;
 
 	int ret, sub_testno = 1;
 
 	printf("Test %d: Reflink on inlined files test.\n", testno++);
+
+	write_buf = (char *)malloc(HUNK_SIZE);
 
 	if (file_size > max_inline_size)
 		file_size = get_rand(0, max_inline_size);
@@ -2157,7 +2262,8 @@ static int inline_test(void)
 
 	ret = xattr_basic_test(xattr_nums, XATTR_NAME_LEAST_SZ,
 			       XATTR_VALUE_TO_CLUSTER + 100);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	fflush(stdout);
 
@@ -2169,9 +2275,11 @@ static int inline_test(void)
 			 "refile_%ld", workplace, i);
 		snprintf(dest, PATH_MAX, "%s_target", orig_path);
 		ret = prep_orig_file(orig_path, file_size, 1);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 		ret = reflink(orig_path, dest, 1);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 	}
 
 	for (i = 0; i < ref_trees; i++) {
@@ -2183,12 +2291,14 @@ static int inline_test(void)
 		write_size = 1;
 		get_rand_buf(write_buf, write_size);
 		ret = write_at_file(orig_path, write_buf, write_size, offset);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 		offset = get_rand(max_inline_size, max_inline_size * 2);
 		write_size = 1;
 		get_rand_buf(write_buf, write_size);
 		ret = write_at_file(dest, write_buf, write_size, offset);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 	}
 
 	for (i = 0; i < ref_trees; i++) {
@@ -2196,9 +2306,12 @@ static int inline_test(void)
 			 "refile_%ld", workplace, i);
 		snprintf(dest, PATH_MAX, "%s_target", orig_path);
 		ret = do_unlink(orig_path);
-		should_exit(ret);
+		if (ret)
+			goto bail;
+
 		ret = do_unlink(dest);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 	}
 
 	fflush(stdout);
@@ -2208,10 +2321,12 @@ static int inline_test(void)
 	snprintf(orig_path, PATH_MAX, "%s/original_inline_stress_refile",
 		 workplace);
 	ret = prep_orig_file(orig_path, file_size, 1);
+	if (ret)
+		goto bail;
 
-	should_exit(ret);
 	ret = do_reflinks(orig_path, orig_path, ref_counts, 1);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 
 	for (i = 0; i < ref_counts; i++) {
 
@@ -2226,7 +2341,8 @@ static int inline_test(void)
 			get_rand_buf(write_buf, write_size);
 			ret = write_at_file(dest, write_buf, write_size,
 					    offset);
-			should_exit(ret);
+			if (ret)
+				goto bail;
 			offset += write_size;
 		}
 
@@ -2243,8 +2359,13 @@ static int inline_test(void)
 	}
 
 	ret = do_unlinks(orig_path, ref_counts);
-	should_exit(ret);
+	if (ret)
+		goto bail;
 	ret = do_unlink(orig_path);
+bail:
+	if (write_buf)
+		free(write_buf);
+
 	should_exit(ret);
 
 	return 0;
@@ -2374,7 +2495,7 @@ static int verify_truncate_cow_test(void)
 	char *read_pattern = NULL;
 
 	unsigned long i;
-	unsigned long long offset, read_size, new_size, len, trunc_size;
+	unsigned long long offset, read_size, new_size, trunc_size;
 	char dest[PATH_MAX];
 
 	printf("Test %d: Verify cow for truncating.\n", testno++);
@@ -2412,7 +2533,7 @@ static int verify_truncate_cow_test(void)
 
 		ret = ftruncate(fd, new_size);
 		if (ret < 0) {
-			fprintf(stderr, "failed to truncate file %d to %llu\n",
+			fprintf(stderr, "failed to truncate file %s to %llu\n",
 				orig_path, new_size); 
 			close(fd);
 			goto bail;

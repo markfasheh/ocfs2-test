@@ -712,28 +712,29 @@ int prep_orig_file_in_chunks(char *file_name, unsigned long chunks)
 
 int verify_reflink_pair(const char *src, const char *dest)
 {
-	int fds, fdd, ret, o_ret;
-	char bufs[HUNK_SIZE], bufd[HUNK_SIZE];
+	int fds = -1, fdd = -1, ret = 0;
+	char *bufs = NULL, *bufd = NULL;
 	unsigned long reads, readd;
+
+	bufs = (char *)malloc(HUNK_SIZE);
+	bufd = (char *)malloc(HUNK_SIZE);
 
 	fds = open64(src, open_ro_flags);
 	if (fds < 0) {
-		o_ret = fds;
-		fds = errno;
-		fprintf(stderr, "open file %s failed:%d:%s\n", src, fds,
-			strerror(fds));
-		fds = o_ret;
-		return fds;
+		ret  = errno;
+		fprintf(stderr, "open file %s failed:%d:%s\n", src, ret,
+			strerror(ret));
+		ret = fds;
+		goto bail;
 	}
 
 	fdd = open64(dest, open_ro_flags);
 	if (fdd < 0) {
-		o_ret = fdd;
-		fdd = errno;
-		fprintf(stderr, "open file %s failed:%d:%s\n", src, fdd,
-			strerror(fdd));
-		fdd = o_ret;
-		return fdd;
+		ret = errno;
+		fprintf(stderr, "open file %s failed:%d:%s\n", src, ret,
+			strerror(ret));
+		ret = fdd;
+		goto bail;
 	}
 
 	while ((reads = read(fds, bufs, HUNK_SIZE)) &&
@@ -742,20 +743,31 @@ int verify_reflink_pair(const char *src, const char *dest)
 		if (reads != readd) {
 			fprintf(stderr, "data readed are not in the "
 				"same size\n");
-			return 1;
+			ret = 1;
+			goto bail;
 		}
 
 		ret = memcmp(bufs, bufd, reads);
 		if (ret) {
 			fprintf(stderr, "data readed are different\n");
-			return ret;
+			goto bail;
 		}
 	}
 
-	close(fds);
-	close(fdd);
+bail:
+	if (bufs)
+		free(bufs);
 
-	return 0;
+	if (bufd)
+		free(bufd);
+
+	if (fds > 0)
+		close(fds);
+
+	if (fdd > 0)
+		close(fdd);
+
+	return ret;
 }
 
 int verify_pattern(char *buf, unsigned long offset, unsigned long size)
@@ -781,19 +793,20 @@ int verify_orig_file(char *orig)
 	int ret = 0, fd, o_ret;
 	unsigned long readed, offset = 0;
 	unsigned long verify_size = 0;
-	char buf[HUNK_SIZE];
+	char *buf = NULL;
 
 	unsigned int mmap_size = page_size;
 	void *region;
 
+	buf = (char *)malloc(HUNK_SIZE);
+
 	fd = open64(orig, open_ro_flags);
 	if (fd < 0) {
-		o_ret = fd;
-		fd = errno;
-		fprintf(stderr, "open file %s failed:%d:%s\n", orig, fd,
-			strerror(fd));
-		fd = o_ret;
-		return fd;
+		ret = errno;
+		fprintf(stderr, "open file %s failed:%d:%s\n", orig, ret,
+			strerror(ret));
+		ret = fd;
+		goto bail;
 	}
 
 	if (file_size > PATTERN_SIZE)
@@ -816,13 +829,13 @@ int verify_orig_file(char *orig)
 			fprintf(stderr, "mmap (read) error %d: \"%s\"\n", ret,
 				strerror(ret));
 			ret = o_ret;
-			return ret;
+			goto bail;
 		}
 
 		ret = verify_pattern(region, 0, verify_size);
 		if (ret) {
 			fprintf(stderr, "Verify orig file by mmap failed\n");
-			return ret;
+			goto bail;
 		}
 
 		munmap(region, mmap_size);
@@ -834,7 +847,7 @@ int verify_orig_file(char *orig)
 		ret = verify_pattern(buf, offset, readed);
 		if (ret) {
 			fprintf(stderr, "Verify original file failed\n");
-			return ret;
+			goto bail;
 		}
 
 		offset += readed;
@@ -842,9 +855,14 @@ int verify_orig_file(char *orig)
 			break;
 	}
 
-	close(fd);
+bail:
+	if (buf)
+		free(buf);
 
-	return 0;
+	if (fd > 0)
+		close(fd);
+
+	return ret;
 }
 
 int do_reflinks(const char *src, const char *dest_prefix,
@@ -888,23 +906,24 @@ int do_reflinks(const char *src, const char *dest_prefix,
 int do_reflinks_at_random(const char *src, const char *dest_prefix,
 				 unsigned long iter)
 {
-	int ret, o_ret, fd, method;
+	int ret = 0, o_ret, fd, method;
 	unsigned long i = 0;
-	char dest[PATH_MAX], buf[2 * HUNK_SIZE], *ptr;
+	char dest[PATH_MAX], *buf = NULL, *ptr;
 
 	unsigned long write_size = 0, append_size = 0, truncate_size = 0;
 	unsigned long read_size = 0, offset = 0;
 	unsigned long tmp_file_size = file_size;
 
+	buf = (char *)malloc(HUNK_SIZE * 2);
+
 	fd = open64(src, open_rw_flags | O_APPEND);
 
 	if (fd < 0) {
-		o_ret = fd;
-		fd = errno;
+		ret = errno;
 		fprintf(stderr, "open file %s failed:%d:%s\n",
-			src, fd, strerror(fd));
-		fd = o_ret;
-		return fd;
+			src, ret, strerror(ret));
+		ret = fd;
+		goto bail;
 	}
 
 	if (test_flags & ODCT_TEST)
@@ -935,7 +954,7 @@ int do_reflinks_at_random(const char *src, const char *dest_prefix,
 			if (ret < 0) {
 				fprintf(stderr, "do_reflinks_at_random failed"
 					" at write_at\n");
-				return ret;
+				goto bail;
 			}
 		}
 
@@ -953,7 +972,7 @@ int do_reflinks_at_random(const char *src, const char *dest_prefix,
 					"at appending on file %s:%d:%s.\n",
 					src, ret, strerror(ret));
 				ret = o_ret;
-				return ret;
+				goto bail;
 			}
 
 			tmp_file_size += append_size;
@@ -973,7 +992,7 @@ int do_reflinks_at_random(const char *src, const char *dest_prefix,
 					"at truncating on file %s:%d:%s.\n",
 					src, ret, strerror(ret));
 				ret = o_ret;
-				return ret;
+				goto bail;
 			}
 
 			tmp_file_size = truncate_size;
@@ -1008,7 +1027,7 @@ int do_reflinks_at_random(const char *src, const char *dest_prefix,
 					"at reading on file %s:%d:%s.\n",
 					src, ret, strerror(ret));
 				ret = o_ret;
-				return ret;
+				goto bail;
 			}
 		}
 
@@ -1018,24 +1037,31 @@ int do_reflinks_at_random(const char *src, const char *dest_prefix,
 			fprintf(stderr, "do_reflinks_at_random failed at "
 				"reflink(%ld) after method(%d) operation.\n",
 				i, method);
-			return ret;
+			goto bail;
 		}
 
 		i++;
 	}
 
-	close(fd);
+bail:
+	if (buf)
+		free(buf);
 
-	return 0;
+	if (fd > 0)
+		close(fd);
+
+	return ret;
 }
 
 int do_reads_on_reflinks(char *ref_pfx, unsigned long iter,
 				unsigned long size, unsigned long interval)
 {
-	int ret, fd, o_ret;
+	int ret = 0, fd;
 	unsigned long i, read_size, offset = 0;
 	char ref_path[PATH_MAX];
-	char buf[HUNK_SIZE * 2], *ptr;
+	char *buf = NULL, *ptr;
+
+	buf = (char *)malloc(HUNK_SIZE * 2);
 
 	if (test_flags & ODCT_TEST)
 		ptr = buf_dio;
@@ -1049,12 +1075,11 @@ int do_reads_on_reflinks(char *ref_pfx, unsigned long iter,
 		snprintf(ref_path, PATH_MAX, "%sr%ld", ref_pfx, i);
 		fd = open64(ref_path, open_ro_flags);
 		if (fd < 0) {
-			o_ret = fd;
-			fd = errno;
+			ret = errno;
 			fprintf(stderr, "open file %s failed:%d:%s\n",
-				ref_path, fd, strerror(fd));
-			fd = o_ret;
-			return fd;
+				ref_path, ret, strerror(ret));
+			ret = fd;
+			goto bail;
 		}
 
 		offset = 0;
@@ -1084,7 +1109,10 @@ int do_reads_on_reflinks(char *ref_pfx, unsigned long iter,
 				ret = mmap_read_at(fd, ptr, read_size, offset);
 				if (ret) {
 					fprintf(stderr, "mmap_read_at fail\n");
-					return ret;
+					if (fd > 0)
+						close(fd);
+
+					goto bail;
 				}
 
 			} else {
@@ -1099,9 +1127,11 @@ int do_reads_on_reflinks(char *ref_pfx, unsigned long iter,
 
 				ret = read_at(fd, ptr, read_size, offset);
 				if (ret) {
-
 					fprintf(stderr, "read_at failed\n");
-					return ret;
+					if (fd > 0)
+						close(fd);
+
+					goto bail;
 				}
 			}
 
@@ -1115,16 +1145,22 @@ int do_reads_on_reflinks(char *ref_pfx, unsigned long iter,
 		close(fd);
 	}
 
-	return 0;
+bail:
+	if (buf)
+		free(buf);
+
+	return ret;
 }
 
 int do_cows_on_write(char *ref_pfx, unsigned long iter,
 			    unsigned long size, unsigned long interval)
 {
-	int ret, fd, o_ret;
+	int ret = 0, fd;
 	unsigned long i, write_size, offset = 0;
 	char ref_path[PATH_MAX];
-	char buf[HUNK_SIZE * 2], *ptr;
+	char *buf = NULL, *ptr;
+
+	buf = (char *)malloc(HUNK_SIZE * 2);
 
 	if (test_flags & ODCT_TEST)
 		ptr = buf_dio;
@@ -1141,12 +1177,11 @@ int do_cows_on_write(char *ref_pfx, unsigned long iter,
 		snprintf(ref_path, PATH_MAX, "%sr%ld", ref_pfx, i);
 		fd = open64(ref_path, open_rw_flags);
 		if (fd < 0) {
-			o_ret = fd;
-			fd = errno;
+			ret = errno;
 			fprintf(stderr, "open file %s failed:%d:%s\n",
-				ref_path, fd, strerror(fd));
-			fd = o_ret;
-			return fd;
+				ref_path, ret, strerror(ret));
+			ret = fd;
+			goto bail;
 		}
 
 		offset = 0;
@@ -1178,7 +1213,9 @@ int do_cows_on_write(char *ref_pfx, unsigned long iter,
 				if (ret) {
 
 					fprintf(stderr, "mmap_write_at fail\n");
-					return ret;
+					if (fd > 0)
+						close(fd);
+					goto bail;
 				}
 
 			} else {
@@ -1195,7 +1232,10 @@ int do_cows_on_write(char *ref_pfx, unsigned long iter,
 				if (ret) {
 
 					fprintf(stderr, "write_at failed\n");
-					return ret;
+					if (fd > 0)
+						close(fd);
+
+					goto bail;
 				}
 			}
 
@@ -1209,7 +1249,11 @@ int do_cows_on_write(char *ref_pfx, unsigned long iter,
 		close(fd);
 	}
 
-	return 0;
+bail:
+	if (buf)
+		free(buf);
+
+	return ret;
 }
 
 int do_cows_on_ftruncate(char *ref_pfx, unsigned long iter,
@@ -1255,10 +1299,12 @@ int do_cows_on_ftruncate(char *ref_pfx, unsigned long iter,
 
 int do_appends(char *ref_pfx, unsigned long iter)
 {
-	int ret, fd, o_ret;
+	int ret = 0, fd, o_ret;
 	unsigned long i, append_size;
 	char ref_path[PATH_MAX];
-	char buf[HUNK_SIZE], *ptr;
+	char *buf = NULL, *ptr;
+
+	buf = (char *)malloc(HUNK_SIZE);
 
 	if (test_flags & ODCT_TEST)
 		ptr = buf_dio;
@@ -1269,12 +1315,11 @@ int do_appends(char *ref_pfx, unsigned long iter)
 		snprintf(ref_path, PATH_MAX, "%sr%ld", ref_pfx, i);
 		fd = open64(ref_path, open_rw_flags | O_APPEND);
 		if (fd < 0) {
-			o_ret = fd;
-			fd = errno;
+			ret = errno;
 			fprintf(stderr, "create file %s failed:%d:%s\n",
-				ref_path, fd, strerror(fd));
-			fd = o_ret;
-			return fd;
+				ref_path, ret, strerror(ret));
+			ret = fd;
+			goto bail;
 		}
 
 		if (test_flags & RAND_TEST)
@@ -1293,13 +1338,19 @@ int do_appends(char *ref_pfx, unsigned long iter)
 			fprintf(stderr, "append file %s failed:%d:%s\n",
 				ref_path, ret, strerror(ret));
 			ret = o_ret;
-			return ret;
+			if (fd > 0)
+				close(fd);
+			goto bail;
 		}
 
 		close(fd);
 	}
 
-	return 0;
+bail:
+	if (buf)
+		free(buf);
+
+	return ret;
 }
 
 int do_unlink(char *path)
@@ -1892,15 +1943,13 @@ int semaphore_v(int sem_id)
 
 int open_file(const char *filename, int flags)
 {
-	int fd, ret, o_ret;
+	int fd, ret = 0;
 
 	fd = open64(filename, open_rw_flags, FILE_MODE);
 	if (fd < 0) {
-		o_ret = fd;
-		fd = errno;
-		fprintf(stderr, "open file %s failed:%d:%s\n", filename, fd,
-			strerror(fd));
-		fd = o_ret;
+		ret = errno;
+		fprintf(stderr, "open file %s failed:%d:%s\n", filename, ret,
+			strerror(ret));
 		return -1;
 	}
 

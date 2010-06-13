@@ -330,16 +330,18 @@ static void should_exit(int ret)
 
 static int basic_test(void)
 {
-	int ret, fd;
+	int ret = 0, fd;
 	char dest[PATH_MAX];
 	int sub_testno = 1;
 
-	char write_buf[HUNK_SIZE * 2];
-	char read_buf[HUNK_SIZE * 2];
+	char *write_buf = NULL, *read_buf = NULL;
 
 	unsigned long write_size = 0, read_size = 0;
 	unsigned long append_size = 0, truncate_size = 0;
 	unsigned long interval, offset = 0;
+
+	write_buf = (char *)malloc(HUNK_SIZE * 2);
+	read_buf = (char *)malloc(HUNK_SIZE * 2);
 
 	root_printf("Test %d: Multi-nodes basic refcount test.\n", testno++);
 
@@ -352,7 +354,8 @@ static int basic_test(void)
 	if (!rank) {
 
 		ret = prep_orig_file(orig_path, file_size, 1);
-		should_exit(ret);
+		if (ret)
+			goto bail_free;
 	}
 
 	MPI_Barrier_Sync();
@@ -368,14 +371,16 @@ static int basic_test(void)
 
 		snprintf(dest, PATH_MAX, "%s-%s-%d", orig_path, hostname, rank);
 		ret = reflink(orig_path, dest, 1);
-		should_exit(ret);
+		if (ret)
+			goto bail_free;
 	}
 
 	MPI_Barrier_Sync();
 
 	if (!rank) {
 		ret = verify_orig_file(orig_path);
-		should_exit(ret);
+		if (ret)
+			goto bail_free;
 	}
 
 	MPI_Barrier_Sync();
@@ -410,7 +415,8 @@ static int basic_test(void)
 				ret = write_at_file(dest, write_buf, write_size,
 						    offset);
 
-			should_exit(ret);
+			if (ret)
+				goto bail_free;
 
 			if (test_flags & RAND_TEST)
 				offset += write_size + get_rand(1, interval);
@@ -423,7 +429,8 @@ static int basic_test(void)
 
 	if (!rank) {
 		ret = verify_orig_file(orig_path);
-		should_exit(ret);
+		if (ret)
+			goto bail_free;
 	}
 
 	MPI_Barrier_Sync();
@@ -455,7 +462,8 @@ static int basic_test(void)
 				ret = read_at_file(dest, read_buf, read_size,
 						   offset);
 
-			should_exit(ret);
+			if (ret)
+				goto bail_free;
 
 			if (test_flags & RAND_TEST)
 				offset = offset + read_size +
@@ -470,7 +478,8 @@ static int basic_test(void)
 
 	if (!rank) {
 		ret = verify_orig_file(orig_path);
-		should_exit(ret);
+		if (ret)
+			goto bail_free;
 	}
 
 	MPI_Barrier_Sync();
@@ -489,6 +498,11 @@ static int basic_test(void)
 		snprintf(dest, PATH_MAX, "%s-%s-%d", orig_path, hostname, rank);
 		fd = open64(dest, open_rw_flags | O_APPEND);
 		if (fd < 0) {
+			if (write_buf)
+				free(write_buf);
+
+			if (read_buf)
+				free(read_buf);
 			fd = errno;
 			abort_printf("open file %s failed:%d:%s\n",
 				     dest, fd, strerror(fd));
@@ -503,6 +517,11 @@ static int basic_test(void)
 
 		ret = write(fd, write_buf, append_size);
 		if (ret < 0) {
+			if (write_buf)
+				free(write_buf);
+
+			if (read_buf)
+				free(read_buf);
 			ret = errno;
 			abort_printf("write file %s failed:%d:%s\n",
 				     dest, ret, strerror(ret));
@@ -515,7 +534,8 @@ static int basic_test(void)
 
 	if (!rank) {
 		ret = verify_orig_file(orig_path);
-		should_exit(ret);
+		if (ret)
+			goto bail_free;
 	}
 
 	MPI_Barrier_Sync();
@@ -539,6 +559,11 @@ static int basic_test(void)
 		ret = truncate(dest, truncate_size);
 
 		if (ret < 0) {
+			if (write_buf)
+				free(write_buf);
+
+			if (read_buf)
+				free(read_buf);
 			ret = errno;
 			abort_printf("truncate file %s failed:%d:%s\n",
 				     dest, ret, strerror(ret));
@@ -549,7 +574,8 @@ static int basic_test(void)
 
 	if (!rank) {
 		ret = verify_orig_file(orig_path);
-		should_exit(ret);
+		if (ret)
+			goto bail_free;
 	}
 
 	MPI_Barrier_Sync();
@@ -558,17 +584,29 @@ bail:
 	if (rank) {
 
 		ret = do_unlink(dest);
-		should_exit(ret);
+		if (ret)
+			goto bail_free;
 
 	} else {
 
 		ret = do_unlink(orig_path);
-		should_exit(ret);
+		if (ret)
+			goto bail_free;
 	}
 
 	MPI_Barrier_Sync();
 
-	return 0;
+bail_free:
+
+	if (write_buf)
+		free(write_buf);
+
+	if (read_buf)
+		free(read_buf);
+	
+	should_exit(ret);
+
+	return ret;
 }
 
 static int directio_test(void)
@@ -1031,10 +1069,12 @@ static int do_xattr_data_cows(char *ref_pfx, unsigned long iter, int ea_nums)
 	unsigned long i, j;
 	char dest[PATH_MAX];
 
-	int fd, ret, o_ret;
+	int fd, ret = 0, o_ret;
 
 	unsigned long offset = 0, write_size = 0;
-	char write_buf[HUNK_SIZE];
+	char *write_buf = NULL;
+
+	write_buf = (char *)malloc(HUNK_SIZE);
 
 	for (i = 0; i < iter; i++) {
 
@@ -1047,7 +1087,7 @@ static int do_xattr_data_cows(char *ref_pfx, unsigned long iter, int ea_nums)
 			fprintf(stderr, "open file %s failed:%d:%s\n",
 				dest, fd, strerror(fd));
 			fd = o_ret;
-			return fd;
+			goto bail;
 		}
 		strcpy(filename, dest);
 
@@ -1075,11 +1115,11 @@ static int do_xattr_data_cows(char *ref_pfx, unsigned long iter, int ea_nums)
 
 				ret = read_ea(NORMAL, fd);
 				if (ret < 0)
-					return ret;
+					goto bail;
 
 				ret = xattr_value_validator(j);
 				if (ret < 0)
-					return ret;
+					goto bail;
 			}
 
 			/* Update file data*/
@@ -1094,14 +1134,18 @@ static int do_xattr_data_cows(char *ref_pfx, unsigned long iter, int ea_nums)
 
 			ret = write_at(fd, write_buf, write_size, offset);
 			if (ret < 0)
-				return ret;
+				goto bail;
 
 		}
 
 		close(fd);
 	}
 
-	return 0;
+bail:
+	if (write_buf)
+		free(write_buf);
+
+	return ret;
 }
 
 static int xattr_basic_test(int ea_name_size, int ea_value_size)
@@ -1300,14 +1344,17 @@ static int xattr_test(void)
 static int stress_test(void)
 {
 	unsigned long i, j;
-	int ret, sub_testno = 1;
-	char write_buf[2 * HUNK_SIZE], dest[PATH_MAX];
+	int ret = 0, sub_testno = 1;
+	char *write_buf = NULL, dest[PATH_MAX];
 	char tmp_dest[PATH_MAX], tmp_orig[PATH_MAX];
-	char pattern_buf[HUNK_SIZE * 2];
-	char verify_buf[HUNK_SIZE * 2];
+	char *pattern_buf = NULL, *verify_buf = NULL;
 
 	unsigned long offset = 0, write_size = 0, interval = 0;
 	unsigned long verify_size = 0, verify_offset = 0;
+
+	write_buf = (char *)malloc(HUNK_SIZE * 2);
+	pattern_buf = (char *)malloc(HUNK_SIZE * 2);
+	verify_buf = (char *)malloc(HUNK_SIZE * 2);
 
 	root_printf("Test %d: Multi-nodes stress refcount test.\n", testno++);
 
@@ -1320,9 +1367,11 @@ static int stress_test(void)
 			 "refile_rank%d_%ld", workplace, rank, i);
 		snprintf(dest, PATH_MAX, "%s_target", orig_path);
 		ret = prep_orig_file(orig_path, 32 * 1024, 1);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 		ret = reflink(orig_path, dest, 1);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 	}
 
 	for (i = 0; i < ref_trees; i++) {
@@ -1334,7 +1383,8 @@ static int stress_test(void)
 		write_size = 1;
 		get_rand_buf(write_buf, write_size);
 		ret = write_at_file(dest, write_buf, write_size, offset);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 	}
 
 	for (i = 0; i < ref_trees; i++) {
@@ -1342,9 +1392,11 @@ static int stress_test(void)
 			 "rank%d_%ld", workplace, rank, i);
 		snprintf(dest, PATH_MAX, "%s_target", orig_path);
 		ret = do_unlink(orig_path);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 		ret = do_unlink(dest);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 	}
 
 	MPI_Barrier_Sync();
@@ -1359,12 +1411,14 @@ static int stress_test(void)
 	if (!rank) {
 
 		ret = prep_orig_file(orig_path, 10 * HUNK_SIZE, 1);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 
 		for (i = 1; i < size; i++) {
 			snprintf(ref_path, PATH_MAX, "%s_%ld", dest, i);
 			ret = reflink(orig_path, ref_path, 1);
-			should_exit(ret);
+			if (ret)
+				goto bail;
 		}
 	}
 
@@ -1374,7 +1428,8 @@ static int stress_test(void)
 
 		snprintf(ref_path, PATH_MAX, "%s_%d", dest, rank);
 		ret = do_reflinks(ref_path, ref_path, ref_counts, 1);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 
 		for (i = 0; i < ref_counts; i++) {
 
@@ -1393,6 +1448,8 @@ static int stress_test(void)
 			get_rand_buf(write_buf, write_size);
 			ret = write_at_file(ref_path, write_buf, write_size,
 					    offset);
+			if (ret)
+				goto bail;
 		}
 
 	}
@@ -1419,7 +1476,8 @@ static int stress_test(void)
 
 		snprintf(ref_path, PATH_MAX, "%s_%d", dest, rank);
 		ret = do_unlinks(ref_path, ref_counts);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 
 	} else {
 
@@ -1427,11 +1485,13 @@ static int stress_test(void)
 
 			snprintf(ref_path, PATH_MAX, "%s_%ld", dest, i);
 			ret = do_unlink(ref_path);
-			should_exit(ret);
+			if (ret)
+				goto bail;
 		}
 
 		ret = do_unlink(orig_path);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 	}
 
 	MPI_Barrier_Sync();
@@ -1446,9 +1506,11 @@ static int stress_test(void)
 
 	if (!rank) {
 		ret = prep_orig_file(orig_path, file_size, 1);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 		ret = reflink(orig_path, dest, 1);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 	}
 
 	MPI_Barrier_Sync();
@@ -1463,7 +1525,8 @@ static int stress_test(void)
 			snprintf(dest, PATH_MAX, "%s_%d_%ld", tmp_dest,
 				 rank, i);
 			ret = reflink(orig_path, dest, 1);
-			should_exit(ret);
+			if (ret)
+				goto bail;
 
 			write_size = get_rand(1, M_SIZE);
 			get_rand_buf(write_buf, write_size);
@@ -1481,20 +1544,24 @@ static int stress_test(void)
 
 			ret = read_at_file(orig_path, pattern_buf, verify_size,
 					   verify_offset);
-			should_exit(ret);
+			if (ret)
+				goto bail;
 
 			ret = write_at_file(dest, write_buf, write_size,
 					    offset);
-			should_exit(ret);
+			if (ret)
+				goto bail;
 
 			ret = read_at_file(orig_path, verify_buf, verify_size,
 					   verify_offset);
-			should_exit(ret);
+			if (ret)
+				goto bail;
 
 			if (memcmp(pattern_buf, verify_buf, verify_size)) {
 				abort_printf("Verify original file date failed"
 					     " after writting to snapshot!\n");
-				should_exit(-1);
+				ret = -1;
+				goto bail;
 			}
 
 			offset = offset + write_size + interval;
@@ -1509,7 +1576,8 @@ static int stress_test(void)
 				 rank, j);
 
 			ret = do_unlink(dest);
-			should_exit(ret);
+			if (ret)
+				goto bail;
 		}
 
 		strcpy(dest, tmp_dest);
@@ -1522,7 +1590,8 @@ static int stress_test(void)
 			get_rand_buf(write_buf, write_size);
 			ret = write_at_file(dest, write_buf,
 					    write_size, offset);
-			should_exit(ret);
+			if (ret)
+				goto bail;
 
 			offset = offset + write_size + interval;
 		}
@@ -1534,13 +1603,27 @@ static int stress_test(void)
 	if (!rank) {
 
 		ret = do_unlink(dest);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 
 		ret = do_unlink(orig_path);
-		should_exit(ret);
+		if (ret)
+			goto bail;
 	}
 
-	return 0;
+bail:
+	if (write_buf)
+		free(write_buf);
+
+	if (pattern_buf)
+		free(pattern_buf);
+
+	if (verify_buf)
+		free(verify_buf);
+
+	should_exit(ret);
+
+	return ret;
 }
 
 static int dest_test(void)
