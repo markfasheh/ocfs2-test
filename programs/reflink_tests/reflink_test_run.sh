@@ -356,8 +356,8 @@ function f_ovmtest()
 	for i in $(seq 1 ${iterations});do
 
 		check_end=$((${i}-1))
-		disk_free=`f_get_disk_usage ${DEVICE}|awk '{print $3}'`
-		rc=`echo "${disk_free}<$[2*${size}]"|bc`
+		disk_free_k=`df |grep ${DEVICE}|awk '{print $4}'`
+		rc=`echo "${disk_free_k}<$[2*${size}*1024]"|bc`
 		if [ "${rc}" = "1" ];then
 			f_LogMsg ${LOG_FILE} "Remove #${removed} snapshot and \
 copy to release space"
