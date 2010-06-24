@@ -39,13 +39,14 @@ DEBUGON = os.getenv('DEBUG',0)
 uname = os.uname()
 lhostname = str(socket.gethostname())
 logfile = config.LOGFILE
-iteractions = 10
+count = 10
 path = ''
 procs = 1
 cmd = config.BINDIR+'/create_racer'
 #
-Usage = '\n	 %prog [-i|--iteractions] \
-[-C | --cleanup logfile] \
+Usage = '\n	 %prog [-c|--count] \
+[--cleanup] \
+[-i | --if <Network Interface>] \
 [-l | --logfile logfile] \
 [-n | --nodelist nodelist] \
 [-p | --path pathname] \
@@ -55,7 +56,7 @@ Usage = '\n	 %prog [-i|--iteractions] \
 #
 def Cleanup():
 	from os import access, F_OK
-	for i in range(options.iteractions):
+	for i in range(options.count):
 		filename = options.path+'/create_racer:'+str(i).zfill(6)
 		if access(filename,F_OK) == 1:
 			if DEBUGON:
@@ -70,18 +71,24 @@ def Cleanup():
 if __name__=='__main__':
 	parser = optparse.OptionParser(usage=Usage)
 #
-	parser.add_option('-C',
-		'--cleanup',
+	parser.add_option('--cleanup',
 		action="store_true",
 		dest='cleanup',
 		default=False,
 		help='Perform directory cleanup.')
 #
-	parser.add_option('-i', 
-		'--iteractions', 
-		dest='iteractions',
+	parser.add_option('-c', 
+		'--count', 
+		dest='count',
 		type='int',
-		help='Number of iteractions.')
+		help='Number of times the test will be executed.')
+#
+        parser.add_option('-i',
+                '--if',
+                dest='interface',
+                type='string',
+                help='Network Interface name to be used for MPI messaging.')
+
 #
 	parser.add_option('-l', 
 		'--logfile', 
@@ -107,12 +114,12 @@ if __name__=='__main__':
 			logfile, 0, '')
 		parser.error('incorrect number of arguments')
 #
-	if options.cleanup and (not options.iteractions or 
+	if options.cleanup and (not options.count or 
 		not options.path):
-		parser.error('Cleanup options requires path and iteractions.')
+		parser.error('Cleanup options requires path and count.')
 #
-	if options.iteractions:
-		iteractions = options.iteractions
+	if options.count:
+		count = options.count
 #
 	if options.logfile:
 		logfile = options.logfile
@@ -134,6 +141,7 @@ if __name__=='__main__':
 		path = options.path
 	else:
 		parser.error('Invalid path.')
+	interface = options.interface
 #
 if DEBUGON:
 	o2tf.printlog('run_create_racer: main - current directory %s' % 
@@ -147,11 +155,12 @@ o2tf.OpenMPIInit(DEBUGON, options.nodelist, logfile, 'ssh')
 #
 ret = o2tf.openmpi_run(DEBUGON, procs, 
 	str('%s -i %s %s 2>&1 | tee -a %s' % (cmd, 
-	options.iteractions, 
+	options.count, 
 	options.path, 
 	options.logfile)), 
 	options.nodelist, 
 	'ssh',
+	options.interface,
 	options.logfile,
 	'WAIT')
 #
