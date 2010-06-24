@@ -54,6 +54,7 @@ Usage = '\n	 %prog [-b|--blocksize] \
 [-c | --count count] \
 [-d | --directory directory] \
 [-f | --filename <filename>] \
+[-i | --if <Network Interface>] \
 [-l | --logfile logfile] \
 [-n | --nodelist nodelist] \
 [-p | --procs procs] \
@@ -95,6 +96,12 @@ if __name__=='__main__':
 				If specified, a single file will be used by \
 				instances of the test.')
 #
+        parser.add_option('-i',
+                '--if',
+                dest='interface',
+                type='string',
+                help='Network Interface name to be used for MPI messaging.')
+#
 	parser.add_option('-l', 
 		'--logfile', 
 		dest='logfile',
@@ -122,9 +129,7 @@ if __name__=='__main__':
 	(options, args) = parser.parse_args()
 	if len(args) != 0:
 		o2tf.printlog('args left %s' % len(args), 
-			  logfile, 
-		0, 
-		'')
+			  logfile, 0, '')
 		parser.error('incorrect number of arguments')
 #
 	if options.blocksize:
@@ -132,9 +137,7 @@ if __name__=='__main__':
 		blockvalues = blocksize.split(',')
 		if len(blockvalues) != 2:
 			o2tf.printlog('Blocksize must be specified in format xxx,yyy\n\n', 
-			logfile, 
-			0, 
-			'')
+			logfile, 0, '')
 			parser.error('Invalid format.')
 	else:
 		parser.error('Blocksize parameter needs to be specified.')
@@ -142,16 +145,12 @@ if __name__=='__main__':
 	if int(blockvalues[0]) < MINBLOCKSIZE or int(blockvalues[1]) > MAXBLOCKSIZE:
 		o2tf.printlog('Blocksize must be between %s and %s\n\n' % 
 		(MINBLOCKSIZE, MAXBLOCKSIZE), 
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
 		parser.error('Invalid range.')
 	if DEBUGON:
 		o2tf.printlog('Blocksize range from %s to %s\n\n' % 
 	  (str(blockvalues[0]), str(blockvalues[1])), 
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
 #
 	if options.count:
 		count = options.count
@@ -175,7 +174,8 @@ if __name__=='__main__':
 			nodelist = nodelist.add(options.nodelist)
 		else:
 			nodelist = options.nodelist.split(',')
-
+#
+	interface = options.interface
 #
 	if options.procs:
 		procs = options.procs
@@ -190,23 +190,15 @@ else:
 #
 if DEBUGON:
 	o2tf.printlog('run_write_torture: main - current directory %s' % os.getcwd(),
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
 	o2tf.printlog('run_write_torture: main - cmd = %s' % cmd,
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
 	o2tf.printlog('run_write_torture: main - blocksize = %s' % options.blocksize,
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
 #
 for z in range(options.count):
 	o2tf.printlog('run_write_torture: Running test# %s' % z, 
-	logfile, 
-	0, 
-	'')
+	logfile, 0, '')
 #
 	o2tf.OpenMPIInit(DEBUGON, options.nodelist, logfile, 'ssh')
 	ret = o2tf.openmpi_run(DEBUGON, options.procs,
@@ -217,6 +209,7 @@ for z in range(options.count):
 		os.path.join(options.directory, filename) ) ), 
 		options.nodelist, 
 		'ssh',
+		options.interface,
 		options.logfile,
 		'WAIT')
 	if not ret:
