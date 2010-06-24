@@ -29,7 +29,7 @@
 # E-mail		  : Marcos.Matsunaga@oracle.com
 
 #
-import os, sys, time, optparse, socket, string, o2tf, pdb, timing, time, config
+import os, sys, time, optparse, socket, string, o2tf, pdb, timing, time, config, platform
 #
 DEBUGON = os.getenv('DEBUG',0)
 #
@@ -50,13 +50,9 @@ def tbuild(thrid, command):
 	'	 command - command to be executed'
 	if DEBUGON:
 		o2tf.printlog('buildkernel:tbuild - current directory %s' % os.getcwd(), 
-			logfile, 
-			0, 
-			'')
+			logfile, 0, '')
 		o2tf.printlog('buildkernel:tbuild - command	%s ' % command, 
-			logfile, 
-			0, 
-			'')
+			logfile, 0, '')
 	pidlist[thrid] = os.spawnv(os.P_NOWAIT, 
 			'/bin/bash', 
 			['bash', 
@@ -69,38 +65,25 @@ def check_thread(logfile):
 	'check_thread takes 1 argument:'
 	'	 logfile - logfile name'
 	o2tf.printlog('buildkernel:check_thread: Waiting for processes to finish '
-		'on thread ',
-		logfile, 
-		0, 
-		'')
+		'on thread ', logfile, 0, '')
 	while len(pidlist) > 0:
 		o2tf.printlog('buildkernel:check_thread: Checking thread processes',
-			logfile, 
-			0, 
-			'')
+			logfile, 0, '')
 		o2tf.printlog('buildkernel:check_thread: pid list %s' % (pidlist), 
-			logfile, 
-			0, 
-			'')
+			logfile, 0, '')
 		for z in range(len(pidlist)):
 			out = os.waitpid(pidlist[z],os.WNOHANG)
 			o2tf.printlog('buildkernel:check_thread: z=%s, out=%s' % (z, out[1]), 
-				logfile, 
-				0, 
-				'')
+				logfile, 0, '')
 			if out[0] > 0:
 				o2tf.printlog('buildkernel:check_thread: Removing pid '
 					'%s from the list' %	pidlist[z], 
-					logfile, 
-					0, 
-					'')
+					logfile, 0, '')
 				t2 = time.time()
 				o2tf.printlog('buildkernel:check_thread: %s [%s]: Build '
 					'time is %f seconds' % 
 					(str(socket.gethostname()), pidlist[z], t2 - t1), 
-					logfile, 
-					0, 
-					'')
+					logfile, 0, '')
 				pidlist.remove(out[0])
 				break
 		time.sleep(CHECKTHREAD_SLEEPTIME)
@@ -200,34 +183,20 @@ if __name__=='__main__':
 #
 if DEBUGON:
 	o2tf.printlog('buildkernel: cleardir = (%s)' % cleardir, 
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
 	o2tf.printlog('buildkernel: dirlist = (%s)' % dirlist, 
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
 	o2tf.printlog('buildkernel: dirlen = (%s)' % dirlen, 
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
 	o2tf.printlog('buildkernel: logfile = (%s)' % logfile, 
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
 	o2tf.printlog('buildkernel: nodelist = (%s)' % nodelist, 
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
 	if options.extract_tar:
 		o2tf.printlog('buildkernel: tarfile = (%s)' % tarfile, 
-			logfile, 
-			0, 
-			'')
+			logfile, 0, '')
 	o2tf.printlog('buildkernel: extract_tar = (%s)' % extract_tar, 
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
 #
 if cleardir:
 	o2tf.ClearDir(DEBUGON, logfile, options.dirlist)
@@ -262,29 +231,28 @@ import os.path
 logdir = os.path.dirname(logfile)
 pidlist = [0] * dirlen * 2
 for x in range(dirlen):
+	logdate = str(time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()))
+	arch = str(platform.machine())
+	hostname = str(socket.gethostname())
+	makelog = os.path.join(logdir,logdate+'_make_'+arch+'_'+hostname)
+	o2tf.printlog('buildkernel:Main - build logfiles %s' % makelog,
+		logfile, 0, '')
+
 	wdir = dirlist[x] + '/' + str(socket.gethostname()) +'/'+ config.KERNELDIR
 	cmd = 'cd ' + wdir + '; \
 		make mrproper 1>>%s 2>&1; \
 		make defconfig 1>>%s 2>&1; \
-		/usr/bin/make -j2 V=1 1>>%s 2>&1' %  (logfile, logfile, logfile)
+		/usr/bin/make -j2 V=1 1>>%s 2>&1' %  (makelog, makelog, makelog)
 #
 	if DEBUGON:
 		o2tf.printlog('buildkernel:Main - current directory %s' % os.getcwd(),
-			logfile,
-			0,
-			'')
+			logfile, 0, '')
 		o2tf.printlog('buildkernel:Main - working directory %s' % dirlist[x],
-			logfile,
-			0,
-			'')
+			logfile, 0, '')
 		o2tf.printlog('buildkernel:Main - wdir =  %s' %  wdir,
-			logfile,
-			0,
-			'')
+			logfile, 0, '')
 		o2tf.printlog('buildkernel:Main - cmd = %s' % cmd,
-			logfile,
-			0,
-			'')
+			logfile, 0, '')
 	t1 = time.time()
 	tbuild(x, cmd)
 	cmd = 'cd ' + dirlist[x] + '/' + nodefind + '; \

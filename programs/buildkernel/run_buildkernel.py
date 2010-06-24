@@ -91,6 +91,7 @@ def Initialize():
 			options.logfile) ),
 			options.nodelist, 
 			'ssh',
+			options.interface,
 			options.logfile,
 			'WAIT')
 #
@@ -102,6 +103,7 @@ def Initialize():
 			tarfile) ),
 			options.nodelist, 
 			'ssh',
+			options.interface,
 			options.logfile,
 			'WAIT')
 	o2tf.printlog('Directories initialization completed.', logfile, 0, '')
@@ -109,10 +111,11 @@ def Initialize():
 Usage = 'Usage: %prog [-c|--count count] \
 [-d|--directorylist dirlist] \
 [-h|--help] \
-[-i|--initialize] \
+[--initialize] \
+[-i|--if <Network Interface>] \
 [-l|-logfile logfilename] \
 [-n|--nodes nodelist] \
-[-nocheck] \
+[--nocheck] \
 [-t|--tarfile fullpath tar filename] \
 [-u|--user username]'
 #
@@ -138,12 +141,17 @@ if __name__=='__main__':
 		type='string',
 		help='List of directories that will be used by the test.')
 #
-	parser.add_option('-i',
-		'--initialize', 
+	parser.add_option('--initialize', 
 		action="store_true",
 		dest='initialize',
 		default=False,
 		help='Initialize directories before each run. Default=False.')
+#
+	parser.add_option('-i', 
+		'--if', 
+		dest='interface',
+		type='string',
+		help='Network Interface name to be used for MPI messaging.')
 #
 	parser.add_option('-l', 
 		'--logfile', 
@@ -187,6 +195,7 @@ if __name__=='__main__':
 	else:
 		nodelist = options.nodelist.split(',')
 	logfile = options.logfile
+	interface = options.interface
 	tarfile = options.tarfile
 	if nodelen > config.NPROC:
 	   nproc = nodelen
@@ -202,6 +211,7 @@ if DEBUGON:
    o2tf.printlog('run_buildkernel: dirlist = (%s)' % dirlist, logfile, 0, '')
    o2tf.printlog('run_buildkernel: dirlen = (%s)' % dirlen, logfile, 0, '')
    o2tf.printlog('run_buildkernel: nodelist = (%s)' % nodelist, logfile, 0, '')
+   o2tf.printlog('run_buildkernel: interface = (%s)' % interface, logfile, 0, '')
    o2tf.printlog('run_buildkernel: nodelen = (%s)' % nodelen, logfile, 0, '')
    o2tf.printlog('run_buildkernel: logfile = (%s)' % logfile, logfile, 0, '')
    o2tf.printlog('run_buildkernel: tarfile = (%s)' % tarfile, logfile, 0, '')
@@ -224,6 +234,7 @@ for i in range(options.count):
 			options.nodelist) ), 
 			options.nodelist, 
 			'ssh',
+			options.interface,
 			options.logfile,
 			'WAIT' )
 if not ret:
