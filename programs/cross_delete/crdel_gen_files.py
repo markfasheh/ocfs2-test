@@ -141,7 +141,7 @@ if DEBUGON:
 o2tf.CreateDir(DEBUGON, string.join(dirlist,','), logfile)
 #
 for i in range(dirlen):
-	o2tf.untar(DEBUGON, dirlist[i], tarfile, logfile)
+	o2tf.untar(DEBUGON, dirlist[i], tarfile, logfile, '1')
 #
 # Remove the workfile after it is done.
 #

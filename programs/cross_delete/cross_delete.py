@@ -154,6 +154,7 @@ def Cleanup(ret):
 #
 Usage = 'usage: %prog [-c|count count] \
 [-d|--dirlist dirlist] \
+[-i|--if <Network Interface>] \
 [-l|-logfile logfilename] \
 [-n|nodes nodelist] \
 [-t|--tarfile fullpath tar filename] \
@@ -173,6 +174,12 @@ if __name__=='__main__':
 		dest='dirlist',
 		type='string',
 		help='Directory where the files will be extracted.')
+#
+        parser.add_option('-i',
+                '--if',
+                dest='interface',
+                type='string',
+                help='Network Interface name to be used for MPI messaging.')
 #
 	parser.add_option('-l',
 		'--logfile',
@@ -206,6 +213,7 @@ if __name__=='__main__':
 	count = options.count
 	dirlist = options.dirlist.split(',')
 	dirlen = len(dirlist)
+	interface = options.interface
 	nodelist = options.nodes.split(',')
 	nodelen = len(nodelist)
 	logfile = options.logfile
@@ -300,6 +308,7 @@ for y in range(count):
 		tarfile) ),
 		','.join(nodelist),
 		'ssh',
+		options.interface,
 		logfile,
 		'WAIT')
 	if not ret:
@@ -318,6 +327,7 @@ for y in range(count):
 		','.join(nodelist),
 		'ssh',
 		logfile,
+		options.interface,
 		'WAIT')
 	if not ret:
 		o2tf.printlog(
