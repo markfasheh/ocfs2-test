@@ -70,7 +70,7 @@ CHACL_BIN="`which sudo` -u root `which chacl`"
 BLOCKSIZE=
 CLUSTERSIZE=
 SLOTS=4
-LABELNAME=ocfs2-acl-tests
+LABELNAME="ocfs2-acl-tests-`uname -m`"
 
 DEFAULT_LOG_DIR=${O2TDIR}/log
 LOG_DIR=
@@ -194,8 +194,10 @@ function f_check()
 
         ${MKDIR_BIN} -p ${LOG_DIR} || exit 1
 
-        RUN_LOG_FILE="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/`date +%F-%H-%M-%S`-acl-tests-run.log"
-        LOG_FILE="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/`date +%F-%H-%M-%S`-acl-tests.log"
+        RUN_LOG_FILE="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/acl-tests-run-`uname -m`-\
+`date +%F-%H-%M-%S`.log"
+        LOG_FILE="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/acl-tests-`uname -m`-\
+`date +%F-%H-%M-%S`.log"
         MKFSLOG="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/$$_mkfs.log"
         MOUNTLOG="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/$$_mount.log"
 
