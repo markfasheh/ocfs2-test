@@ -18,7 +18,7 @@
 #
 # o2tf - OCFS2 Tests Functions.
 #
-import os, sys, signal, string, popen2, socket, time, pdb, shutil, platform
+import os, sys, signal, string, socket, time, pdb, shutil, platform
 import config, stat, os.path
 #from log import log
 # Set time executable to use.
@@ -130,7 +130,7 @@ def extract_tar(DEBUGON, logfile, dirl, tarfile):
 				% wdir, logfile, 0, '')
 		os.mkdir(wdir)
 		os.chdir(wdir)
-		untar(DEBUGON, wdir, tarfile, logfile)
+		untar(DEBUGON, wdir, tarfile, logfile, '1')
 #
 # CreateDir is used by :
 #   - o2tf.py
@@ -162,7 +162,7 @@ def CreateDir(DEBUGON, dirl, logfile):
 #
 # untar is used by :
 #   - o2tf.py
-def untar(DEBUGON, destdir, tarfile, logfile):
+def untar(DEBUGON, destdir, tarfile, logfile, quiet):
 	'Untar into a destdir, the tarfile, logging the output into a logfile'
 	'For the moment, it only works with compressed tar files.'
 	if DEBUGON:
@@ -174,19 +174,27 @@ def untar(DEBUGON, destdir, tarfile, logfile):
 	options = 'xvf'
 	compress = 'z'
 	st = os.stat(destdir)
+	logdate = str(time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime()))
+	arch = str(platform.machine())
 	if stat.S_ISREG(st.st_mode):
 		o2tf.printlog('o2tf.untar: (%s) is a regular file. Can\'t \
 			extract tarfile into a regular file.' % \
 			destdir, logfile, 0, '')
 	else:
-		if DEBUGON:
-			printlog('o2tf.untar: Extracting tar file %s into %s \
-				directory.' %  (tarfile, destdir),
-				logfile, 0, '')
+		printlog('o2tf.untar: Extracting tar file %s into %s \
+			directory.' %  (tarfile, destdir),
+			logfile, 0, '')
+		if quiet == '1':
+			tlogfile = os.path.join(dirlog,logdate+'_untar_'+arch+'_'+nodename)
+		else:
+			tlogfile = logfile
+		printlog('o2tf.untar: Extraction logfile at %s ' % logfile,
+			logfile, 0, '')
+
 		t1 = time.time()
 		os.system('cd %s; tar %s %s 2>&1 1>> %s; du -sh * 1>> %s' % \
-			(destdir, options + compress, tarfile, logfile,
-				logfile))
+			(destdir, options + compress, tarfile, tlogfile,
+				tlogfile))
 		t2 = time.time()
 		printlog('o2tf.untar: Extraction elapsed time = %s' % \
 			(t2 - t1), logfile, 0, '')
@@ -236,7 +244,7 @@ so just do a sanity check here to test if all nodes are available.
 #
 # Calls mpirun from openmpi
 #
-def openmpi_run(DEBUGON, nproc, cmd, nodes, remote_sh, logfile, w_flag):
+def openmpi_run(DEBUGON, nproc, cmd, nodes, remote_sh, interface, logfile, w_flag):
 	"""
 	Execute commands in parallel using OpenMPI.'
 	"""
@@ -250,6 +258,11 @@ def openmpi_run(DEBUGON, nproc, cmd, nodes, remote_sh, logfile, w_flag):
 		nprocopt=''
 	else:
 		nprocopt='-np ' + str(nproc)
+
+	if not interface:
+		iface = ''
+	else:
+		iface = '-mca btl_tcp_if_include '+interface
 
 	if remote_sh == '' or remote_sh == 'ssh':
 		shopt = '-mca plm_rsh_agent ssh:rsh'
@@ -269,8 +282,8 @@ def openmpi_run(DEBUGON, nproc, cmd, nodes, remote_sh, logfile, w_flag):
 				logfile, 0, '')
 		pid = os.spawnv(os.P_NOWAIT,
 			'/bin/bash', ['bash', '-xc',
-			config.MPIRUN + ' -mca btl tcp,self %s %s --host %s %s' % \
-			(shopt, nprocopt, nodes, cmd)])
+			config.MPIRUN + ' -mca btl tcp,self %s %s %s --host %s %s' % \
+			(shopt, iface, nprocopt, nodes, cmd)])
 		if w_flag == 'NOWAIT':
 			return pid
 		else:

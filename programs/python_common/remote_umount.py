@@ -35,7 +35,8 @@ DEBUGON = os.getenv('DEBUG',0)
 userid = pwd.getpwuid(os.getuid())[0]
 logfile = config.LOGFILE
 #
-Usage = 'Usage: %prog [-m|--mountpoint mountpoint] \
+Usage = 'Usage: %prog [-i|--if <Network Interface>] \
+[-m|--mountpoint mountpoint] \
 [-n|--nodes nodelist]'
 #
 if userid == 'root':
@@ -44,6 +45,12 @@ if userid == 'root':
 	sys.exit(1)
 if __name__=='__main__':
 	parser = optparse.OptionParser(Usage)
+#
+        parser.add_option('-i',
+                '--if',
+                dest='interface',
+                type='string',
+                help='Network Interface name to be used for MPI messaging.')
 #
 	parser.add_option('-m', 
 		'--mountpoint', 
@@ -57,6 +64,12 @@ if __name__=='__main__':
 		type='string',
 		help='List of nodes where the test will be executed.')
 #
+	parser.add_option('-s', 
+		'--shell', 
+		dest='remote_method',
+		type='string',
+		help='Remote access method <ssh|rsh>.')
+#
 	(options, args) = parser.parse_args()
 	if len(args) != 0:
 		parser.error('incorrect number of arguments')
@@ -64,6 +77,14 @@ if __name__=='__main__':
 		parser.error('Please specify node(s) list.')
 	if not options.mountpoint:
 		parser.error('Please specify mountpoint.')
+#
+	if not options.remote_method:
+		remote_method = 'ssh'
+	else:
+		if options.remote_method == 'ssh' or options.remote_method == 'rsh':
+			remote_method = options.remote_method
+		else:
+			parser.error('Invalid option. Choose ssh or rsh')
 #
 	nodelist = options.nodelist.split(',')
 	nodelen = len(nodelist)
@@ -89,7 +110,9 @@ ret = o2tf.openmpi_run(DEBUGON,
 		 nproc,
 		 str('%s' % command),
 		 options.nodelist,
-		 'ssh', logfile,
+		 remote_method, 
+		 options.interface,
+		 logfile,
 		 'WAIT')
 
 if ret:
