@@ -40,15 +40,16 @@ pgm='run_lvb_torture'
 uname = os.uname()
 lhostname = str(socket.gethostname())
 logfile = config.LOGFILE
-iteractions = 10000
+count = 10000
 path = ''
 procs = 2
 dlmfs = '/dlm'
 cmd = config.BINDIR+'/lvb_torture'
 #
 Usage = '\n	 %prog [-d | --dlmfs <dlmfs path>] \
-[-i | --iteractions <iteractions>] \
+[-c | --count <count>] \
 [-H | --hbdev <heartbeat device>] \
+[-i | --if <Network Interface>] \
 [-l | --logfile <logfile>] \
 [-n | --nodelist <nodelist>] \
 <domain> <lockname> \
@@ -68,17 +69,23 @@ if __name__=='__main__':
 		type='string',
 		help='dlmfs pathname (dlmfs mountpoint - defaults to /dlm).')
 #
+	parser.add_option('-c', 
+		'--count', 
+		dest='count',
+		type='int',
+		help='Number of count. Defaults to %s' % count)
+#
+        parser.add_option('-i',
+                '--if',
+                dest='interface',
+                type='string',
+                help='Network Interface name to be used for MPI messaging.')
+#
 	parser.add_option('-H', 
 		'--hbdev', 
 		dest='hbdev',
 		type='string',
 		help='OCFS2 heartbeat device name.')
-#
-	parser.add_option('-i', 
-		'--iteractions', 
-		dest='iteractions',
-		type='int',
-		help='Number of iteractions. Defaults to %s' % iteractions)
 #
 	parser.add_option('-l', 
 		'--logfile', 
@@ -107,8 +114,8 @@ if __name__=='__main__':
 	if options.dlmfs:
 		dlmfs = options.dlmfs
 #
-	if options.iteractions:
-		iteractions = options.iteractions
+	if options.count:
+		count = options.count
 #
 	if options.hbdev:
 		hbdev = ' -h '+options.hbdev
@@ -117,6 +124,7 @@ if __name__=='__main__':
 #
 	if options.logfile:
 		logfile = options.logfile
+	interface = options.interface
 #
 	if options.nodelist:
 		nodelist = options.nodelist
@@ -135,25 +143,17 @@ from os import access, W_OK
 	
 if DEBUGON:
 	o2tf.printlog('%s: main - dlmfs = %s' % (pgm, dlmfs),
-		logfile, 
-		0, 
-		'')
-	o2tf.printlog('%s: main - iterations = %s' % (pgm, iteractions),
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
+	o2tf.printlog('%s: main - count = %s' % (pgm, count),
+		logfile, 0, '')
 	o2tf.printlog('%s: main - hbdev = %s' % (pgm, hbdev),
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
+	o2tf.printlog('%s: main - interface = %s' % (pgm, interface),
+		logfile, 0, '')
 	o2tf.printlog('%s: main - logfile = %s' % (pgm, logfile),
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
 	o2tf.printlog('%s: main - nodelist = %s' % (pgm, nodelist),
-		logfile, 
-		0, 
-		'')
+		logfile, 0, '')
 #
 o2tf.OpenMPIInit(DEBUGON, options.nodelist, logfile, 'ssh')
 #
@@ -161,12 +161,13 @@ ret = o2tf.openmpi_run(DEBUGON, procs,
 	str('%s -d %s %s -i %s %s %s 2>&1 | tee -a %s' % (cmd, 
 	dlmfs, 
 	hbdev, 
-	iteractions, 
+	count, 
 	domain,
 	lockname,
 	options.logfile)), 
 	options.nodelist, 
 	'ssh',
+	options.interface,
 	options.logfile,
 	'WAIT')
 if not ret:
