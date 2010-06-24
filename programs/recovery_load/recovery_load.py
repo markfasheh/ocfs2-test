@@ -55,18 +55,38 @@ def Populate():
 	if access(localdir, F_OK) == 1:
 		os.system('rm -fr '+localdir)
 	o2tf.CreateDir(DEBUGON, localdir, logfile)
-	o2tf.untar(DEBUGON, localdir, tarfile, logfile)
+	o2tf.untar(DEBUGON, localdir, tarfile, logfile,'1')
 #
 def Find():
+	o2tf.printlog('recovery_load: Find Started',
+		logfile, 0, '')
 	finddir=os.path.join(options.directory, str('%s_recovery' % nodelist[NodeIndex]))
 	if DEBUGON:
 		o2tf.printlog('recovery_load: finddir [%s]' % finddir,
 			logfile, 0, '')
-	os.system(str('find %s -type f -exec touch {} \;' % finddir))
+	
+	ret = os.system(str('find %s -type f -exec touch {} \;' % finddir))
+	if not ret:
+		o2tf.printlog('recovery_load: find on %s successful.' % finddir,
+			logfile, 0, '')
+	else:
+		o2tf.printlog('recovery_load: find on %s failed.' % finddir,
+			logfile, 0, '')
+	
 	if DEBUGON:
 		o2tf.printlog('recovery_load: directory [%s]' % \
 			options.directory, logfile, 0, '')
-	os.system(str('find %s -type f -exec touch {} \;' % options.directory))
+	
+	ret = os.system(str('find %s -type f -exec touch {} \;' % options.directory))
+	if not ret:
+		o2tf.printlog('recovery_load: find on %s successful.' % options.directory,
+			logfile, 0, '')
+	else:
+		o2tf.printlog('recovery_load: find on %s failed.' % options.directory,
+			logfile, 0, '')
+
+	o2tf.printlog('recovery_load: Find Completed',
+		logfile, 0, '')
 #
 def Cleanup(ret):
 	sys.exit(ret)
@@ -77,6 +97,7 @@ Usage = 'usage: %prog [-D|--Debug] \
 [-d|--directory] \
 [-e|--extract] \
 [-f|--find] \
+[-i|--if <Network Interface>] \
 [-l|-logfile logfilename] \
 [-n|nodes nodelist] \
 [-t|--tarfile fullpath tar filename] \
@@ -111,6 +132,12 @@ if __name__=='__main__':
 		dest='find',
 		default=False,
 		help='In client mode, will run find. Default=False.')
+#
+        parser.add_option('-i',
+                '--if',
+                dest='interface',
+                type='string',
+                help='Network Interface name to be used for MPI messaging.')
 #
 	parser.add_option('-l',
 		'--logfile',
@@ -152,6 +179,7 @@ if __name__=='__main__':
 	nodelist = options.nodes.split(',')
 	nodelen = len(nodelist)
 	logfile = options.logfile
+	interface = options.interface
 	if nodelen < 2:
 		o2tf.printlog('recovery_load: nodelist must have at least 2 '+
 			'nodes' % options.directory, logfile, 0, '')
@@ -206,6 +234,7 @@ if not Client:
 		options.nodes, tarfile) ),
 		','.join(nodelist),
 		'ssh',
+		options.interface,
 		logfile,
 		'WAIT')
 	if not ret:
@@ -224,6 +253,7 @@ if not Client:
 		options.nodes) ),
 		','.join(nodelist),
 		'ssh',
+		options.interface,
 		logfile,
 		'WAIT')
 	if not ret:
