@@ -53,15 +53,15 @@ fi
 
 BLOCKSIZE=
 CLUSTERSIZE=
-SLOTS=
+SLOTS=5
 JOURNALSIZE=0
 BLOCKS=0
 DEVICE=
-LABELNAME=ocfs2-multi-refcount-tests
+LABELNAME="ocfs2-multi-refcount-tests-`uname -m`"
 WORK_PLACE_DIRENT=ocfs2-multi-refcount-tests
 WORK_PLACE=
 MULTI_REFLINK_TEST_BIN="${BINDIR}/multi_reflink_test"
-
+IFCONFIG_BIN="`which sudo` -u root `which ifconfig`"
 
 DEFAULT_LOG_DIR=${O2TDIR}/log
 LOG_DIR=
@@ -95,6 +95,7 @@ function f_usage()
     echo "       -f MPI hosts list,separated by comma"
     echo "       -o output directory for the logs"
     echo "       -d specify the device"
+    echo "       -i Network Interface name to be used for MPI messaging."
     echo "       -W enable data=writeback mode"
     echo "       <mountpoint path> specify the mounting point."
     exit 1;
@@ -107,13 +108,14 @@ function f_getoptions()
                 exit 1
          fi
 
-	 while getopts "o:d:r:f:Wha:" options; do
+	 while getopts "o:d:i:r:f:Wha:" options; do
                 case $options in
 		r ) MPI_RANKS="$OPTARG";;
                 f ) MPI_HOSTS="$OPTARG";;
                 o ) LOG_DIR="$OPTARG";;
                 d ) DEVICE="$OPTARG";;
 		a ) MPI_ACCESS_METHOD="$OPTARG";;
+		i ) INTERFACE="$OPTARG";;
 		W ) MOUNT_OPTS="data=writeback";;
                 h ) f_usage
                     exit 1;;
@@ -135,7 +137,7 @@ function f_setup()
 	f_getoptions $*
 
 	if [ "$MPI_ACCESS_METHOD" = "rsh" ];then
-		MPI_PLS_AGENT_ARG="-mca plm_rsh_agent rsh:ssh"
+		MPI_PLS_AGENT_ARG="-mca pls_rsh_agent rsh:ssh"
 	fi
 
 	if [ -z "${MOUNT_POINT}" ];then
@@ -157,23 +159,28 @@ ${MOUNT_POINT}`"
 
 	if [ -z "$MPI_HOSTS" ];then
 		f_usage
-	fi
-
-	if [ -z "${SLOTS}" ];then
+	else
 		echo $MPI_HOSTS|sed -e 's/,/\n/g' >/tmp/$$
 		SLOTS=`cat /tmp/$$ |wc -l`
 		rm -f /tmp/$$
 	fi
 
+	if [ ! -z "${INTERFACE}" ]; then
+		${IFCONFIG_BIN} ${INTERFACE} >/dev/null 2>&1 || {
+			echo "Invalid NIC";
+			f_usage;
+		} 
+		MPI_BTL_IF_ARG="-mca btl_tcp_if_include ${INTERFACE}"   
+	fi;
 	MPI_RANKS=${MPI_RANKS:-$DEFAULT_RANKS}
 
 	LOG_DIR=${LOG_DIR:-$DEFAULT_LOG_DIR}
         ${MKDIR_BIN} -p ${LOG_DIR} || exit 1
 
-	RUN_LOG_FILE="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/`date +%F-%H-\
-%M-%S`-multi-refcount-tests-run.log"
-	LOG_FILE="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/`date +%F-%H-%M-\
-%S`-multi-refcount-tests.log"
+	RUN_LOG_FILE="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/multi-refcount-tests-run-\
+`uname -m`-`date +%F-%H-%M-%S`.log"
+	LOG_FILE="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/multi-refcount-tests-\
+`uname -m`-`date +%F-%H-%M-%S`.log"
 
 }
 
@@ -326,11 +333,11 @@ ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 \
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Stress Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Stress Test, CMD:${MPIRUN} \
 ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np ${MPI_RANKS} --host \
-${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -p 100000 -l 2048576000 -n 20000 \
+${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -p 1000 -l 2147483648 -n 2000 \
 -w ${WORK_PLACE} -s "
 	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np \
-${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -p 100000 -l \
-20485760000 -n 20000 -w ${WORK_PLACE} -s >>${LOG_FILE} 2>&1
+${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -p 1000 -l \
+2147483648 -n 2000 -w ${WORK_PLACE} -s >>${LOG_FILE} 2>&1
 	RET=$?
 	f_echo_status ${RET}| tee -a ${RUN_LOG_FILE}
 	f_exit_or_not ${RET}
