@@ -8,6 +8,8 @@ CFLAGS = -O2 -Wall -g $(OCFS2_CFLAGS)
 
 SOURCES = fill_holes.c punch_holes.c verify_holes.c fill_holes.h reservations.h
 
+SUBDIRS = fill_holes_data
+
 DIST_FILES = $(SOURCES)
 
 BIN_EXTRA = burn-in.sh old_burn-in.sh fill_verify_holes.sh

@@ -9,15 +9,22 @@ SUDO="`which sudo` -u root"
 DEBUGFS_BIN="`which sudo` -u root `which debugfs.ocfs2`"
 MKFS_BIN="`which sudo` -u root `which mkfs.ocfs2`"
 TUNEFS_BIN="`which sudo` -u root `which tunefs.ocfs2`"
+MOUNTED_BIN="`which sudo` -u root `which mounted.ocfs2`"
 GREP=`which grep`
+CHOWN=`which chown`
 DF=`which df`
+WC=`which wc`
 ECHO="`which echo` -e"
 AWK=`which awk`
 
+USERID=`/usr/bin/whoami`
 BINPATH="."
 LOGPATH="."
 MMAPOPT=
-UNWOPT=
+if [ -f `dirname ${0}`/config.sh ]; then
+	. `dirname ${0}`/config.sh
+fi;
+NWOPT=
 
 log_run() {
     echo "Run: $@"
@@ -66,6 +73,49 @@ run100() {
     done
 }
 
+Run_corruption() {
+	CORRUPTLOG=${O2TDIR}/workfiles/fill_holes_data/nosparsebug.dat
+	FILESIZE=$[11*1024*1024*1024];
+	FILENAME=${DIRECTORY}/fill_holes.txt;
+	FS_FEATURES='--fs-features=nosparse,nounwritten'
+	LOCAL_FEATURE=''
+	if [ ${LOCALFLAG} -eq 0 ]; then
+		LOCAL_FEATURE='-M local';
+	fi;
+	echo -e "Testing corruption";
+	mounted=`mount|grep ${MOUNTPOINT}|${WC} -l`;
+	if [ ${mounted} -eq 1 ]; then
+		echo -e "umounting partition";
+		sudo umount ${MOUNTPOINT};
+	fi;
+	mounted=`mount|grep ${MOUNTPOINT}|${WC} -l`;
+	if [ ${mounted} -ne 0 ]; then
+		echo -e "Device ${DEVICE} is mounted by some other node.";
+		echo -e "Can't proceed with this test. Aborting.";
+		exit 1;
+	fi;
+	echo "Formatting partition with nosparse,nounwritten options.";
+	echo "y"|${MKFS_BIN} -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -L ${LABEL} \
+	-N ${SLOTS} ${LOCAL_FEATURE} ${FS_FEATURES} ${DEVICE};
+	if [ $? -ne 0 ]; then
+		echo -e "mkfs.ocfs2 failed $?";
+		exit 1;
+	fi;
+	echo "mounting device with label ${LABEL} on ${MOUNTPOINT}";
+	sudo mount LABEL=${LABEL} ${MOUNTPOINT};
+	sudo mkdir -p ${DIRECTORY}
+	${SUDO} ${CHOWN} --recursive ${USERID} ${MOUNTPOINT}
+
+	mounted=`mount|grep ${MOUNTPOINT}|${WC} -l`;
+	if [ ${mounted} -eq 0 ]; then
+		echo -e "Device ${DEVICE} was not properly mounted.";
+		echo -e "Can't proceed with this test. Aborting.";
+		exit 1;
+	fi;
+	${BINDIR}/fill_holes  -r ${CORRUPTLOG} ${FILENAME} ${FILESIZE};
+	${BINDIR}/verify_holes ${CORRUPTLOG} ${FILENAME};
+}
+
 #
 # GetDevInfo
 #
@@ -88,6 +138,8 @@ LABEL=`${DEBUGFS_BIN} -R stats ${DEVICE} | grep Label:|\
 if [ "X${LABEL}" == "X" ]; then
 	LABEL="testlabel";
 fi;
+${DEBUGFS_BIN} -R "stats" ${DEVICE}|grep "Feature Incompat"|grep -q 'local'
+LOCALFLAG=$? 
 UUID=`${DEBUGFS_BIN} -R stats ${DEVICE} | grep UUID|\
 	${AWK} -F" " '{print $2}'`;
 SLOTS=`${DEBUGFS_BIN} -R stats ${DEVICE} | grep Slots:|\
@@ -122,3 +174,4 @@ fi
 
 GetDevInfo;
 run100 ${ITER} ${SIZE} 
+Run_corruption
