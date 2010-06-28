@@ -18,12 +18,13 @@
 
 static void usage(void)
 {
-	printf("punch_holes [-f] [-i ITER] [-o LOGFILE] [-r REPLAYLOG] FILE SIZE\n"
+	printf("punch_holes [-f] [-u] [-i ITER] [-o LOGFILE] [-r REPLAYLOG] FILE SIZE\n"
 	       "FILE is a path to a file\n"
 	       "SIZE is in bytes and must always be specified, even with a REPLAYLOG\n"
 	       "ITER defaults to 1000, unless REPLAYLOG is specified.\n"
 	       "LOGFILE defaults to stdout\n"
 	       "-f will result in logfile being flushed after every write\n"
+	       "-u will create an unwritten region instead of ftruncate\n"
 	       "REPLAYLOG is an optional file to generate values from\n\n"
 	       "FILE will be truncated to zero, then truncated out to SIZE\n"
 	       "A random series of characters will be written into the\n"
@@ -43,6 +44,7 @@ static char buf[MAX_WRITE_SIZE];
 
 static unsigned int max_iter = 1000;
 static unsigned int flush_output = 0;
+static unsigned int create_unwritten = 0;
 static char *fname = NULL;
 static char *logname = NULL;
 static char *replaylogname = NULL;
@@ -55,13 +57,16 @@ static int parse_opts(int argc, char **argv)
 	int c, iter_specified = 0;
 
 	while (1) {
-		c = getopt(argc, argv, "fi:o:r:");
+		c = getopt(argc, argv, "ufi:o:r:");
 		if (c == -1)
 			break;
 
 		switch (c) {
 		case 'f':
 			flush_output = 1;
+			break;
+		case 'u':
+			create_unwritten = 1;
 			break;
 		case 'i':
 			max_iter = atoi(optarg);
@@ -190,6 +195,26 @@ static int do_write(int fd, struct write_unit *wu)
 	return 0;
 }
 
+static int resv_unwritten(int fd, uint64_t start, uint64_t len)
+{
+	int ret = 0;
+	struct ocfs2_space_resv sr;
+
+	memset(&sr, 0, sizeof(sr));
+	sr.l_whence = 0;
+	sr.l_start = start;
+	sr.l_len = len;
+
+	ret = ioctl(fd, OCFS2_IOC_RESVSP64, &sr);
+	if (ret == -1) {
+		fprintf(stderr, "ioctl error %d: \"%s\"\n",
+			errno, strerror(errno));
+		return -1;
+	}
+
+	return ret;
+}
+
 static int prep_file(char *name, unsigned long size)
 {
 	int ret, fd;
@@ -202,6 +227,12 @@ static int prep_file(char *name, unsigned long size)
 		fprintf(stderr, "open error %d: \"%s\"\n", errno,
 			strerror(errno));
 		return -1;
+	}
+
+	if (create_unwritten) {
+		ret = resv_unwritten(fd, 0, size);
+		if (ret)
+			return ret;
 	}
 
 	ret = ftruncate(fd, size);

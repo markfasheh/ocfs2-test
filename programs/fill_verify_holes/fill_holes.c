@@ -119,10 +119,29 @@ static int parse_opts(int argc, char **argv)
 	return 0;
 }
 
+static int resv_unwritten(int fd, uint64_t start, uint64_t len)
+{
+	int ret = 0;
+	struct ocfs2_space_resv sr;
+
+	memset(&sr, 0, sizeof(sr));
+	sr.l_whence = 0;
+	sr.l_start = start;
+	sr.l_len = len;
+
+	ret = ioctl(fd, OCFS2_IOC_RESVSP64, &sr);
+	if (ret == -1) {
+		fprintf(stderr, "ioctl error %d: \"%s\"\n",
+			errno, strerror(errno));
+		return -1;
+	}
+
+	return ret;
+}
+
 static int prep_file(char *name, unsigned long size)
 {
 	int ret, fd;
-	struct ocfs2_space_resv sr;
 
 	fd = open(name, O_RDWR|O_CREAT|O_TRUNC,
 		  S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
@@ -133,17 +152,9 @@ static int prep_file(char *name, unsigned long size)
 	}
 
 	if (create_unwritten) {
-		memset(&sr, 0, sizeof(sr));
-		sr.l_whence = 0;
-		sr.l_start = 0;
-		sr.l_len = size;
-
-		ret = ioctl(fd, OCFS2_IOC_RESVSP64, &sr);
-		if (ret == -1) {
-			fprintf(stderr, "ioctl error %d: \"%s\"\n",
-				errno, strerror(errno));
-			return -1;
-		}
+		ret = resv_unwritten(fd, 0, size);
+		if (ret)
+			return ret;
 	}
 
 	ret = ftruncate(fd, size);
