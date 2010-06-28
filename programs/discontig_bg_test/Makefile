@@ -12,7 +12,7 @@ SOURCES = spawn_inodes.c gen_extents.c resv.h resv_unwritten.c punch_hole.c
 
 DIST_FILES = $(SOURCES)
 
-BIN_EXTRA = fillup_contig_bg.sh
+BIN_EXTRA = fillup_contig_bg.sh activate_discontig_bg.sh
 
 BIN_PROGRAMS = spawn_inodes gen_extents resv_unwritten punch_hole
 
