@@ -10,6 +10,7 @@ CFILES =		\
 	dir_ops.c	\
 	xattr_ops.c	\
 	mpi_ops.c	\
+	aio.c
 
 ifdef OCFS2_TEST_REFLINK
 CFILES +=	file_ops.c
@@ -18,7 +19,8 @@ endif
 HFILES =		\
 	dir_ops.h	\
 	xattr_ops.h	\
-	mpi_ops.h
+	mpi_ops.h	\
+	aio.h
 
 ifdef OCFS2_TEST_REFLINK
 HFILES +=	file_ops.h
