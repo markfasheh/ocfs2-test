@@ -26,6 +26,8 @@ USERID=`${WHOAMI}`
 FILL_HOLES=`which fill_holes 2>/dev/null`
 VERIFY_HOLES=`which verify_holes 2>/dev/null`
 
+AIOOPT=
+
 log_run() {
 	${ECHO} "Run: $@"
 	"$@"
@@ -68,7 +70,7 @@ do_umount() {
 
 usage()
 {
-	${ECHO} "${APP} [ -M ] [ -U ] [ -i iteractions ] [ -s size ] [-o mountopts] -c count -m mountpoint -l logdir -d device"
+	${ECHO} "${APP} [ -M ] [ -U ] [ -A ] [ -i iteractions ] [ -s size ] [-o mountopts] -c count -m mountpoint -l logdir -d device"
 	exit 1
 }
 
@@ -80,7 +82,7 @@ SIZE=10000000
 MMAPOPT=
 UNWOPT=
 
-while getopts "c:d:i:l:s:m:o:MUh?" args
+while getopts "c:d:i:l:s:m:o:MUAh?" args
 do
 	case "$args" in
 		c) COUNT="$OPTARG";;
@@ -92,6 +94,7 @@ do
 		o) MOUNTOPTS="$OPTARG";;
 		M) MMAPOPT="-m";;
 		U) UNWOPT="-u";;
+		A) AIOOPT="-a";;
 		h) USAGE="yes";;
 		?) USAGE="yes";;
 	esac
@@ -136,7 +139,7 @@ do
       	outlog="${LOGPATH}/${fnamebase}.${i}.log"
 
     	${ECHO} "Creating file..."
-   	log_run "${FILL_HOLES}" ${MMAPOPT} ${UNWOPT} -f -o "${outlog}" -i "${ITER}" "${outtxt}" "${SIZE}"
+   	log_run "${FILL_HOLES}" ${MMAPOPT} ${UNWOPT} ${AIOOPT} -f -o "${outlog}" -i "${ITER}" "${outtxt}" "${SIZE}"
 	if [ $? -ne 0 ]; then
 		do_umount ${MOUNTPOINT}
 		exit 1

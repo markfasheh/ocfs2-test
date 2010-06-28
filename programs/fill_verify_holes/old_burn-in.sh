@@ -3,6 +3,7 @@
 BINPATH="."
 LOGPATH="."
 MMAPOPT=
+AIOOPT=
 
 log_run() {
     echo "Run: $@"
@@ -15,7 +16,7 @@ run_fill() {
     size="$3";
     logfile="$4"
 
-    log_run "$BINPATH/fill_holes" $MMAPOPT -f -o "$logfile" -i "$iter" "$filename" "$size"
+    log_run "$BINPATH/fill_holes" $MMAPOPT $AIOOPT -f -o "$logfile" -i "$iter" "$filename" "$size"
     log_run "$BINPATH/verify_holes" "$logfile" "$filename"
 
     RET=$?
@@ -40,10 +41,11 @@ run100() {
 
 USAGE=""
 OPTIND=1
-while getopts "mb:l:h?" args
+while getopts "mab:l:h?" args
 do
   case "$args" in
     m) MMAPOPT="-m";;
+    a) AIOOPT="-a";;
     b) BINPATH="$OPTARG";;
     l) LOGPATH="$OPTARG";;
     h) USAGE="yes";;
@@ -52,7 +54,7 @@ do
 done
 
 if [ -n "$USAGE" ]; then
-    echo "usage: burn-in.sh [ -b path-to-binaries ] [ -l path-for-logfiles ]";
+    echo "usage: burn-in.sh [ -b path-to-binaries ] [ -l path-for-logfiles ] [ -a ]";
     exit 0;
 fi
 

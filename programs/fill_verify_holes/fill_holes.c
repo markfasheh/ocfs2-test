@@ -15,6 +15,7 @@
 
 #include "fill_holes.h"
 #include "reservations.h"
+#include "aio.h"
 
 
 /*
@@ -34,7 +35,7 @@ size, verifying it's contents.
 
 static void usage(void)
 {
-	printf("fill_holes [-f] [-m] [-u] [-i ITER] [-o LOGFILE] [-r REPLAYLOG] FILE SIZE\n"
+	printf("fill_holes [-f] [-m] [-u] [-a] [-i ITER] [-o LOGFILE] [-r REPLAYLOG] FILE SIZE\n"
 	       "FILE is a path to a file\n"
 	       "SIZE is in bytes and must always be specified, even with a REPLAYLOG\n"
 	       "ITER defaults to 1000, unless REPLAYLOG is specified.\n"
@@ -42,6 +43,7 @@ static void usage(void)
 	       "-f will result in logfile being flushed after every write\n"
 	       "-m instructs the test to use mmap to write to FILE\n"
 	       "-u will create an unwritten region instead of ftruncate\n"
+	       "-a will enable aio io mode\n"
 	       "REPLAYLOG is an optional file to generate values from\n\n"
 	       "FILE will be truncated to zero, then truncated out to SIZE\n"
 	       "For each iteration, a character, offset and length will be\n"
@@ -61,6 +63,7 @@ static char buf[MAX_WRITE_SIZE];
 static unsigned int max_iter = 1000;
 static unsigned int flush_output = 0;
 static unsigned int create_unwritten = 0;
+static unsigned int enable_aio = 0;
 static char *fname = NULL;
 static char *logname = NULL;
 static char *replaylogname = NULL;
@@ -75,13 +78,16 @@ static int parse_opts(int argc, char **argv)
 	int c, iter_specified = 0;
 
 	while (1) {
-		c = getopt(argc, argv, "umfi:o:r:");
+		c = getopt(argc, argv, "aumfi:o:r:");
 		if (c == -1)
 			break;
 
 		switch (c) {
 		case 'u':
 			create_unwritten = 1;
+			break;
+		case 'a':
+			enable_aio = 1;
 			break;
 		case 'm':
 			use_mmap = 1;
@@ -278,7 +284,11 @@ static int prep_write_unit(struct write_unit *wu)
 
 int do_write(int fd, struct write_unit *wu)
 {
-	int ret;
+	int ret, i;
+	struct o2test_aio o2a;
+	char *buf_cmp = NULL;
+	unsigned long long *ubuf = (unsigned long long *)buf;
+	unsigned long long *ubuf_cmp = NULL;
 
 	if (use_mmap) {
 		memset(mapped + wu->w_offset, wu->w_char, wu->w_len);
@@ -286,14 +296,58 @@ int do_write(int fd, struct write_unit *wu)
 	}
 
 	memset(buf, wu->w_char, wu->w_len);
+
+	if (enable_aio) {
+
+		buf_cmp = (char *)malloc(MAX_WRITE_SIZE);
+
+		ret = o2test_aio_setup(&o2a, 1);
+		if (ret < 0)
+			goto bail;
+
+		ret = o2test_aio_pwrite(&o2a, fd, buf, wu->w_len, wu->w_offset);
+		if (ret < 0)
+			goto bail;
+
+		ret = o2test_aio_query(&o2a, 1, 1);
+		if(ret < 0)
+			goto bail;
+
+		ret = pread(fd, buf_cmp, wu->w_len, wu->w_offset);
+		if (ret < 0) {
+			ret = errno;
+			fprintf(stderr, "pread error %d: \"%s\"\n", ret,
+				strerror(ret));
+			ret = -1;
+			goto bail;
+		}
+
+		if (memcmp(buf, buf_cmp, wu->w_len)) {
+
+			ubuf_cmp = (unsigned long long *)buf_cmp;
+			for (i = 0; i < wu->w_len / sizeof(unsigned long long); i++)
+				printf("%d: 0x%llx[aio_write]  0x%llx[pread]\n",
+				       i, ubuf[i], ubuf_cmp[i]);
+		}
+
+		ret = o2test_aio_destroy(&o2a);
+
+		goto bail;
+	}
+
 	ret = pwrite(fd, buf, wu->w_len, wu->w_offset);
 	if (ret == -1) {
 		fprintf(stderr, "write error %d: \"%s\"\n", errno,
 			strerror(errno));
-		return -1;
+		goto bail;
 	}
 
-	return 0;
+	ret = 0;
+bail:
+	if (buf_cmp)
+		free(buf_cmp);
+
+	return ret;
 }
 
 int main(int argc, char **argv)

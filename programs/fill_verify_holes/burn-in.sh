@@ -21,6 +21,7 @@ USERID=`/usr/bin/whoami`
 BINPATH="."
 LOGPATH="."
 MMAPOPT=
+AIOOPT=
 if [ -f `dirname ${0}`/config.sh ]; then
 	. `dirname ${0}`/config.sh
 fi;
@@ -38,7 +39,7 @@ run_fill() {
     logfile="$4"
 
     echo "Creating file..."
-    log_run "${BINPATH}/fill_holes" ${MMAPOPT} ${UNWOPT} -f -o "${logfile}" -i "${iter}" \
+    log_run "${BINPATH}/fill_holes" ${MMAPOPT} ${UNWOPT} ${AIOOPT} -f -o "${logfile}" -i "${iter}" \
 	    "${filename}" "${size}"
     sleep 10
     sudo /sbin/fuser -km ${MOUNTPOINT}
@@ -149,7 +150,7 @@ BLOCKSIZE=`echo 2^${BLOCKSIZE_BITS} |bc`;
 #
 }
 #
-while getopts "c:d:i:b:l:s:muh?" args
+while getopts "c:d:i:b:l:s:muah?" args
 do
   case "$args" in
     c) COUNT="$OPTARG";;
@@ -160,13 +161,14 @@ do
     s) SIZE="$OPTARG";;
     m) MMAPOPT="-m";;
     u) UNWOPT="-u";;
+    a) AIOOPT="-a";;
     h) USAGE="yes";;
     ?) USAGE="yes";;
   esac
 done
 
 if [ -n "${USAGE}" ]; then
-    echo "usage: burn-in.sh [ -m ] [ -u ] [ -b path-to-binaries ]  \
+    echo "usage: burn-in.sh [ -m ] [ -u ] [ -a ] [ -b path-to-binaries ]  \
     	[ -l path-for-logfiles ] [ -c count ] [ -d  directory ]  \
 	[ -i iteractions ] [ -s size ]";
     exit 0;
