@@ -1,0 +1,179 @@
+#!/bin/bash
+#
+# Test for the ocfs2 tail zero bug
+#
+
+_IMAGE=""
+_MOUNTPOINT=""
+_LOOP=""
+
+cleanup()
+{
+    [ -d "$_MOUNTPOINT" ] && umount "$_MOUNTPOINT"
+    [ -d "$_MOUNTPOINT" ] && rmdir "$_MOUNTPOINT"
+    [ -n "$_LOOP" ] && losetup -d "$_LOOP"
+    [ -n "$_IMAGE" ] && rm -f "$_IMAGE"
+}
+trap "exitcode=\$?; cleanup 2>/dev/null && exit \$exitcode" 0
+trap "cleanup; die \"Signal caught, exiting\"" 1 2 13 15
+
+die()
+{
+    [ -n "$*" ] && echo "$@" >&2
+    exit 1
+}
+
+make_image()
+{
+    local image="$1"
+
+    dd if=/dev/urandom of="$image" bs=1M count=1 seek=10000 conv=notrunc 2>/dev/null ||
+        die "Unable to create image \"$image\""
+    dd if=/dev/urandom of="$image" bs=1M count=200 conv=notrunc 2>/dev/null ||
+        die "Unable to poison the start of image \"$image\""
+    losetup -f --show "$image" || die "Unable to attach loopback device"
+}
+
+make_fs()
+{
+    local device="$1"
+    local mountpoint="$2"
+    local extra_features="$3"
+    case "$extra_features" in
+        ,*) ;;
+        *)
+            extra_features=",$extra_features"
+            ;;
+    esac
+
+    mkfs -t ocfs2 -C 1M \
+        --fs-features=local"$extra_features" "$device" ||
+        die "Unable to create ocfs2 filesystem"
+    mount -t ocfs2 "$device" "$mountpoint" ||
+        die "Unable to mount ocfs2 filesystem"
+}
+
+clean_one_test()
+{
+    for f in "$@"
+    do
+        megs="$(ls -l "$f" | awk '{printf "%lu", ($5 + 1048576 - 1) / 1048576}')"
+        [ -z "$megs" ] && die "Unable to clean test file \"$f\""
+        dd if=/dev/urandom of="$f" bs=1M count="${megs}" 2>/dev/null ||
+            die "Unable to scribble over test file \"$f\""
+        rm -f "$f" || die "Unable to remove test file \"$f\""
+    done
+}
+
+run_one_test()
+{
+    local device="$1"
+    local mountpoint="$2"
+    local offset="$3"
+    local trunc=""
+    [ "$4" = "true" ] && trunc="conv=notrunc"
+
+    local testfile="${mountpoint}/testfile"
+    local comparefile="${mountpoint}/diff"
+    local expectedfile="${mountpoint}/expected-$offset"
+
+    echo "Testing seek=$offset $trunc ..."
+    echo -n 'a' | dd of="$testfile" bs=1 count=1 2>/dev/null
+    umount "$mountpoint" || die "Unable to unmount \"$mountpoint\""
+    mount -t ocfs2 "$device" "$mountpoint" ||
+        die "Unable to remount \"$mountpoint\""
+    echo -n 'a' | dd of="$testfile" bs=1 count=1 seek=$offset $trunc 2>/dev/null
+    dd if="$testfile" bs=1M count=1 2>/dev/null | hexdump -C >"$comparefile"
+    if diff -q "$comparefile" "$expectedfile" >/dev/null 2>&1;
+    then
+        echo "    Test passed."
+    else
+        echo "    Test failed.  Extent contents:"
+        cat "$comparefile"
+    fi
+
+    echo "Cleaning up after test ..."
+    clean_one_test "$testfile" "$comparefile"
+}
+
+setup_expected()
+{
+    local mountpoint="$1"
+
+    cat >"${mountpoint}/expected-10M" <<EOCAT
+00000000  61 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |a...............|
+00000010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00100000
+EOCAT
+    [ $? = 0 ] || die "Unable to create \"expected-10M\""
+
+    cp "${mountpoint}/expected-10M" "${mountpoint}/expected-1M" ||
+        die "Unable to create \"expected-1M\""
+
+    cat >"${mountpoint}/expected-512K" <<EOCAT
+00000000  61 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |a...............|
+00000010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00080000  61                                                |a|
+00080001
+EOCAT
+    [ $? = 0 ] || die "Unable to create \"expected-512K\""
+
+    cat >"${mountpoint}/expected-1K" <<EOCAT
+00000000  61 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |a...............|
+00000010  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00000400  61                                                |a|
+00000401
+EOCAT
+    [ $? = 0 ] || die "Unable to create \"expected-1K\""
+
+}
+
+run_tests()
+{
+    local device="$1"
+    local mountpoint="$2"
+    local extra_features="$3"
+
+    echo "Generating filesystem ..."
+    make_fs "$device" "$mountpoint" $extra_features ||
+        die "Unable to create ocfs2 filesystem"
+    setup_expected "$mountpoint"
+
+    local offset
+    for offset in 10M 1M 512K 1K
+    do
+        run_one_test "$device" "$mountpoint" "$offset" "false"
+        run_one_test "$device" "$mountpoint" "$offset" "true"
+    done
+
+    echo "Destroying filesystem ..."
+    umount "$mountpoint" || die "Unable to unmount filesystem"
+    dd if=/dev/urandom of="$device" bs=1M count=1 2>/dev/null ||
+        die "Unable to reset device"
+}
+
+main()
+{
+    echo "Generating image ..."
+    _IMAGE="$(mktemp ${TMPDIR:-/tmp}/tailtest-image.XXXXXX 2>/dev/null)"
+    [ -z "$_IMAGE" ] && die "Unable to create image file"
+    _LOOP="$(make_image "$_IMAGE")"
+    [ -z "$_LOOP" ] && die "Unable to attach loopback device"
+
+    _MOUNTPOINT="$(mktemp -d ${TMPDIR:-/tmp}/tailtest-mountpoint.XXXXXX 2>/dev/null)"
+    [ -z "$_MOUNTPOINT" ] && die "Unable to create mountpoint"
+
+    run_tests "$_LOOP" "$_MOUNTPOINT" "sparse,inline-data"
+    run_tests "$_LOOP" "$_MOUNTPOINT" "sparse,noinline-data"
+    run_tests "$_LOOP" "$_MOUNTPOINT" "nosparse,inline-data"
+    run_tests "$_LOOP" "$_MOUNTPOINT" "nosparse,noinline-data"
+
+    return 0
+}
+
+main "$@"
+exit $?
+
