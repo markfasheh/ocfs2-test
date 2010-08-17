@@ -433,7 +433,7 @@ ${WORK_PLACE} -v ${VERI_LOG} >>${LOG_FILE} 2>&1
 ${REFLINK_TEST_BIN} -i 1 -n 10 -p 10 -l 1638400 -d ${DEVICE} -w ${WORK_PLACE} \
 -D 10 -a ${LISTENER_ADDR} -P ${LISTENER_PORT} "
 	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -p 10 -l 1638400 -d ${DEVICE} -w \
-${WORK_PLACE} -D 10 -a ${LISTENER_ADDR} -p ${LISTENER_ADDR} >>${LOG_FILE} 2>&1
+${WORK_PLACE} -D 10 -a ${LISTENER_ADDR} -P ${LISTENER_ADDR} >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
 	exit ${RET}

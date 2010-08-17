@@ -224,13 +224,16 @@ static int parse_opts(int argc, char **argv)
 		case 'h':
 			test_flags |= HOLE_TEST;
 			hole_nums = atol(optarg);
+			break;
 		case 'P':
 			port = atol(optarg);
+			break;
 		case 'H':
 			test_flags |= PUNH_TEST;
+			break;
 		case 'T':
 			test_flags |= TRUC_TEST;
-
+			break;
 		default:
 			break;
 		}
