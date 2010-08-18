@@ -96,7 +96,7 @@ set -o pipefail
 ################################################################################
 function f_usage()
 {
-        echo "usage: `basename ${0}` [-D <-a remote_listener_addr> <-p port>] \
+        echo "usage: `basename ${0}` [-D <-a remote_listener_addr_in_IPV4> <-p port>] \
 [-v verify_log] [-W] [-o logdir] <-d device> <mountpoint path>"
         echo "       -o output directory for the logs"
         echo "       -d block device name used for ocfs2 volume"
@@ -169,7 +169,7 @@ function f_check()
 		fi
 	fi
 
-        LOG_DIR=${LOG_DIR:-$DEFAULT_LOG}
+        LOG_DIR=${LOG_DIR:-$DEFAULT_LOG_DIR}
 	${MKDIR_BIN} -p ${LOG_DIR} || exit 1
 
         RUN_LOG_FILE="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/`date +%F-%H-\
@@ -433,7 +433,7 @@ ${WORK_PLACE} -v ${VERI_LOG} >>${LOG_FILE} 2>&1
 ${REFLINK_TEST_BIN} -i 1 -n 10 -p 10 -l 1638400 -d ${DEVICE} -w ${WORK_PLACE} \
 -D 10 -a ${LISTENER_ADDR} -P ${LISTENER_PORT} "
 	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -p 10 -l 1638400 -d ${DEVICE} -w \
-${WORK_PLACE} -D 10 -a ${LISTENER_ADDR} -P ${LISTENER_ADDR} >>${LOG_FILE} 2>&1
+${WORK_PLACE} -D 10 -a ${LISTENER_ADDR} -P ${LISTENER_PORT} >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
 	exit ${RET}
