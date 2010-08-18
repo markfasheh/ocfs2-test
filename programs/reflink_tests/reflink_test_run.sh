@@ -398,6 +398,21 @@ for #${j} reflink and copy"
 
 function f_runtest()
 {
+	if [ -n "${VERI_TEST}" ];then
+	((TEST_NO++))
+	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Verify Test After Desctruction :"
+	f_mount ${LOG_FILE} ${DEVICE} ${MOUNT_POINT} ocfs2 ${MOUNT_OPTS}
+	RET=$?
+	f_exit_or_not ${RET}
+	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Verify Test After Desctruction, CMD:${SUDO} \
+${REFLINK_TEST_BIN} -i 1 -n 10 -p 10 -l 1638400 -d ${DEVICE} -w ${WORK_PLACE} -v ${VERI_LOG} "
+	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -p 10 -l 1638400 -d ${DEVICE} -w \
+${WORK_PLACE} -v ${VERI_LOG} >>${LOG_FILE} 2>&1
+        RET=$?
+        f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
+	exit ${RET}
+	fi
+
 	f_LogRunMsg ${RUN_LOG_FILE} "[*] Mkfs device ${DEVICE}:"
 	f_mkfs ${LOG_FILE} ${BLOCKSIZE} ${CLUSTERSIZE} ${LABELNAME} ${SLOTS} \
 ${DEVICE} "refcount,xattr" ${JOURNALSIZE} ${BLOCKS}
@@ -413,18 +428,6 @@ ${DEVICE} "refcount,xattr" ${JOURNALSIZE} ${BLOCKS}
 
 	WORK_PLACE=${MOUNT_POINT}/${WORK_PLACE_DIRENT}
 	${MKDIR_BIN} -p ${WORK_PLACE}
-
-	if [ -n "${VERI_TEST}" ];then
-	((TEST_NO++))
-	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Verify Test After Desctruction :"
-	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Verify Test After Desctruction, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 10 -p 10 -l 1638400 -d ${DEVICE} -w ${WORK_PLACE} -v ${VERI_LOG} "
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -p 10 -l 1638400 -d ${DEVICE} -w \
-${WORK_PLACE} -v ${VERI_LOG} >>${LOG_FILE} 2>&1
-        RET=$?
-        f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
-	exit ${RET}
-	fi
 
 	if [ -n "${DSCV_TEST}" ];then
 	((TEST_NO++))
