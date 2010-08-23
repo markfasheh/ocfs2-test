@@ -26,6 +26,12 @@
 
 #include "directio.h"
 
+int open_rw_flags = FILE_RW_FLAGS;
+int open_ro_flags = FILE_RO_FLAGS;
+
+int test_flags = 0x00000000;
+int verbose = 0;
+
 static void usage(void)
 {
 	printf("Usage: directio_test [-p concurrent_process] "

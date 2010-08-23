@@ -78,4 +78,26 @@ union semun {
 	struct seminfo *__buf;      /* buffer for IPC_INFO */
 };
 
+unsigned long get_rand_ul(unsigned long min, unsigned long max);
+
+int open_file(const char *filename, int flags);
+int get_i_size(char *filename, unsigned long *size);
+int read_at(int fd, void *buf, size_t count, off_t offset);
+int write_at(int fd, const void *buf, size_t count, off_t offset);
+
+void prep_rand_dest_write_unit(struct write_unit *wu, unsigned long chunk_no);
+int do_write_chunk(int fd, struct write_unit wu);
+int do_read_chunk(int fd, unsigned long chunk_no, struct write_unit *wu);
+int prep_orig_file_in_chunks(char *file_name, unsigned long filesize);
+int verify_file(FILE *logfile, char *filename, unsigned long filesize);
+
+int init_sock(char *serv, int port);
+int set_semvalue(int sem_id, int val);
+int semaphore_init(int val);
+int semaphore_close(int sem_id);
+int semaphore_p(int sem_id);
+int semaphore_v(int sem_id);
+
+int open_logfile(FILE **logfile, const char *logname);
+int log_write(struct write_unit *wu, union log_handler log);
 #endif
