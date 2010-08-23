@@ -56,7 +56,8 @@ SUBDIRS =			\
 	acl_tests		\
 	quota_tests		\
 	inode_alloc_perf_tests	\
-	reflink_tests
+	reflink_tests		\
+	directio_test
 
 ifdef OCFS2_TEST_DX_DIRS
 	SUBDIRS += dx_dirs_tests
