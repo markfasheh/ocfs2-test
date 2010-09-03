@@ -201,8 +201,6 @@ f_setup()
 	if [ -z "$MPI_HOSTS" ];then
 		f_usage
 	fi
-
-	OCFS2_UUID=`blkid |grep ${OCFS2_DEVICE}|cut -d' ' -f3|cut -d'"' -f2`
 }
 
 f_do_mkfs_and_mount()
@@ -223,7 +221,7 @@ f_do_mkfs_and_mount()
 	${SUDO} chown -R ${USERNAME}:${GROUPNAME} ${MOUNT_POINT}
 	${SUDO} chmod -R 777 ${MOUNT_POINT}
 
-
+	OCFS2_UUID=`blkid |grep ${OCFS2_DEVICE}|cut -d' ' -f3|cut -d'"' -f2`
 } 
 
 f_do_umount()
