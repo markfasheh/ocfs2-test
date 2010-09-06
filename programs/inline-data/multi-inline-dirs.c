@@ -1129,7 +1129,7 @@ static int uuid2dev(const char *uuid, char *dev)
 	FILE *df;
 	char cmd[300];
 
-	snprintf(cmd, 300, "blkid |grep %s|cut -d':' -f1", uuid);
+	snprintf(cmd, 300, "/sbin/blkid |grep %s|cut -d':' -f1", uuid);
 
 	df = popen(cmd, "r");
 	if (df == NULL) {
