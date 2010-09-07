@@ -193,6 +193,115 @@ do_mkdir() {
 	${SUDO} ${CHOWN} -R ${USERID} $1
 }
 
+run_create_and_open()
+{
+	log_message "run_create_and_open" $@
+        if [ "$#" -lt "3" ]; then
+                echo "Error in run_create_and_open()"
+                exit 1
+        fi
+
+	logdir=$1
+	device=$2
+	mountpoint=$3
+
+	workdir=${mountpoint}/create_and_open_test
+	blocksize=4096
+	clustersize=32768
+	features="sparse,unwritten,inline-data"
+
+	mountopts="defaults"
+
+	log_start "create_and_open"
+
+	do_format ${blocksize} ${clustersize} ${features} ${device}
+	do_mount ${device} ${mountpoint} ${mountopts}
+	do_mkdir ${workdir}
+
+	outlog=${logdir}/create_and_open.log
+
+	create_and_open ${workdir} >${outlog} 2>&1
+	RC=$?
+
+	do_umount ${mountpoint}
+
+	log_end ${RC}
+}
+
+run_extend_and_write()
+{
+	log_message "run_extend_and_write" $@
+        if [ "$#" -lt "3" ]; then
+                echo "Error in run_extend_and_write()"
+                exit 1
+        fi
+
+	logdir=$1
+	device=$2
+	mountpoint=$3
+
+	workfile=${mountpoint}/extend_and_write_testfile
+	blocksize=4096
+	clustersize=32768
+	features="sparse,unwritten,inline-data"
+
+	for mopt in writeback ordered;do
+
+		mountopts="data=${mopt}"
+
+		log_start "extend_and_write_test" ${mountopts}
+
+		do_format ${blocksize} ${clustersize} ${features} ${device}
+		do_mount ${device} ${mountpoint} ${mountopts}
+
+		outlog=${logdir}/extend_and_write.log
+
+		run_extend_and_write.py -f ${workfile} -l ${outlog} -n 1000 -s 4096
+		RC=$?
+
+		do_umount ${mountpoint}
+
+		log_end ${RC}
+	done
+}
+
+run_directaio()
+{
+	log_message "run_directaio" $@
+        if [ "$#" -lt "3" ]; then
+                echo "Error in run_directaio()"
+                exit 1
+        fi
+
+	logdir=$1
+	device=$2
+	mountpoint=$3
+
+	workfile=${mountpoint}/directaio_testfile
+	blocksize=4096
+	clustersize=32768
+	features="sparse,unwritten,inline-data"
+
+	for mopt in writeback ordered
+	do
+		mountopts="data=${mopt}"
+
+		log_start "direct-aio" ${mountopts}
+
+		do_format ${blocksize} ${clustersize} ${features} ${device}
+		do_mount ${device} ${mountpoint} ${mountopts}
+
+		outlog=${logdir}/directaio_${mopt}.log
+
+		partial_aio_direct ${workfile} >${outlog} 2>&1
+		RC=$?
+
+		do_umount ${mountpoint}
+	
+		log_end ${RC}
+	done
+}
+
 # run_aiostress ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
 run_aiostress()
 {
@@ -495,6 +604,323 @@ run_renamewriterace()
 	done
 }
 
+run_splice()
+{
+	log_message "run_splice" $@
+        if [ "$#" -lt "3" ]; then
+                echo "Error in run_splice()"
+                exit 1
+        fi
+
+	logdir=$1
+	device=$2
+	mountpoint=$3
+
+	workdir=${mountpoint}/testme
+	blocksize=4096
+	clustersize=32768
+	features="sparse,unwritten,inline-data"
+
+	for mopt in writeback ordered
+	do
+		mountopts="data=${mopt}"
+
+		log_start "splice" ${mountopts}
+
+		do_format ${blocksize} ${clustersize} ${features} ${device}
+		do_mount ${device} ${mountpoint} ${mountopts}
+		do_mkdir ${workdir}
+
+                outlog=${logdir}/splice_${mopt}.log
+
+		splice_test.py -d ${workdir} -c 1000 -f splice_test.dat >${outlog} 2>&1
+		RC=$?
+
+		do_umount ${mountpoint}
+
+		log_end ${RC}
+	done
+}
+
+run_sendfile()
+{
+	log_message "run_sendfile" $@
+        if [ "$#" -lt "3" ]; then
+                echo "Error in run_sendfile()"
+                exit 1
+        fi
+
+	logdir=$1
+	device=$2
+	mountpoint=$3
+
+	workfile=${mountpoint}/ocfs2_sendfile_data
+	verifyfile=/tmp/sendfile_verify
+	
+	blocksize=4096
+	clustersize=32768
+	features="sparse,unwritten,inline-data"
+	port=8001
+
+	for mopt in writeback ordered
+	do
+		mountopts="data=${mopt}"
+
+		log_start "sendfile" ${mountopts}
+
+		do_format ${blocksize} ${clustersize} ${features} ${device}
+		do_mount ${device} ${mountpoint} ${mountopts}
+
+		# Generate original date file
+		dd if=/dev/random of=${workfile} bs=${clustersize} count=4
+                outlog=${logdir}/sendfile_${mopt}.log
+
+		nc -l ${port} >${verifyfile} &
+		sendfiletest ${workfile} `hostname` >${outlog} 2>&1
+		RC=$?
+
+		md51=`md5sum ${workfile}|cut -d' ' -f1`
+		md52=`md5sum ${verifyfile}|cut -d' ' -f1`
+
+		if [ "${md51}" != "${md52}" ];then
+			log_message "md5sum verification failed."
+			RC=1
+		fi
+
+		do_umount ${mountpoint}
+
+		log_end ${RC}
+	done
+}
+
+run_mmap()
+{
+	log_message "run_mmap" $@
+        if [ "$#" -lt "3" ]; then
+                echo "Error in run_mmap()"
+                exit 1
+        fi
+
+	logdir=$1
+	device=$2
+	mountpoint=$3
+
+	workfile=${mountpoint}/mmap_testfile
+	features="sparse,unwritten,inline-data"
+
+	for blocksize in 512 1024 2048 4096;do
+		for clustersize in 4096 32768 1048576;do
+			for mopt in writeback ordered;do
+				mountopts="data=${mopt}"
+
+				log_start "mmap" ${blocksize} ${clustersize} ${features} ${mountopts}
+
+				do_format ${blocksize} ${clustersize} ${features} ${device}
+				do_mount ${device} ${mountpoint} ${mountopts}
+
+				outlog=${logdir}/mmap_${mopt}_${blocksize}_${clustersize}.log
+
+				dd if=/dev/zero of=${workfile} bs=1M count=1024
+				mmap_test ${workfile} >${outlog} 2>&1
+				RC=$?
+
+				do_umount ${mountpoint}
+
+				log_end ${RC}
+			done
+		done
+	done
+}
+
+run_reserve_space()
+{
+	log_message "run_reserve_space" $@
+        if [ "$#" -lt "3" ]; then
+                echo "Error in run_reserve_space()"
+                exit 1
+        fi
+
+	logdir=$1
+	device=$2
+	mountpoint=$3
+
+	workfile=${mountpoint}/reserve_space_testfile
+	features="sparse,unwritten,inline-data"
+	space_free=
+	iter=1000
+
+	for blocksize in 512 1024 2048 4096;do
+		for clustersize in 4096 32768 1048576;do
+			for mopt in writeback ordered;do
+				mountopts="data=${mopt}"
+
+				log_start "reserve_space" ${blocksize} ${clustersize} ${features} ${mountopts}
+
+				do_format ${blocksize} ${clustersize} ${features} ${device}
+				do_mount ${device} ${mountpoint} ${mountopts}
+
+				outlog=${logdir}/reserve_space_${mopt}_${blocksize}_${clustersize}.log
+				space_free=`df|grep ${device}|awk '{print $4}'`
+				space_free=$((${space_free}*1024))
+
+				for i in `seq ${iter}`;do
+					r_whence=0
+					r_start=$((${RANDOM}%${space_free}))
+					r_len=$((${RANDOM}%(${space_free}-${r_start})))
+
+					reserve_space ${workfile} resv ${r_whence} ${r_start} ${r_len} >>${outlog} 2>&1 || {
+						RC=$?
+						break
+					}
+				
+					reserve_space ${workfile} unresv ${r_whence} ${r_start} ${r_len} >>${outlog} 2>&1 || {
+						RC=$?
+						break
+					}
+				done
+
+				do_umount ${mountpoint}
+
+				log_end ${RC}
+			done
+		done
+	done
+}
+
+run_inline_data()
+{
+	log_message "run_inline_data" $@
+        if [ "$#" -lt "3" ]; then
+                echo "Error in run_inline_data()"
+                exit 1
+        fi
+
+	logdir=$1
+	device=$2
+	mountpoint=$3
+
+	log_start "inline_data_test" 
+	single-inline-run.sh  -o ${logdir} -d ${device} ${mountpoint}
+	RC=$?
+	log_end ${RC}
+}
+
+run_dx_dir()
+{
+	log_message "run_dx_dir" $@
+        if [ "$#" -lt "3" ]; then
+                echo "Error in run_dx_dir()"
+                exit 1
+        fi
+
+	logdir=$1
+	device=$2
+	mountpoint=$3
+        kernelsrc=$4
+
+	log_start "index_dir_test" 
+	index_dir_run.sh  -o ${logdir} -d ${device} -t ${kernelsrc} ${mountpoint}
+	RC=$?
+	log_end ${RC}
+}
+
+run_xattr_test()
+{
+	log_message "run_xattr_test" $@
+        if [ "$#" -lt "3" ]; then
+                echo "Error in run_xattr_test()"
+                exit 1
+        fi
+
+	logdir=$1
+	device=$2
+	mountpoint=$3
+
+	log_start "xattr_test" 
+	xattr-single-run.sh -c -o ${logdir} -d ${device} ${mountpoint}
+	RC=$?
+
+	log_end ${RC}
+}
+
+run_reflink_test()
+{
+	log_message "run_reflink_test" $@
+        if [ "$#" -lt "3" ]; then
+                echo "Error in run_reflink()"
+                exit 1
+        fi
+
+	logdir=$1
+	device=$2
+	mountpoint=$3
+
+	#ordered mount option
+	log_start "reflink_test" "ordered"
+	./reflink_test_run.sh -o ${logdir} -d ${device} ${mountpoint} || {
+		RC=$?
+		log_end ${RC}
+	}
+
+	#writeback mount option
+	log_start "reflink_test" "writeback"
+	./reflink_test_run.sh -W -o ${logdir} -d ${device} ${mountpoint}
+	RC=$?
+	log_end ${RC}
+}
+
+# Following cases aim to test tools
+run_mkfs()
+{
+	log_message "run_mkfs" $@
+        if [ "$#" -lt "2" ]; then
+                echo "Error in run_mkfs()"
+                exit 1
+        fi
+
+	logdir=$1
+	device=$2
+
+	log_start "mkfs_test"
+	mkfs-test.sh -o ${logdir} -d ${device}
+	RC=$?
+	log_end ${RC}
+}
+
+run_tunefs()
+{
+	log_message "run_tunefs" $@
+        if [ "$#" -lt "2" ]; then
+                echo "Error in run_tunefs()"
+                exit 1
+        fi
+
+	logdir=$1
+	device=$2
+
+	log_start "tunefs_test"
+	tunefs-test.sh --with-mkfs=/sbin/mkfs.ocfs2 --log-dir=${logdir} ${device}
+	RC=$?
+	log_end ${RC}
+}
+
+run_backup_super()
+{
+	log_message "run_backup_super" $@
+        if [ "$#" -lt "2" ]; then
+                echo "Error in run_backup_super()"
+                exit 1
+        fi
+
+	logdir=$1
+	device=$2
+
+	log_start "backup_super_test"
+	test_backup_super.sh --with-mkfs=/sbin/mkfs.ocfs2 --log-dir=${logdir} ${device}
+	RC=$?
+	log_end ${RC}
+}
+
 #
 #
 # MAIN
@@ -561,6 +987,10 @@ log_message "*** Start Single Node test ***"
 
 ${ECHO} "Output log is ${LOGFILE}"
 
+run_create_and_open ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+
+run_directaio ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+
 run_fillverifyholes ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
 
 run_renamewriterace ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
@@ -572,6 +1002,28 @@ run_filesizelimits ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
 run_mmaptruncate ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
 
 run_buildkernel ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${KERNELSRC}
+
+run_splice ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+
+run_sendfile ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+
+run_mmap ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+
+run_reserve_space ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+
+run_inline_data ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+
+run_xattr_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+
+run_reflink_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+
+# For tools test.
+
+run_mkfs ${LOGDIR} ${DEVICE}
+
+run_tunefs ${LOGDIR} ${DEVICE}
+
+run_backup_super ${LOGDIR} ${DEVICE}
 
 ENDRUN=$(date +%s)
 
