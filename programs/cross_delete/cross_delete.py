@@ -216,7 +216,8 @@ if __name__=='__main__':
 	interface = options.interface
 	nodelist = options.nodes.split(',')
 	nodelen = len(nodelist)
-	logfile = options.logfile
+	if options.logfile:
+		logfile = options.logfile
 	if nodelen < 2:
 		o2tf.printlog('cross_delete: nodelist must have at least 2 nodes' %
 			dirlist,
