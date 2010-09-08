@@ -16,6 +16,7 @@ MPI_LINK = $(MPICC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 SOURCES =			\
 	reflink_test.h 		\
+	crc32table.h 		\
 	xattr_test.h 		\
 	reflink_test_utils.c	\
 	xattr_test_utils.c 	\
