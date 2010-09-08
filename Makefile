@@ -22,7 +22,7 @@ ifeq ($(TESTARCH),error)
 $(error could not detect architecture for ocfs2-test)
 endif
 
-SUBDIRS = programs utilities tests suites
+SUBDIRS = api-compat programs utilities tests suites
 
 SUBDIRS += vendor
 
