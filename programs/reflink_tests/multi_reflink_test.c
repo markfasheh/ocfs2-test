@@ -828,7 +828,7 @@ static int comp_test(void)
 
 	MPI_Barrier_Sync();
 
-	if (rank % 6 == 1) {
+	if (rank == 1) {
 		/*also doing reflinks and unlinks*/
 		printf("  *Test Rank %d: Doing reflinks,cows and unlink.\n",
 		       rank);
