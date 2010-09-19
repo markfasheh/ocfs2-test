@@ -8,6 +8,12 @@ CFLAGS = -O2 -Wall -g $(OCFS2_CFLAGS)
 
 CFLAGS += $(EXTRA_CFLAGS)
 
+INCLUDES = -I$(TOPDIR)/programs/libocfs2test
+
+CFLAGS += $(INCLUDES)
+
+LIBO2TEST = $(TOPDIR)/programs/libocfs2test/libocfs2test.a
+
 ifdef NO_REFLINK
 CFLAGS += -DNO_REFLINK
 endif
@@ -50,10 +56,10 @@ BIN_EXTRA = reflink_test_run.sh multi_reflink_test_run.sh reflink_files.sh
 BIN_PROGRAMS = reflink_test multi_reflink_test
 
 reflink_test: $(SINGLE_SOURCES)
-	$(LINK) $(OCFS2_LIBS)
+	$(LINK) $(OCFS2_LIBS) $(LIBO2TEST) -laio
 
 multi_reflink_test: $(MULTI_SOURCES)
-	$(MPI_LINK) $(OCFS2_LIBS)
+	$(MPI_LINK) $(OCFS2_LIBS) $(LIBO2TEST) -laio
 
 include $(TOPDIR)/Postamble.make
 

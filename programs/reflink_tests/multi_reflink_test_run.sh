@@ -69,6 +69,7 @@ RUN_LOG_FILE=
 LOG_FILE=
 
 MOUNT_OPTS=
+AIO_OPT=
 
 DEFAULT_RANKS=4
 MPI_RANKS=
@@ -89,7 +90,7 @@ set -o pipefail
 function f_usage()
 {
     echo "usage: `basename ${0}` [-r MPI_Ranks] <-f MPI_Hosts> \
-[-a access method] [-o logdir] <-d <device>> [-W] <mountpoint path>"
+[-a access method] [-o logdir] <-d <device>> [-W] [-A] <mountpoint path>"
     echo "       -r size of MPI rank"
     echo "       -a access method for mpi execution,should be ssh or rsh"
     echo "       -f MPI hosts list,separated by comma"
@@ -97,6 +98,7 @@ function f_usage()
     echo "       -d specify the device"
     echo "       -i Network Interface name to be used for MPI messaging."
     echo "       -W enable data=writeback mode"
+    echo "       -A enable asynchronous io testing mode"
     echo "       <mountpoint path> specify the mounting point."
     exit 1;
 
@@ -108,7 +110,7 @@ function f_getoptions()
                 exit 1
          fi
 
-	 while getopts "o:d:i:r:f:Wha:" options; do
+	 while getopts "o:d:i:r:f:WAha:" options; do
                 case $options in
 		r ) MPI_RANKS="$OPTARG";;
                 f ) MPI_HOSTS="$OPTARG";;
@@ -117,6 +119,7 @@ function f_getoptions()
 		a ) MPI_ACCESS_METHOD="$OPTARG";;
 		i ) INTERFACE="$OPTARG";;
 		W ) MOUNT_OPTS="data=writeback";;
+		A ) AIO_OPT=" -A ";;
                 h ) f_usage
                     exit 1;;
                 * ) f_usage
@@ -208,10 +211,10 @@ ${DEVICE} "refcount,xattr" ${JOURNALSIZE} ${BLOCKS}
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Basic Functional Test, CMD:\
 ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np \
 ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 \
--n 100 -w ${WORK_PLACE} -f "
+-n 100 -w ${WORK_PLACE} -f ${AIO_OPT}"
 	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np \
 ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 \
--n 100 -w ${WORK_PLACE} -f >>${LOG_FILE} 2>&1
+-n 100 -w ${WORK_PLACE} -f ${AIO_OPT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_echo_status ${RET}| tee -a ${RUN_LOG_FILE}
 	f_exit_or_not ${RET}
@@ -226,10 +229,10 @@ ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 \
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Random Test, CMD:${MPIRUN} \
 ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np ${MPI_RANKS} --host \
 ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 -n 100 -w \
-${WORK_PLACE} -r "
+${WORK_PLACE} -r ${AIO_OPT}"
 	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np \
 ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 -n \
-100 -w ${WORK_PLACE} -r >>${LOG_FILE} 2>&1
+100 -w ${WORK_PLACE} -r ${AIO_OPT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_echo_status ${RET}| tee -a ${RUN_LOG_FILE}
 	f_exit_or_not ${RET}
@@ -262,10 +265,10 @@ ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 -n 
         f_LogMsg ${LOG_FILE} "[${TEST_NO}] O_DIRECT Test, CMD:${MPIRUN} \
 ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np ${MPI_RANKS} --host \
 ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 41943040 -n 100 -w \
-${WORK_PLACE} -O "
+${WORK_PLACE} -O ${AIO_OPT}"
         ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np \
 ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 41943040 -n \
-100 -w ${WORK_PLACE} -O >>${LOG_FILE} 2>&1
+100 -w ${WORK_PLACE} -O ${AIO_OPT} >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET}| tee -a ${RUN_LOG_FILE}
         f_exit_or_not ${RET}

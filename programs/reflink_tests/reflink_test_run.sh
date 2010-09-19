@@ -69,6 +69,7 @@ WORK_PLACE_DIRENT=ocfs2-refcount-tests
 WORK_PLACE=
 
 MOUNT_OPTS=
+AIO_OPT=
 
 DSCV_TEST=
 LISTENER_ADDR=
@@ -97,10 +98,11 @@ set -o pipefail
 function f_usage()
 {
         echo "usage: `basename ${0}` [-D <-a remote_listener_addr_in_IPV4> <-p port>] \
-[-v verify_log] [-W] [-o logdir] <-d device> <mountpoint path>"
+[-v verify_log] [-W] [-A] [-o logdir] <-d device> <mountpoint path>"
         echo "       -o output directory for the logs"
         echo "       -d block device name used for ocfs2 volume"
         echo "       -W enable data=writeback mode"
+	echo "       -A enable asynchronous io testing mode"
 	echo "       -D enable destructive test,it will crash the testing node,\
 be cautious, you need to specify listener addr and port then"
         echo "       <mountpoint path> specify the testing mounting point."
@@ -115,11 +117,12 @@ function f_getoptions()
                 exit 1
          fi
 
-         while getopts "o:WDhd:a:p:v:" options; do
+         while getopts "o:WDAhd:a:p:v:" options; do
                 case $options in
                 o ) LOG_DIR="$OPTARG";;
                 d ) DEVICE="$OPTARG";;
 		W ) MOUNT_OPTS="data=writeback";;
+		A ) AIO_OPT=" -A ";;
 		D ) DSCV_TEST="1";;
 		a ) LISTENER_ADDR="$OPTARG";;
 		p ) LISTENER_PORT="$OPTARG";;
@@ -445,9 +448,9 @@ ${WORK_PLACE} -D 10 -a ${LISTENER_ADDR} -P ${LISTENER_PORT} >>${LOG_FILE} 2>&1
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Basic Fucntional Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Basic Fucntional Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -f "
+${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -f ${AIO_OPT}"
 	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w \
-${WORK_PLACE} -f >>${LOG_FILE} 2>&1
+${WORK_PLACE} -f ${AIO_OPT} >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
         f_exit_or_not ${RET}
@@ -461,9 +464,9 @@ ${WORK_PLACE} -f >>${LOG_FILE} 2>&1
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Random Refcount Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Random Refcount Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -f -r "
+${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -f -r ${AIO_OPT}"
 	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w \
-${WORK_PLACE} -r >>${LOG_FILE} 2>&1
+${WORK_PLACE} -r ${AIO_OPT} >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
         f_exit_or_not ${RET}
@@ -477,7 +480,7 @@ ${WORK_PLACE} -r >>${LOG_FILE} 2>&1
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Mmap Refcount Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Mmap Refcount Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -m "
+${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -m"
 	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w \
 ${WORK_PLACE} -m >>${LOG_FILE} 2>&1
         RET=$?
@@ -493,7 +496,7 @@ ${WORK_PLACE} -m >>${LOG_FILE} 2>&1
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Boundary Refcount Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Boundary Refcount Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -d ${DEVICE} -w ${WORK_PLACE} -b "
+${REFLINK_TEST_BIN} -i 1 -d ${DEVICE} -w ${WORK_PLACE} -b"
 	${SUDO} ${REFLINK_TEST_BIN} -i 1 -d ${DEVICE} -w \
 ${WORK_PLACE} -b >>${LOG_FILE} 2>&1
         RET=$?
@@ -526,9 +529,9 @@ ${WORK_PLACE} -c 100 >>${LOG_FILE} 2>&1
 	((TEST_NO++))
         f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] O_DIRECT Refcount Test:"
         f_LogMsg ${LOG_FILE} "[${TEST_NO}] O_DIRECT Refcount Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -O "
+${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -O ${AIO_OPT}"
         ${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w \
-${WORK_PLACE} -O >>${LOG_FILE} 2>&1
+${WORK_PLACE} -O ${AIO_OPT} >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
         f_exit_or_not ${RET}

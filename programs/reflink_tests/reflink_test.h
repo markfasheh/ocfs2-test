@@ -51,6 +51,8 @@
 #include <ocfs2/byteorder.h>
 #include "crc32table.h"
 
+#include "aio.h"
+
 #define OCFS2_MAX_FILENAME_LEN	255
 #define FILE_RW_FLAGS		(O_CREAT|O_RDWR)
 #define FILE_RO_FLAGS		(O_RDONLY)
@@ -79,6 +81,7 @@
 #define VERI_TEST		0x00002000
 #define PUNH_TEST		0x00004000
 #define TRUC_TEST		0x00008000
+#define ASIO_TEST		0x00010000
 
 #define MPI_RET_SUCCESS		0
 #define MPI_RET_FAILED		1

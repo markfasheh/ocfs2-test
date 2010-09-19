@@ -117,7 +117,7 @@ static void usage(void)
 {
        root_printf("Usage: multi_reflink_test [-i iteration] [-l file_size] "
 	       "[-p refcount_tree_pairs] [-n reflink_nums] <-w work_place> "
-	       "[-f] [-x] [-r] [-m] [-y] [-s] [-c] [-O]\n"
+	       "[-f] [-x] [-r] [-m] [-y] [-s] [-c] [-O] [-A]\n"
 	       "iteration specify the running times.\n"
 	       "file_size specify the size of original file.\n"
 	       "reflink_nums specify the number of reflinks.\n"
@@ -130,6 +130,7 @@ static void usage(void)
 	       "-s specify the stress test.\n"
 	       "-c specify the comprehensive test.here need 6 ranks at least.\n"
 	       "-O specify O_DIRECT test.\n"
+	       "-A specify asynchronous io test.\n"
 	       "-m specify the mmap test.\n");
 
 	MPI_Finalize();
@@ -142,7 +143,7 @@ int parse_opts(int argc, char **argv)
 	int c;
 
 	while (1) {
-		c = getopt(argc, argv, "I:i:w:OfFrRmMyYcCsSW:n:N:l:L:p:P:x:X:");
+		c = getopt(argc, argv, "I:i:w:OAfFrRmMyYcCsSW:n:N:l:L:p:P:x:X:");
 		if (c == -1)
 			break;
 
@@ -178,6 +179,9 @@ int parse_opts(int argc, char **argv)
 			break;
 		case 'O':
 			test_flags |= ODCT_TEST;
+			break;
+		case 'A':
+			test_flags |= ASIO_TEST;
 			break;
 		case 'r':
 		case 'R':

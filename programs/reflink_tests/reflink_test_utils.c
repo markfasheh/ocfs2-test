@@ -205,15 +205,69 @@ int mmap_read_at_file(char *pathname, void *buf, size_t count,
 
 int write_at(int fd, const void *buf, size_t count, off_t offset)
 {
-	int ret;
+	int ret, i;
 	size_t bytes_write;
+	struct o2test_aio o2a;
+	void *buf_cmp = NULL;
+	unsigned long long *ubuf = (unsigned long long *)buf;
+        unsigned long long *ubuf_cmp = NULL;
+
+	if (test_flags & ASIO_TEST) {
+
+		if (test_flags & ODCT_TEST) {
+			ret = posix_memalign(&buf_cmp, DIRECTIO_SLICE,
+					     count);
+			if (ret) {
+				ret = errno;
+				fprintf(stderr, "error %s during %s\n",
+					strerror(ret), "posix_memalign");
+				ret = -1;
+				goto bail;
+			}
+		} else
+			buf_cmp = (char *)malloc(count);
+
+		ret = o2test_aio_setup(&o2a, 1);
+		if (ret < 0)
+			goto bail;
+
+		ret = o2test_aio_pwrite(&o2a, fd, (void *)buf, count, offset);
+		if (ret < 0)
+			goto bail;
+
+		ret = o2test_aio_query(&o2a, 1, 1);
+		if(ret < 0)
+			goto bail;
+
+		ret = pread(fd, buf_cmp, count, offset);
+		if (ret < 0) {
+			ret = errno;
+			fprintf(stderr, "pread error %d: \"%s\"\n", ret,
+				strerror(ret));
+			ret = -1;
+			goto bail;
+		}
+
+		if (memcmp(buf, buf_cmp, count)) {
+
+			ubuf_cmp = (unsigned long long *)buf_cmp;
+			for (i = 0; i < count / sizeof(unsigned long long); i++)
+				printf("%d: 0x%llx[aio_write]  0x%llx[pread]\n",
+				       i, ubuf[i], ubuf_cmp[i]);
+		}
+
+		ret = o2test_aio_destroy(&o2a);
+
+		goto bail;
+	}
 
 	ret = pwrite(fd, buf, count, offset);
 
 	if (ret < 0) {
 		ret = errno;
 		fprintf(stderr, "write error %d: \"%s\"\n", ret, strerror(ret));
-		return -1;
+		ret = -1;
+		goto bail;
 	}
 
 	bytes_write = ret;
@@ -226,13 +280,19 @@ int write_at(int fd, const void *buf, size_t count, off_t offset)
 			ret = errno;
 			fprintf(stderr, "write error %d: \"%s\"\n", ret,
 				strerror(ret));
-			return -1;
+			ret = -1;
+			goto bail;
 		}
 
 		bytes_write += ret;
 	}
 
-	return 0;
+	ret = 0;
+bail:
+	if (buf_cmp)
+		free(buf_cmp);
+
+	return ret;
 }
 
 int write_at_file(char *pathname, const void *buf, size_t count,

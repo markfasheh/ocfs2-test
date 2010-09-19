@@ -108,7 +108,7 @@ static void usage(void)
 	printf("Usage: reflink_tests [-i iteration] <-n ref_counts> "
 	       "<-p refcount_tree_pairs> <-l file_size> <-d disk> "
 	       "<-w workplace> -f -b [-c conc_procs] -m -s -r [-x xattr_nums]"
-	       " [-h holes_num] [-o holes_filling_log] -O -D <child_nums> -I -H -T\n\n"
+	       " [-h holes_num] [-o holes_filling_log] -O -A -D <child_nums> -I -H -T\n\n"
 	       "-f enable basic feature test.\n"
 	       "-b enable boundary test.\n"
 	       "-c enable concurrent tests with conc_procs processes.\n"
@@ -116,6 +116,7 @@ static void usage(void)
 	       "-r enable random test.\n"
 	       "-s enable stress test.\n"
 	       "-O enable O_DIRECT test.\n"
+	       "-A enable asynchronous io test.\n"
 	       "-D enable destructive test.\n"
 	       "-v enable verification for destructive test.\n"
 	       "-H enable CoW verification test for punching holes.\n"
@@ -143,7 +144,7 @@ static int parse_opts(int argc, char **argv)
 
 	while (1) {
 		c = getopt(argc, argv,
-			   "i:d:w:IOfFbBsSrRHTmMW:n:N:"
+			   "i:d:w:IOAfFbBsSrRHTmMW:n:N:"
 			   "l:L:c:C:p:x:X:h:o:v:a:P:D:");
 		if (c == -1)
 			break;
@@ -168,6 +169,9 @@ static int parse_opts(int argc, char **argv)
 			break;
 		case 'O':
 			test_flags |= ODCT_TEST;
+			break;
+		case 'A':
+			test_flags |= ASIO_TEST;
 			break;
 		case 'D':
 			test_flags |= DSCV_TEST;
