@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <stdarg.h>
 
 #include <sys/socket.h>
 #include <netdb.h>
@@ -89,7 +90,8 @@ void prep_rand_dest_write_unit(struct write_unit *wu, unsigned long chunk_no);
 int do_write_chunk(int fd, struct write_unit wu);
 int do_read_chunk(int fd, unsigned long chunk_no, struct write_unit *wu);
 int prep_orig_file_in_chunks(char *file_name, unsigned long filesize);
-int verify_file(FILE *logfile, char *filename, unsigned long filesize);
+int verify_file(int is_remote, FILE *logfile, struct write_unit *wus,
+		char *filename, unsigned long filesize);
 
 int init_sock(char *serv, int port);
 int set_semvalue(int sem_id, int val);

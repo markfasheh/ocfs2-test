@@ -354,7 +354,8 @@ int prep_orig_file_in_chunks(char *file_name, unsigned long filesize)
 	return 0;
 }
 
-int verify_file(FILE *logfile, char *filename, unsigned long filesize)
+int verify_file(int is_remote, FILE *logfile, struct write_unit *remote_wus,
+		char *filename, unsigned long filesize)
 {
 	int fd = 0, ret = 0;
 	struct write_unit *wus, wu, ewu;
@@ -367,6 +368,11 @@ int verify_file(FILE *logfile, char *filename, unsigned long filesize)
 
 	wus = (struct write_unit *)malloc(t_bytes);
 	memset(wus, 0, t_bytes);
+
+	if (is_remote) {
+		memcpy(wus, remote_wus, t_bytes);
+		goto verify_body;
+	}
 
 	for (i = 0; i < num_chunks; i++)
 		wus[i].wu_chunk_no = i;
@@ -401,6 +407,7 @@ int verify_file(FILE *logfile, char *filename, unsigned long filesize)
 		}
 	}
 
+verify_body:
 	fd = open_file(filename, open_ro_flags);
 	if (fd < 0)
 		return fd;
@@ -409,21 +416,21 @@ int verify_file(FILE *logfile, char *filename, unsigned long filesize)
 		/*
 		 * Verification consists of two following parts:
 		 *
-		 *    - verify write records in logfile.
-		 *    - verify pattern of chunks absent from logfile.
+		 *    - verify write records.
+		 *    - verify pattern of chunks absent from write records.
 		 */
 		
 		ret = do_read_chunk(fd, i, &wu);
 		if (ret < 0)
 			return ret;
 		/*
-		 * verify pattern of chunks absent from logfile.
+		 * verify pattern of chunks absent from write records.
 		 */
 		if (!wus[i].wu_timestamp) {
 
 			if (verbose)
 				fprintf(stdout, "  verifying #%lu chunk "
-					"out of log\n", i);
+					"out of write records\n", i);
 			/*
 			 * skip holes
 			 */
@@ -454,7 +461,8 @@ int verify_file(FILE *logfile, char *filename, unsigned long filesize)
 		 * verify write records in logfile.
 		 */
 		if (verbose)
-			fprintf(stdout, "  verifying #%lu chunk in log\n", i);
+			fprintf(stdout, "  verifying #%lu chunk in write "
+				"records\n", i);
 
 		if (ret < CHUNK_SIZE) {
 			fprintf(stderr, "Short read(readed:%d, expected:%d)"
@@ -482,6 +490,8 @@ int verify_file(FILE *logfile, char *filename, unsigned long filesize)
 
 		}
 	}
+
+	ret = 0;
 
 bail:
 	if (wus)

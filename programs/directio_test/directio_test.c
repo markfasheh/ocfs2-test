@@ -416,7 +416,7 @@ static int verify_test(void)
 	ret = 
 
 	fprintf(stdout, "# Verify file %s in chunks\n", workfile);
-	ret = verify_file(log.stream_log, workfile, file_size);
+	ret = verify_file(0, log.stream_log, NULL, workfile, file_size);
 
 	return ret;
 }
