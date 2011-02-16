@@ -432,8 +432,10 @@ int verify_file(int is_remote, FILE *logfile, struct write_unit *remote_wus,
 		goto verify_body;
 	}
 
-	for (i = 0; i < num_chunks; i++)
+	for (i = 0; i < num_chunks; i++) {
 		wus[i].wu_chunk_no = i;
+		wus[i].wu_chunksize = chunksize;
+	}
 
 	while (!feof(logfile)) {
 
@@ -457,6 +459,7 @@ int verify_file(int is_remote, FILE *logfile, struct write_unit *remote_wus,
 		wu.wu_timestamp = atoll(arg2);
 		wu.wu_checksum = atoi(arg3);
 		wu.wu_char = arg4[0];
+		wu.wu_chunksize = chunksize;
 
 		if (wu.wu_timestamp >= wus[wu.wu_chunk_no].wu_timestamp) {
 
