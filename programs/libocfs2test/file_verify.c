@@ -147,10 +147,17 @@ int get_i_size(char *filename, unsigned long *size, int flags)
 	return ret;
 }
 
-static int read_at(int fd, void *buf, size_t count, off_t offset)
+static int read_at(int fd, void *buf, size_t count, off_t offset, size_t i_size)
 {
 	int ret;
 	size_t bytes_read;
+
+	if (((offset + count) > i_size) && (i_size >= offset)) {
+		count = i_size - offset;
+	}
+
+	if (!count)
+		return count;
 
 	ret = pread(fd, buf, count, offset);
 	if (ret < 0) {
@@ -346,12 +353,22 @@ int do_read_chunk(int fd, unsigned long chunk_no, unsigned int chunksize,
 {
 	int ret;
 	char *tmp_pattern;
-	size_t count = chunksize;
+	size_t count = chunksize, i_size;
 	off_t offset = chunksize * chunk_no;
+	struct stat stat;
 
 	tmp_pattern = (char *)malloc(chunksize);
 
-	ret = read_at(fd, tmp_pattern, count, offset);
+	ret = fstat(fd, &stat);
+	if (ret == -1) {
+		ret = errno;
+		fprintf(stderr, "stat failure %d: %s\n", ret, strerror(ret));
+		return ret;
+	}
+	
+	i_size = stat.st_size;
+
+	ret = read_at(fd, tmp_pattern, count, offset, i_size);
 	if (ret < 0)
 		goto out;
 
