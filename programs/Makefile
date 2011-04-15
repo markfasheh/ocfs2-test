@@ -58,7 +58,8 @@ SUBDIRS =			\
 	inode_alloc_perf_tests	\
 	reflink_tests		\
 	directio_test		\
-	discontig_bg_test
+	discontig_bg_test	\
+	defrag-test
 
 ifdef OCFS2_TEST_DX_DIRS
 	SUBDIRS += dx_dirs_tests
