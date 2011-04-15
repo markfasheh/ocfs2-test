@@ -22,6 +22,8 @@ MULTI_SOURCES = multi_defrager.c
 
 DIST_FILES = $(SOURCES) $(MULTI_SOURCES)
 
+BIN_EXTRA = defrag-test.sh
+
 BIN_PROGRAMS = frager verify_file defrager multi_defrager
 
 frager: frager.o
