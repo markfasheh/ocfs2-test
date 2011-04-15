@@ -43,6 +43,7 @@ int prep_orig_file_in_chunks(char *file_name, unsigned long filesize,
 			     unsigned int chunksize, int flags);
 void prep_rand_dest_write_unit(struct write_unit *wu, unsigned long chunk_no,
 			       unsigned int chunksize);
+int fill_chunk_pattern(char *pattern, struct write_unit *wu);
 int do_write_chunk(int fd, struct write_unit wu);
 int do_read_chunk(int fd, unsigned long chunk_no, unsigned int chunksize,
 		  struct write_unit *wu);

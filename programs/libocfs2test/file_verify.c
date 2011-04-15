@@ -209,7 +209,7 @@ static int write_at(int fd, const void *buf, size_t count, off_t offset)
 	return count;
 }
 
-static int fill_chunk_pattern(char *pattern, struct write_unit *wu)
+int fill_chunk_pattern(char *pattern, struct write_unit *wu)
 {
 	unsigned long offset = 0;
 	uint32_t checksum = 0;
