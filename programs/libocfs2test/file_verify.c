@@ -132,8 +132,8 @@ int get_i_size(char *filename, unsigned long *size, int flags)
 	struct stat stat;
 	int ret = 0, fd;
 
-	fd = open_file(filename, O_RDONLY);
-	if (fd)
+	fd = open_file(filename, O_RDONLY | flags);
+	if (fd < 0)
 		return fd;
 
 	ret = fstat(fd, &stat);
@@ -432,7 +432,7 @@ int verify_file(int is_remote, FILE *logfile, struct write_unit *remote_wus,
 {
 	int fd = 0, ret = 0;
 	struct write_unit *wus, wu, ewu;
-	unsigned long num_chunks = filesize / chunksize;
+	unsigned long num_chunks = filesize / chunksize, i_size;
 	unsigned long i, t_bytes = sizeof(struct write_unit) * num_chunks;
 	char arg1[100], arg2[100], arg3[100], arg4[100], *tmp_pattern;
 
@@ -443,6 +443,10 @@ int verify_file(int is_remote, FILE *logfile, struct write_unit *remote_wus,
 
 	wus = (struct write_unit *)malloc(t_bytes);
 	memset(wus, 0, t_bytes);
+
+	ret = get_i_size(filename, &i_size, 0);
+	if (ret)
+		return ret;
 
 	if (is_remote) {
 		memcpy(wus, remote_wus, t_bytes);
@@ -497,7 +501,14 @@ verify_body:
 		 *    - verify write records.
 		 *    - verify pattern of chunks absent from write records.
 		 */
-		
+		memset(&wu, 0, sizeof(struct write_unit));
+
+		/*
+		 * verfication ends up touching the EOF of file.
+		 */
+		if (i * chunksize >= i_size)
+			break;
+
 		ret = do_read_chunk(fd, i, chunksize, &wu);
 		if (ret < 0)
 			return ret;
