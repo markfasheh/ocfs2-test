@@ -14,16 +14,19 @@ CFLAGS += $(INCLUDES)
 
 LIBO2TEST = $(TOPDIR)/programs/libocfs2test/libocfs2test.a
 
-SOURCES = frager.c verify_file.c
+SOURCES = frager.c verify_file.c defrager.c
 
 DIST_FILES = $(SOURCES)
 
-BIN_PROGRAMS = frager verify_file
+BIN_PROGRAMS = frager verify_file defrager
 
 frager: frager.o
 	$(LINK) $(OCFS2_LIBS) $(LIBO2TEST)
 
 verify_file: verify_file.o
 	$(LINK) $(OCFS2_LIBS) $(LIBO2TEST)
+
+defrager: defrager.o
+	$(LINK) $(OCFS2_LIBS)
 
 include $(TOPDIR)/Postamble.make
