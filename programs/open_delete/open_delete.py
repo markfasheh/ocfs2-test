@@ -42,10 +42,12 @@ uname = os.uname()
 lhostname = str(socket.gethostname())
 numnodes = 0
 logfile = config.LOGFILE
+interface = 'eth0'
 #
 Usage = '\n	 %prog [-l|-logfile logfilename] \
 [-f | --file filename] \
 [-i | --interactions count] \
+[-I | --interface] \
 [-n | --nodes nodelist] \
 [-h|--help]'
 #
@@ -77,6 +79,12 @@ if __name__=='__main__':
 			type='string', 
 			help='Logfile used by the process.')
 #
+	parser.add_option('-I', 
+			'--interface', 
+			dest='interface',
+			type='string', 
+			help='Nic used by MPI messaging.')
+#
 	parser.add_option('-n', 
 			'--nodes', 
 			dest='nodelist',
@@ -89,6 +97,8 @@ if __name__=='__main__':
 		parser.error('incorrect number of arguments')
 	if options.logfile:
 		logfile = options.logfile
+	if options.interface:
+		interface = options.interface
 	count = options.count
 	filename = options.filename
 	if options.nodelist:
@@ -115,6 +125,7 @@ ret = o2tf.openmpi_run(DEBUGON,
 	filename) ),
 	options.nodelist, 
 	'ssh',
+	interface,
 	options.logfile,
 	'WAIT')
 if not ret:

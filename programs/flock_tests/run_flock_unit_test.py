@@ -37,12 +37,14 @@ DEBUGON = os.getenv('DEBUG',0)
 uname = os.uname()
 lhostname = str(socket.gethostname())
 logfile = config.LOGFILE
+interface = 'eth0'
 procs = 1
 cmd = config.BINDIR+'/flock_unit_test'
 #
 Usage = """
 %prog 
 [-l | --logfile <logfile>] 
+[-i | --interface <interface>] 
 [-n | --nodelist <nodelist>] 
 [-t | --type]  			lock type:should be flock or fcntl.
 [-e | --file1 <filename1>]
@@ -66,6 +68,12 @@ if __name__=='__main__':
 		dest='logfile',
 		type='string', 
 		help='Logfile used by the process.')
+#
+	parser.add_option('-i', 
+		'--interface', 
+		dest='interface',
+		type='string', 
+		help='NIC used for MPI messaging.')
 #
 	parser.add_option('-n', 
 		'--nodelist', 
@@ -129,6 +137,9 @@ if __name__=='__main__':
 		if not options.cleanup:
 			parser.error('Invalid node list.')
 
+	if options.interface:
+		interface = options.interface
+
 if DEBUGON:
 	o2tf.printlog('flock_unit_test: main - current directory %s' % 
 		os.getcwd(), logfile, 0, '')
@@ -145,6 +156,7 @@ ret = o2tf.openmpi_run(DEBUGON, procs,
 	logfile)), 
 	options.nodelist, 
 	'ssh',
+	interface,
 	logfile,
 	'WAIT')
 #

@@ -327,8 +327,8 @@ for y in range(count):
 		(cmdline, stagedir, options.logfile) ),
 		','.join(nodelist),
 		'ssh',
-		logfile,
 		options.interface,
+		logfile,
 		'WAIT')
 	if not ret:
 		o2tf.printlog(

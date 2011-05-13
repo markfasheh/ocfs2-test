@@ -289,7 +289,7 @@ run_open_delete_test()
 	local logfile=${logdir}/open_delete_${DATE}.log
 
 	run_common_testcase "open_delete" "sparse,unwritten,inline-data" \
-"${BINDIR}/open_delete.py -f ${testfile} -i 10000 -l ${logfile} -n ${NODE_LIST}"
+"${BINDIR}/open_delete.py -f ${testfile} -i 10000 -I ${INTERFACE} -l ${logfile} -n ${NODE_LIST}"
 
 }
 
@@ -300,7 +300,7 @@ run_cross_delete_test()
 	local workplace=${MOUNT_POINT}/cross_delete_test
 
 	run_common_testcase "cross_delete" "sparse,unwritten,inline-data" \
-"${BINDIR}/cross_delete.py -c 1 -d ${workplace} -n ${NODE_LIST} -t ${KERNELSRC}"
+"${BINDIR}/cross_delete.py -c 1 -i ${INTERFACE} -d ${workplace} -n ${NODE_LIST} -t ${KERNELSRC}"
 }
 
 run_write_append_truncate_test()
@@ -311,7 +311,7 @@ run_write_append_truncate_test()
 	local testfile=${workplace}/write_append_truncate_test_file
 
 	run_common_testcase "write_append_truncate" "sparse,unwritten,inline-data" \
-"${BINDIR}/run_write_append_truncate.py -i 20000 -l ${logfile} -n ${NODE_LIST} -f ${testfile}"
+"${BINDIR}/run_write_append_truncate.py -i 20000 -I ${INTERFACE} -l ${logfile} -n ${NODE_LIST} -f ${testfile}"
 }
 
 run_multi_mmap_test()
@@ -322,7 +322,7 @@ run_multi_mmap_test()
 	local testfile=${workplace}/multi_mmap_test_file
 
 	run_common_testcase "multi_mmap" "sparse,unwritten,inline-data" \
-"${BINDIR}/run_multi_mmap.py -i 20000 -n ${NODE_LIST} -c -b 6000 --hole -f ${testfile}"
+"${BINDIR}/run_multi_mmap.py -i 20000 -I ${INTERFACE} -n ${NODE_LIST} -c -b 6000 --hole -f ${testfile}"
 }
 
 run_create_racer_test()
@@ -332,7 +332,7 @@ run_create_racer_test()
 	local workplace=${MOUNT_POINT}/create_racer_test
 
 	run_common_testcase "create_racer" "sparse,unwritten,inline-data" \
-"${BINDIR}/run_create_racer.py -i 40000 -l ${logfile} -n ${NODE_LIST} -p ${workplace}"
+"${BINDIR}/run_create_racer.py -c 40000 -i ${INTERFACE} -l ${logfile} -n ${NODE_LIST} -p ${workplace}"
 }
 
 run_xattr_test()
@@ -412,7 +412,7 @@ ${DEVICE} ${FEATURES} ${JOURNALSIZE} ${BLOCKS}
 
 	LogMsg "Run lvb_torture, CMD: ${BINDIR}/run_lvb_torture.py -d /dlm/ -i 60000 \
 -H ${DEVICE} -l ${logfile} -n ${NODE_LIST} "${UUID}" "${LOCK}""
-	${BINDIR}/run_lvb_torture.py -d /dlm/ -i 60000 -H ${DEVICE} -l \
+	${BINDIR}/run_lvb_torture.py -d /dlm/ -c 60000 -i ${INTERFACE} -H ${DEVICE} -l \
 ${logfile} -n ${NODE_LIST} "${UUID}" "${LOCK}" >> ${LOGFILE} 2>&1
 	LogRC $?
 
@@ -437,7 +437,7 @@ run_flock_unit_test()
 	run_common_testcase "flock_unit" "sparse,unwritten,inline-data" \
 "${TOUCH_BIN} ${testfile1} && ${TOUCH_BIN} ${testfile2} && ${BINDIR}/run_flock_unit_test.py \
 -l ${fcntl_logfile} -n ${NODE_LIST} -t fcntl -e ${testfile1} -f ${testfile2} \
-&& ${BINDIR}/run_flock_unit_test.py -l ${flock_logfile} -n ${NODE_LIST} -t \
+&& ${BINDIR}/run_flock_unit_test.py -l ${flock_logfile} -i ${INTERFACE} -n ${NODE_LIST} -t \
 flock -e ${testfile1} -f ${testfile2}"
 }
 

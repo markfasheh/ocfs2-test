@@ -35,12 +35,14 @@ DEBUGON = os.getenv('DEBUG',0)
 uname = os.uname()
 lhostname = str(socket.gethostname())
 logfile = config.LOGFILE
+interface = 'eth0'
 procs = 1
 cmd = config.BINDIR+'/write_append_truncate'
 #
 Usage = """
 %prog 
 [-i | --iterations <iterations>] 
+[-I | --interface <interface>] 
 [-C | --cleanup] 
 [-l | --logfile <logfile>] 
 [-n | --nodelist <nodelist>] 
@@ -84,6 +86,12 @@ if __name__=='__main__':
 		type='string', 
 		help='Logfile used by the process.')
 #
+	parser.add_option('-I', 
+		'--interface', 
+		dest='interface',
+		type='string', 
+		help='NIC used by MPI messaging.')
+#
 	parser.add_option('-n', 
 		'--nodelist', 
 		dest='nodelist',
@@ -119,6 +127,9 @@ if __name__=='__main__':
 	if options.logfile:
 		logfile = options.logfile
 
+	if options.interface:
+		interface = options.interface
+
 	if options.nodelist:
 		nodelist = options.nodelist.split(',')
 		nodelen = len(nodelist)
@@ -148,6 +159,7 @@ ret = o2tf.openmpi_run(DEBUGON, procs,
 	logfile)), 
 	options.nodelist, 
 	'ssh',
+	interface,
 	logfile,
 	'WAIT')
 #
