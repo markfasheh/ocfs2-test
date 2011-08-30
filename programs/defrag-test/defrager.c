@@ -50,9 +50,8 @@ char *filename = NULL;
 
 static void usage(void)
 {
-	fprintf(stderr, ("Usage: %s [-s start_offset] [-l length] [-t thresh] "
-		"<file_path>\n"),
-		program_name);
+	fprintf(stderr, ("Usage: %s [-s start_offset] [-l length] "
+		"[-t threshold] <file_path>\n"), program_name);
 	exit(1);
 }
 
@@ -72,7 +71,7 @@ int parse_opts(int argc, char **argv, struct ocfs2_move_extents *range)
 			range->me_len = atol(optarg);
 			break;
 		case 't':
-			range->me_thresh = atol(optarg);
+			range->me_threshold = atol(optarg);
 			break;
 		case 'h':
 			usage();

@@ -107,7 +107,7 @@ int parse_opts(int argc, char **argv, struct ocfs2_move_extents *range)
 			range->me_len = atol(optarg);
 			break;
 		case 't':
-			range->me_thresh = atol(optarg);
+			range->me_threshold = atol(optarg);
 			break;
 		case 'w':
 			strcpy(workplace, optarg);
@@ -301,13 +301,14 @@ do_defrag:
 			if (ret)
 				goto out;
 			range->me_start = get_rand_ul(0, range->me_start );
-			range->me_len = get_rand_ul(range->me_thresh, i_size);
+			range->me_len =
+				get_rand_ul(range->me_threshold, i_size);
 		}
 
 		if (verbose)
 			rank_printf("defrag %s at offset: %llu, len: %llu, "
-				    "thresh: %llu\n", path, range->me_start,
-				    range->me_len, range->me_thresh);
+				    "threshold: %llu\n", path, range->me_start,
+				    range->me_len, range->me_threshold);
 
 		ret = defrag_file(path, range);
 		if (ret)
