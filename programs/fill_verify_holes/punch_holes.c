@@ -1,3 +1,23 @@
+/* -*- mode: c; c-basic-offset: 8; -*-
+ * vim: noexpandtab sw=8 ts=8 sts=0:
+ *
+ * punch_holes.c
+ *
+ * Copyright (C) 2006, 2011 Oracle.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ * 
+ */
+
+#define _LARGEFILE64_SOURCE
 #define _GNU_SOURCE
 #define _XOPEN_SOURCE 500
 #include <unistd.h>
@@ -7,6 +27,9 @@
 #include <fcntl.h>
 #include <limits.h>
 #include <sys/mman.h>
+#include <inttypes.h>
+#include <linux/types.h>
+#include <stdint.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,7 +78,7 @@ static unsigned long file_size;
 static FILE *logfile = NULL;
 static FILE *replaylogfile = NULL;
 
-static int parse_opts(int argc, char **argv)
+static int ph_parse_opts(int argc, char **argv)
 {
 	int c, iter_specified = 0;
 
@@ -104,7 +127,7 @@ static int parse_opts(int argc, char **argv)
 	return 0;
 }
 
-static int replay_eof(void)
+static int ph_replay_eof(void)
 {
 	if (!replaylogfile)
 		return 0;
@@ -112,7 +135,7 @@ static int replay_eof(void)
 	return feof(replaylogfile);
 }
 
-static int open_replaylog(void)
+static int ph_open_replaylog(void)
 {
 	if (!replaylogname)
 		return 0;
@@ -126,20 +149,21 @@ static int open_replaylog(void)
 	return 0;
 }
 
-static void log_write(struct write_unit *wu)
+static void ph_log_write(struct fh_write_unit *wu)
 {
 	int fd;
 
-	fprintf(logfile, "%c\t%lu\t%u\n", wu->w_char, wu->w_offset, wu->w_len);
+	fprintf(logfile, "%c\t%"PRIu64"\t%u\n", wu->w_char, wu->w_offset,
+		wu->w_len);
+
 	if (flush_output) {
 		fflush(logfile);
-
 		fd = fileno(logfile);
 		fsync(fd);
 	}
 }
 
-static unsigned long get_rand(unsigned long min, unsigned long max)
+static unsigned long ph_get_rand(unsigned long min, unsigned long max)
 {
 	if (min == 0 && max == 0)
 		return 0;
@@ -147,12 +171,12 @@ static unsigned long get_rand(unsigned long min, unsigned long max)
 	return min + ((rand() % max) - min);
 }
 
-static void prep_rand_write_unit(struct write_unit *wu)
+static void ph_prep_rand_write_unit(struct fh_write_unit *wu)
 {
 again:
-	wu->w_char = RAND_CHAR_START + (char) get_rand(0, 52);
-	wu->w_offset = get_rand(0, file_size - 1);
-	wu->w_len = (unsigned int) get_rand(1, MAX_WRITE_SIZE);
+	wu->w_char = RAND_CHAR_START + (char) ph_get_rand(0, 52);
+	wu->w_offset = ph_get_rand(0, file_size - 1);
+	wu->w_len = (unsigned int) ph_get_rand(1, MAX_WRITE_SIZE);
 
 	if (wu->w_offset + wu->w_len > file_size)
 		wu->w_len = file_size - wu->w_offset;
@@ -166,16 +190,16 @@ again:
 	assert(wu->w_len > 0);
 }
 
-static int prep_write_unit(struct write_unit *wu)
+static int ph_prep_write_unit(struct fh_write_unit *wu)
 {
 	int ret;
 
 	if (!replaylogfile) {
-		prep_rand_write_unit(wu);
+		ph_prep_rand_write_unit(wu);
 		return 0;
 	}
 
-	ret = fscanf(replaylogfile, "%c\t%lu\t%u\n", &wu->w_char,
+	ret = fscanf(replaylogfile, "%c\t%"PRIu64"\t%u\n", &wu->w_char,
 		     &wu->w_offset, &wu->w_len);
 	if (ret != 3) {
 		fprintf(stderr, "input failure from replay log, ret %d, %d %s\n",
@@ -186,7 +210,7 @@ static int prep_write_unit(struct write_unit *wu)
 	return 0;
 }
 
-static int do_write(int fd, struct write_unit *wu)
+static int ph_do_write(int fd, struct fh_write_unit *wu)
 {
 	int ret, i;
 	struct o2test_aio o2a;
@@ -249,7 +273,7 @@ bail:
 	return 0;
 }
 
-static int resv_unwritten(int fd, uint64_t start, uint64_t len)
+static int ph_resv_unwritten(int fd, uint64_t start, uint64_t len)
 {
 	int ret = 0;
 	struct ocfs2_space_resv sr;
@@ -269,11 +293,11 @@ static int resv_unwritten(int fd, uint64_t start, uint64_t len)
 	return ret;
 }
 
-static int prep_file(char *name, unsigned long size)
+static int ph_prep_file(char *name, unsigned long size)
 {
 	int ret, fd;
 	unsigned long start;
-	struct write_unit wu;
+	struct fh_write_unit wu;
 
 	fd = open(name, O_RDWR|O_CREAT|O_TRUNC,
 		  S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
@@ -284,7 +308,7 @@ static int prep_file(char *name, unsigned long size)
 	}
 
 	if (create_unwritten) {
-		ret = resv_unwritten(fd, 0, size);
+		ret = ph_resv_unwritten(fd, 0, size);
 		if (ret)
 			return ret;
 	}
@@ -301,7 +325,7 @@ static int prep_file(char *name, unsigned long size)
 	start = 0;
 	while (start < size) {
 again:
-		ret = prep_write_unit(&wu);
+		ret = ph_prep_write_unit(&wu);
 		if (ret) {
 			fprintf(stderr, "error during prep, quitting.\n");
 			return ret;
@@ -315,9 +339,9 @@ again:
 				goto again;
 		}
 
-		log_write(&wu);
+		ph_log_write(&wu);
 
-		ret = do_write(fd, &wu);
+		ret = ph_do_write(fd, &wu);
 		if (ret)
 			return ret;
 
@@ -327,7 +351,7 @@ again:
 	return fd;
 }
 
-static int punch_hole(int fd, struct write_unit *wu)
+static int ph_punch_hole(int fd, struct fh_write_unit *wu)
 {
 	int ret;
 	struct ocfs2_space_resv sr;
@@ -346,7 +370,7 @@ static int punch_hole(int fd, struct write_unit *wu)
 	return 0;
 }
 
-static int open_logfile(void)
+static int ph_open_logfile(void)
 {
 	if (!logname)
 		logfile = stdout;
@@ -363,7 +387,7 @@ static int open_logfile(void)
 int main(int argc, char **argv)
 {
 	int ret, i, fd;
-	struct write_unit wu;
+	struct fh_write_unit wu;
 
 	if (argc < 3) {
 		usage();
@@ -372,34 +396,34 @@ int main(int argc, char **argv)
 
 	srand(getpid());
 
-	ret = parse_opts(argc, argv);
+	ret = ph_parse_opts(argc, argv);
 	if (ret) {
 		usage();
 		return 1;
 	}
 
-	ret = open_logfile();
+	ret = ph_open_logfile();
 	if (ret)
 		return 1;
 
-	ret = open_replaylog();
+	ret = ph_open_replaylog();
 	if (ret)
 		return 1;
 
-	fd = prep_file(fname, file_size);
+	fd = ph_prep_file(fname, file_size);
 	if (fd == -1)
 		return 1;
 
-	for(i = 0; (i < max_iter) && !replay_eof(); i++) {
-		ret = prep_write_unit(&wu);
+	for(i = 0; (i < max_iter) && !ph_replay_eof(); i++) {
+		ret = ph_prep_write_unit(&wu);
 		if (ret)
 			return 1;
 
 		wu.w_char = MAGIC_HOLE_CHAR;
 
-		log_write(&wu);
+		ph_log_write(&wu);
 
-		ret = punch_hole(fd, &wu);
+		ret = ph_punch_hole(fd, &wu);
 		if (ret)
 			return 1;
 	}

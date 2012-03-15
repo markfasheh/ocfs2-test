@@ -1,9 +1,34 @@
+/* -*- mode: c; c-basic-offset: 8; -*-
+ * vim: noexpandtab sw=8 ts=8 sts=0:
+ *
+ * verify_holes.c
+ *
+ * Copyright (C) 2006, 2011 Oracle.  All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * General Public License for more details.
+ * 
+ */
+
+#define _LARGEFILE64_SOURCE
+#define _GNU_SOURCE
 #define _XOPEN_SOURCE 500
 #include <unistd.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <limits.h>
+#include <sys/mman.h>
+#include <inttypes.h>
+#include <linux/types.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,7 +43,7 @@
 struct rb_root	chunk_root = RB_ROOT;
 
 struct file_chunk {
-	struct write_unit	fc_write;
+	struct fh_write_unit	fc_write;
 	struct rb_node		fc_node;
 };
 
@@ -26,7 +51,7 @@ static struct file_chunk *init_chunk = NULL;
 static char buf[MAX_WRITE_SIZE];
 static int verbose = 0;
 
-static void usage(void)
+static void vh_usage(void)
 {
 	printf("verify_holes [-v] LOGFILE FILE\n"
 	       "FILE is a path to a file\n"
@@ -38,7 +63,7 @@ static void usage(void)
 	exit(0);
 }
 
-static int open_files(char *log, FILE **logfp, char *testfile, int *testfd)
+static int vh_open_files(char *log, FILE **logfp, char *testfile, int *testfd)
 {
 	int fd;
 
@@ -61,7 +86,7 @@ static int open_files(char *log, FILE **logfp, char *testfile, int *testfd)
 	return 0;
 }
 
-static int get_i_size(int fd, unsigned long *size)
+static int vh_get_i_size(int fd, unsigned long *size)
 {
 	struct stat stat;
 	int ret;
@@ -77,7 +102,7 @@ static int get_i_size(int fd, unsigned long *size)
 	return ret;
 }
 
-static struct file_chunk *alloc_chunk(void)
+static struct file_chunk *vh_alloc_chunk(void)
 {
 	struct file_chunk *f = calloc(1, sizeof(*init_chunk));
 	if (!f) {
@@ -88,7 +113,7 @@ static struct file_chunk *alloc_chunk(void)
 	return f;
 }
 
-static void print_extent(const char *pre, FILE *where, struct write_unit *wu)
+static void vh_print_extent(const char *pre, FILE *where, struct fh_write_unit *wu)
 {
 	char ch[3] = "\\0\0";
 
@@ -97,13 +122,13 @@ static void print_extent(const char *pre, FILE *where, struct write_unit *wu)
 		ch[1] = '\0';
 	}
 
-	fprintf(where, "%s: {%s,\t%lu,\t%u}\t(%lu)\n", pre, ch, wu->w_offset,
-		wu->w_len, wu->w_offset + (unsigned long)wu->w_len);
+	fprintf(where, "%s: {%s, %"PRIu64", %u} (%"PRIu64")\n", pre, ch,
+		wu->w_offset, wu->w_len, wu->w_offset + wu->w_len);
 }
 
 static int recurse_level = 0;
 
-static void insert_chunk(struct file_chunk *chunk)
+static void vh_insert_chunk(struct file_chunk *chunk)
 {
 	struct rb_node **p;
 	struct rb_node *parent;
@@ -125,7 +150,7 @@ static void insert_chunk(struct file_chunk *chunk)
 
 restart_search:
 #ifdef DEBUG_INSERT
-	print_extent("insert chunk", stdout, &chunk->fc_write);
+	vh_print_extent("insert chunk", stdout, &chunk->fc_write);
 #endif
 	p = &chunk_root.rb_node;
 	parent = NULL;
@@ -134,7 +159,7 @@ restart_search:
 		unsigned long tmpoff;
 		unsigned int tmplen;
 		unsigned long tmpend;
-		struct write_unit *wu;
+		struct fh_write_unit *wu;
 		parent = *p;
 
 		tmp = rb_entry(parent, struct file_chunk, fc_node);
@@ -147,7 +172,7 @@ restart_search:
 		if (off <= tmpoff && end >= tmpend) {
 #ifdef DEBUG_INSERT
 			printf("Fully encompasses another extent\n");
-			print_extent("extent found", stdout, wu);
+			vh_print_extent("extent found", stdout, wu);
 #endif
 
 			/* We fully encompass this extent */
@@ -156,19 +181,19 @@ restart_search:
 
 			goto restart_search;
 		} else if (off > tmpoff && end < tmpend) {
-			struct file_chunk *tmp2 = alloc_chunk();
+			struct file_chunk *tmp2 = vh_alloc_chunk();
 			char tmpch = wu->w_char;
 			/* We are in the middle of this extent */
 #ifdef DEBUG_INSERT
 			printf("Split existing extent\n");
-			print_extent("extent found", stdout, wu);
+			vh_print_extent("extent found", stdout, wu);
 #endif
 
 			rb_erase(&tmp->fc_node, &chunk_root);
 
 			wu->w_len = off - tmpoff;
 
-			insert_chunk(tmp);
+			vh_insert_chunk(tmp);
 
 			wu = &tmp2->fc_write;
 
@@ -176,13 +201,13 @@ restart_search:
 			wu->w_len = tmpend - wu->w_offset;
 			wu->w_char = tmpch;
 
-			insert_chunk(tmp2);
+			vh_insert_chunk(tmp2);
 			goto restart_search;
 		} else if (off <= tmpoff && end <= tmpend && end > tmpoff) {
 			/* We straddle the left side of this extent */
 #ifdef DEBUG_INSERT
 			printf("Left straddle existing extent\n");
-			print_extent("extent found", stdout, wu);
+			vh_print_extent("extent found", stdout, wu);
 #endif
 
 			rb_erase(&tmp->fc_node, &chunk_root);
@@ -190,12 +215,12 @@ restart_search:
 			wu->w_offset = end;
 			wu->w_len = tmpend - wu->w_offset;
 
-			insert_chunk(tmp);
+			vh_insert_chunk(tmp);
 			goto restart_search;
 		} else if (off > tmpoff && off < tmpend && end >= tmpend) {
 #ifdef DEBUG_INSERT
 			printf("Right straddle existing extent\n");
-			print_extent("extent found", stdout, wu);
+			vh_print_extent("extent found", stdout, wu);
 #endif
 
 			/* We straddle the right side of this extent */
@@ -203,7 +228,7 @@ restart_search:
 
 			wu->w_len = off - tmpoff;
 
-			insert_chunk(tmp);
+			vh_insert_chunk(tmp);
 			goto restart_search;
 		} else if (off < tmpoff)
 			p = &(*p)->rb_left;
@@ -217,34 +242,34 @@ restart_search:
 	recurse_level--;
 }
 
-static void init_tree(unsigned long file_size)
+static void vh_init_tree(unsigned long file_size)
 {
-	init_chunk = alloc_chunk();
+	init_chunk = vh_alloc_chunk();
 
 	init_chunk->fc_write.w_char = '\0';
 	init_chunk->fc_write.w_len = file_size;
 	init_chunk->fc_write.w_offset = 0;
 
-	insert_chunk(init_chunk);
+	vh_insert_chunk(init_chunk);
 }
 
-static int read_log(FILE *logfile)
+static int vh_read_log(FILE *logfile)
 {
 	int ret;
 	unsigned int line = 0;
 	struct file_chunk *chunk;
-	struct write_unit *wu;
+	struct fh_write_unit *wu;
 
 	while (1) {
-		chunk = alloc_chunk();
+		chunk = vh_alloc_chunk();
 		wu = &chunk->fc_write;
 
-		ret = fscanf(logfile, "%c\t%lu\t%u\n", &wu->w_char,
+		ret = fscanf(logfile, "%c\t%"PRIu64"\t%u\n", &wu->w_char,
 			     &wu->w_offset, &wu->w_len);
 		if (ret == 3) {
 			if (wu->w_char == MAGIC_HOLE_CHAR)
 				wu->w_char = '\0';
-			insert_chunk(chunk);
+			vh_insert_chunk(chunk);
 			line++;
 			continue;
 		}
@@ -260,14 +285,15 @@ static int read_log(FILE *logfile)
 	return ret;
 }
 
-static int check_chunk(struct write_unit *wu, int fd)
+static int vh_check_chunk(struct fh_write_unit *wu, int fd)
 {
 	unsigned int len = wu->w_len;
 	unsigned int ret;
+	uint64_t off = wu->w_offset;
 	int i;
 
 	if (verbose)
-		print_extent("check chunk", stdout, wu);
+		vh_print_extent("check chunk", stdout, wu);
 
 	while (len) {
 		unsigned int count;
@@ -276,7 +302,7 @@ static int check_chunk(struct write_unit *wu, int fd)
 		if (len > MAX_WRITE_SIZE)
 			count = MAX_WRITE_SIZE;
 
-		ret = read(fd, buf, count);
+		ret = pread(fd, buf, count, off);
 		if (ret == -1) {
 			ret = errno;
 			fprintf(stderr, "read error %d: %s\n",
@@ -312,12 +338,13 @@ static int check_chunk(struct write_unit *wu, int fd)
 		}
 
 		len -= count;
+		off += count;
 	}
 
 	return 0;
 }
 
-static int check_file(int fd)
+static int vh_check_file(int fd)
 {
 	int ret;
 	struct rb_node *node;
@@ -327,9 +354,9 @@ static int check_file(int fd)
 	while (node) {
 		chunk = rb_entry(node, struct file_chunk, fc_node);
 
-		ret = check_chunk(&chunk->fc_write, fd);
+		ret = vh_check_chunk(&chunk->fc_write, fd);
 		if (ret) {
-			print_extent("Verify failed", stderr,
+			vh_print_extent("Verify failed", stderr,
 				     &chunk->fc_write);
 			return EINVAL;
 		}
@@ -340,7 +367,7 @@ static int check_file(int fd)
 	return 0;
 }
 
-static int parse_opts(int argc, char **argv, char **logname, char **fname)
+static int vh_parse_opts(int argc, char **argv, char **logname, char **fname)
 {
 	int c;
 
@@ -371,31 +398,31 @@ int main(int argc, char **argv)
 {
 	int ret, fd;
 	FILE *logfile;
-	unsigned long size;
+	unsigned long size = 0;
 	char *logname, *fname;
 
-	ret = parse_opts(argc, argv, &logname, &fname);
+	ret = vh_parse_opts(argc, argv, &logname, &fname);
 	if (ret) {
-		usage();
+		vh_usage();
 		return 0;
 	}
 
-	ret = open_files(logname, &logfile, fname, &fd);
+	ret = vh_open_files(logname, &logfile, fname, &fd);
 	if (ret)
 		return 1;
 
-	ret = get_i_size(fd, &size);
+	ret = vh_get_i_size(fd, &size);
 	if (ret)
 		return 1;
 
-	init_tree(size);
+	vh_init_tree(size);
 
 	/*
 	 * Read in logfile, sorting records as we go:
 	 *  - records later in the log file are assumed to overwrite those
 	 *    with which they overlap.
 	 */
-	ret = read_log(logfile);
+	ret = vh_read_log(logfile);
 	if (ret)
 		return 1;
 
@@ -403,7 +430,7 @@ int main(int argc, char **argv)
 	 * Iterate over the file, looking for zeros where holes should
 	 * be, and the right characters where holes were filled.
 	 */
-	ret = check_file(fd);
+	ret = vh_check_file(fd);
 	if (ret)
 		return 1;
 
