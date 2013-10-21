@@ -4,7 +4,7 @@ CURDIR = $(shell pwd)
 
 include $(TOPDIR)/Preamble.make
 
-HFILES += reflink.h  splice.h
+HFILES += reflink.h
 
 SOURCES = $(HFILES)
 
