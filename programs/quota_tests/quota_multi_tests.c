@@ -185,6 +185,7 @@ static int name2id(int type, char *name)
 		return user2uid(name);
 	if (type & GROUP)
 		return group2gid(name);
+	return -1;
 }
 
 static void MPI_Barrier_Sync(void)
@@ -1089,7 +1090,7 @@ static void group_inodes_limit_test(long isoftlimit, long bsoftlimit,
 	add_rm_user_group(GROUPDEL_BIN, REMOVE, GROUP, groupname, NULL);
 }
 
-static int quota_corrupt_test(long isoftlimit, long bsoftlimit, int user_postfix)
+static void quota_corrupt_test(long isoftlimit, long bsoftlimit, int user_postfix)
 {
 	int ret, fd;
 	long i, j;
@@ -1155,7 +1156,7 @@ static int quota_corrupt_test(long isoftlimit, long bsoftlimit, int user_postfix
 	add_rm_user_group(USERDEL_BIN, REMOVE, USER, username, NULL);
 }
 
-static int concurrent_rw_test(long isoftlimit, long bsoftlimit,
+static void concurrent_rw_test(long isoftlimit, long bsoftlimit,
 			      long user_postfix)
 {
 	int ret, fd, o_uid, j;
@@ -1250,7 +1251,7 @@ static int concurrent_rw_test(long isoftlimit, long bsoftlimit,
 	}
 }
 
-static int run_tests(void)
+static void run_tests(void)
 {
 	int ret;
 	int i;
@@ -1346,7 +1347,7 @@ static int run_tests(void)
 
 }
 
-static int setup(int argc, char *argv[])
+static void setup(int argc, char *argv[])
 {
 	unsigned long i;
 	int ret;

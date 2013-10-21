@@ -355,7 +355,7 @@ static void atexit_hook(void)
 	free(child_pid_list);
 }
 
-static int one_round_run(enum FILE_TYPE ft, int round_no)
+static void one_round_run(enum FILE_TYPE ft, int round_no)
 {
 	int fd, ret, status;
 	DIR *dp;
