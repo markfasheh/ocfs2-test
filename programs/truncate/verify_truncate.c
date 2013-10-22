@@ -222,7 +222,7 @@ int file_truncate(char *file_name, unsigned long long new_i_size)
 int verify_truncate(char *file_name)
 {
 
-	int fd, ret = 0, o_ret;
+	int fd, ret = 0;
 	int open_ro_flags = O_RDONLY;
 	long i;
 
@@ -261,8 +261,8 @@ int verify_truncate(char *file_name)
 		}
 
 		if (memcmp(buf, pattern, clustersize)) {
-			fprintf(stderr, "#%d cluster corrupted on %s.\n",
-				file_name);
+			fprintf(stderr, "#%ld cluster corrupted on %s.\n",
+				i, file_name);
 			ret = -1;
 			goto out;
 		}

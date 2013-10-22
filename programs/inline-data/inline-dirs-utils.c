@@ -572,7 +572,7 @@ void should_inlined_or_not(int is_inlined, int should_inlined, int test_no)
 		if (!is_inlined) {
 			fprintf(stderr, "After Test #%d, dir %s should be "
 				"inlined here!\n", test_no, dir_name);
-			fprintf(stderr, "Dir(%s): i_size = %d,id_count = %d\n",
+			fprintf(stderr, "Dir(%s): i_size = %lu,id_count = %d\n",
 				dir_name, i_size, id_count);
 			exit(-1);
 		}
@@ -581,7 +581,7 @@ void should_inlined_or_not(int is_inlined, int should_inlined, int test_no)
 		if (is_inlined) {
 			fprintf(stderr, "After Test #%d, dir %s should be "
 				"extented here!\n", test_no, dir_name);
-			fprintf(stderr, "Dir(%s): i_size = %d,id_count = %d\n",
+			fprintf(stderr, "Dir(%s): i_size = %lu,id_count = %d\n",
 				dir_name, i_size, id_count);
 			exit(-1);
 

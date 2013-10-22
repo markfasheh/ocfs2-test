@@ -68,6 +68,7 @@ int parse_opts(int argc, char **argv)
 
 	filesize = 0;
 	enable_multi_nodes = 0;
+	filename[0]='\0';
 
 	while (1) {
 		c = getopt(argc, argv, "f:l:c:k:mh:");
@@ -98,7 +99,7 @@ int parse_opts(int argc, char **argv)
 		}
 	}
 
-	if (!filename) {
+	if (filename[0]=='\0') {
 		fprintf(stderr, "filename is a mandatory option\n");
 		usage();
 	}

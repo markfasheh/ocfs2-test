@@ -311,7 +311,7 @@ static void sigchld_handler()
 static void kill_all_children()
 {
 	int i;
-	int process_nums;
+	int process_nums = 0;
 
 	if (do_multi_process_test == 1)
 		process_nums = child_nums;
@@ -342,7 +342,7 @@ static void sigterm_handler()
 static void atexit_hook(void)
 {
 	int i;
-	int process_nums;
+	int process_nums = 0;
 
 	if (do_multi_process_test == 1)
 		process_nums = child_nums;
@@ -357,9 +357,8 @@ static void atexit_hook(void)
 
 static void one_round_run(enum FILE_TYPE ft, int round_no)
 {
-	int fd, ret, status;
-	DIR *dp;
-	pid_t pid, ppid;
+	int fd = 0, ret, status;
+	pid_t pid;
 	unsigned long j;
 	int i, k;
 	char *write_buf = NULL;
@@ -611,7 +610,7 @@ static void one_round_run(enum FILE_TYPE ft, int round_no)
 		return;
 	}
 	/* Do normal update/add test*/
-	printf("Test %d: Doing normal %d EAs adding and updating on file %s.\n",
+	printf("Test %d: Doing normal %lu EAs adding and updating on file %s.\n",
 		testno, xattr_nums, filename);
 
 	fflush(stdout);
@@ -671,7 +670,7 @@ static void one_round_run(enum FILE_TYPE ft, int round_no)
 	/*Here we do random_size update and check*/
 	if (!do_random_test)
 		goto list_test;
-	printf("Test %d: Doing randomsize updating for %d EAs on file %s.\n",
+	printf("Test %d: Doing randomsize updating for %lu EAs on file %s.\n",
 		testno, xattr_nums, filename);
 
 	unsigned long update_iter;

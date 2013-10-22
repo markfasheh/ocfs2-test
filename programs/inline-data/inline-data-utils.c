@@ -109,7 +109,6 @@ int extend_pattern(int fd, unsigned int old_size, unsigned int new_size)
 {
 	int bytes = new_size - old_size;
 	int ret;
-	int i;
 
 	memset(pattern + old_size, 0, bytes);
 
@@ -210,7 +209,8 @@ int write_at(int fd, const void *buf, size_t count, off_t offset)
 	}
 
 	if (ret != count) {
-		fprintf(stderr, "Short write: wanted %d, got %d\n", count, ret);
+		fprintf(stderr, "Short write: wanted %lu, got %d\n",
+				(unsigned long) count, ret);
 		return -1;
 	}
 
@@ -432,7 +432,7 @@ int should_inlined_or_not(int is_inlined, int should_inlined, int test_no)
 		if (!is_inlined) {
 			fprintf(stderr, "After Test #%d, file %s should be "
 				"inlined here!\n", test_no, file_name);
-			fprintf(stderr, "File(%s): i_size = %d,id_count = %d\n",
+			fprintf(stderr, "File(%s): i_size = %ld,id_count = %u\n",
 				file_name, i_size, id_count);
 			return -1;
 		}
@@ -441,7 +441,7 @@ int should_inlined_or_not(int is_inlined, int should_inlined, int test_no)
 		if (is_inlined) {
 			fprintf(stderr, "After Test #%d, file %s should be "
 				"extented here!\n", test_no, file_name);
-			fprintf(stderr, "File(%s): i_size = %d,id_count = %d\n",
+			fprintf(stderr, "File(%s): i_size = %ld,id_count = %u\n",
 				file_name, i_size, id_count);
 			return -1;
 

@@ -26,6 +26,9 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <linux/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include <linux/limits.h>
 #include <sys/time.h>
 #include <sys/sem.h>

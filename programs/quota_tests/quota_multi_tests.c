@@ -523,7 +523,7 @@ static void negative_inodes_limit_test(long isoftlimit, long bsoftlimit,
 	long i, file_index, rm_counts = 0;
 	struct if_dqblk s_dq, d_dq;
 	char username[USERNAME_SZ];
-	int *inodes_removed;
+	int *inodes_removed = NULL;
 	
 	MPI_Request request;
         MPI_Status status;
@@ -532,7 +532,7 @@ static void negative_inodes_limit_test(long isoftlimit, long bsoftlimit,
 
 		inodes_removed = (int *)malloc(sizeof(int) * isoftlimit * 2);
 		memset((void *)inodes_removed, 0, sizeof(int) * isoftlimit *2);
-		snprintf(username, USERNAME_SZ, "quota-user-rank%d-%d", rank,
+		snprintf(username, USERNAME_SZ, "quota-user-rank%d-%ld", rank,
 			 user_postfix);
 
 		add_rm_user_group(USERADD_BIN, ADD, USER, username, NULL);
@@ -545,7 +545,7 @@ static void negative_inodes_limit_test(long isoftlimit, long bsoftlimit,
 		s_dq.dqb_curspace = 0;
 		setquota(QUOTAUSER, device, name2id(USER, username), s_dq);
 	} else
-		snprintf(username, USERNAME_SZ, "quota-user-rank0-%d",
+		snprintf(username, USERNAME_SZ, "quota-user-rank0-%ld",
 			 user_postfix);
 
 	/*
@@ -557,7 +557,7 @@ static void negative_inodes_limit_test(long isoftlimit, long bsoftlimit,
 		o_uid = getuid();
 		seteuid(name2id(USER, username));
 		for (i = 0; i < isoftlimit * 2; i++) {
-			snprintf(filename, PATH_SZ, "%s/%s-quotafile-%d",
+			snprintf(filename, PATH_SZ, "%s/%s-quotafile-%ld",
 				 workplace, username, i);
 			fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, FILE_MODE);
 			if (fd < 0) {
@@ -603,7 +603,7 @@ static void negative_inodes_limit_test(long isoftlimit, long bsoftlimit,
 		
 		while (rm_counts < rm_nums) {
 			i = get_rand(0, isoftlimit * 2 - 1);
-			snprintf(filename, PATH_SZ, "%s/%s-quotafile-%d",
+			snprintf(filename, PATH_SZ, "%s/%s-quotafile-%ld",
 				 workplace, username, i);
 			ret = unlink(filename);
 			if (ret < 0)
@@ -626,7 +626,7 @@ static void negative_inodes_limit_test(long isoftlimit, long bsoftlimit,
 		file_index = 0;
 		while (file_index < isoftlimit * 2) {
 			if (!inodes_removed[file_index]) {
-				snprintf(filename, PATH_SZ, "%s/%s-quotafile-%d",
+				snprintf(filename, PATH_SZ, "%s/%s-quotafile-%ld",
 					 workplace, username, file_index);
 				ret = unlink(filename);
 			}
@@ -654,7 +654,7 @@ static void user_inodes_grace_time_test(long isoftlimit, long bsoftlimit,
 
 	char username[USERNAME_SZ];
 
-	snprintf(username, USERNAME_SZ, "quota-user-rank%d-%d", rank,
+	snprintf(username, USERNAME_SZ, "quota-user-rank%d-%ld", rank,
 		 user_postfix);
 	
 	add_rm_user_group(USERADD_BIN, ADD, USER, username, NULL);
@@ -676,7 +676,7 @@ static void user_inodes_grace_time_test(long isoftlimit, long bsoftlimit,
 	seteuid(name2id(USER, username));
 
 	for (i = 0; i <= isoftlimit ; i++) {
-		snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%d",
+		snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%ld",
 			 workplace, hostname, username, i);
 		fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, FILE_MODE);
 		if (fd < 0) {
@@ -695,7 +695,7 @@ static void user_inodes_grace_time_test(long isoftlimit, long bsoftlimit,
 	/*Grace time take effect from now*/
 	sleep(grace_seconds);
 	/*grace time expires,so should hit failure here*/
-        snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%d",
+        snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%ld",
                  workplace, hostname, username, isoftlimit + 1);
         if ((fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, FILE_MODE)) > 0) {
                 close(fd);
@@ -706,7 +706,7 @@ static void user_inodes_grace_time_test(long isoftlimit, long bsoftlimit,
 	seteuid(o_uid);
 
 	for (i = 0; i <= isoftlimit; i++) {
-                snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%d",
+                snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%ld",
 			 workplace, hostname, username, i);
 		ret = unlink(filename);
 		if (ret < 0) {
@@ -722,11 +722,9 @@ static void user_inodes_grace_time_test(long isoftlimit, long bsoftlimit,
 
 static void user_space_limit_test(long isoftlimit, long bsoftlimit, int user_postfix)
 {
-	int ret;
-	long i;
-	int fd;
+	int ret, fd;
 	int o_uid;
-	struct if_dqblk s_dq, d_dq;
+	struct if_dqblk s_dq;
 	char *write_buf;
 	int writen_sz = 0;
 	long file_sz = 0;
@@ -822,7 +820,7 @@ static void user_inodes_limit_test(long isoftlimit, long bsoftlimit, int user_po
 	}
 
 	for (i = 0; i < isoftlimit * 2; i++) {
-		snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%d",
+		snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%ld",
 			 workplace, hostname, username, i);
 		if (!(i % 2)) {
 			fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, FILE_MODE);
@@ -837,12 +835,12 @@ static void user_inodes_limit_test(long isoftlimit, long bsoftlimit, int user_po
 		getquota(QUOTAUSER, device, name2id(USER, username), &d_dq);
 		if (d_dq.dqb_curinodes != i + 1)
 			abort_printf("Incorrect quota stats found,expected "
-				     "inode_num = %d,queried inode_num = %d.\n",
+				     "inode_num = %ld,queried inode_num = %d.\n",
 				     i + 1, d_dq.dqb_curinodes);
 	}
 
 	/*We definitely should hit falure here*/
-	snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%d",
+	snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%ld",
 		 workplace, hostname, username, isoftlimit * 2);
 
 	if ((fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, FILE_MODE)) > 0) {
@@ -853,7 +851,7 @@ static void user_inodes_limit_test(long isoftlimit, long bsoftlimit, int user_po
 	/*cleanup*/
 	seteuid(o_uid);
 	for (i = 0; i < isoftlimit * 2; i++) {
-		snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%d",
+		snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%ld",
 			 workplace, hostname, username, i);
 		if (!(i % 2)) {
 			ret = unlink(filename);
@@ -879,10 +877,10 @@ static void user_inodes_limit_test(long isoftlimit, long bsoftlimit, int user_po
 static void group_space_limit_test(long isoftlimit, long bsoftlimit,
 				   long user_num, int grp_postfix)
 {
-	int ret, fd;
-	long i, j;
+	int ret = 0, fd;
+	long i;
 	int o_uid, o_gid;
-	struct if_dqblk s_dq, d_dq;
+	struct if_dqblk s_dq;
 
 	char username[USERNAME_SZ], groupname[GROUPNAME_SZ];
 	char *write_buf;
@@ -908,7 +906,7 @@ static void group_space_limit_test(long isoftlimit, long bsoftlimit,
 	setegid(name2id(GROUP, groupname));
 
 	for (i = 0; i < user_num; i++) {
-		snprintf(username, USERNAME_SZ, "%s-quotauser-%d", groupname, i);
+		snprintf(username, USERNAME_SZ, "%s-quotauser-%ld", groupname, i);
 		add_rm_user_group(USERADD_BIN, ADD, USER_IN_GROUP, username,
 				  groupname);
 		getquota(QUOTAUSER, device, name2id(USER, username), &s_dq);
@@ -966,7 +964,7 @@ static void group_space_limit_test(long isoftlimit, long bsoftlimit,
 	setegid(o_gid);
 
 	for (i = 0; i < user_num; i++) {
-		snprintf(username, USERNAME_SZ, "%s-quotauser-%d", groupname, i);
+		snprintf(username, USERNAME_SZ, "%s-quotauser-%ld", groupname, i);
 		snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-group-spacelimit",
 			 workplace, hostname, username);
 		ret = unlink(filename);
@@ -990,7 +988,7 @@ static void group_inodes_limit_test(long isoftlimit, long bsoftlimit,
 				    long user_num, int grp_postfix)
 {
 	int ret, fd;
-	long i, j;
+	long i;
 	int o_uid, o_gid;
 	int user_index;
 	struct if_dqblk s_dq, d_dq;
@@ -1011,7 +1009,7 @@ static void group_inodes_limit_test(long isoftlimit, long bsoftlimit,
 	setquota(QUOTAGROUP, device, name2id(GROUP, groupname), s_dq);
 
 	for (i = 0; i < user_num; i++) {
-		snprintf(username, USERNAME_SZ, "%s-quotauser-%d", groupname, i);
+		snprintf(username, USERNAME_SZ, "%s-quotauser-%ld", groupname, i);
 		add_rm_user_group(USERADD_BIN, ADD, USER_IN_GROUP, username,
 				  groupname);
 		getquota(QUOTAUSER, device, name2id(USER, username), &s_dq);
@@ -1031,7 +1029,7 @@ static void group_inodes_limit_test(long isoftlimit, long bsoftlimit,
 		user_index = i % user_num;
 		snprintf(username, USERNAME_SZ, "%s-quotauser-%d", groupname,
 			 user_index);
-		snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%d",
+		snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%ld",
 			 workplace, hostname, username, i);
 		o_uid = getuid();
 		seteuid(name2id(USER, username));
@@ -1054,7 +1052,7 @@ static void group_inodes_limit_test(long isoftlimit, long bsoftlimit,
 	/*We definitely should hit falure here*/
 	user_index = (isoftlimit * 2) % user_num;
 	snprintf(username, USERNAME_SZ, "%s-quotauser-%d", groupname, user_index);
-	snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%d",
+	snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%ld",
 		 workplace, hostname, username, isoftlimit * 2);
 	o_uid = getuid();
 	seteuid(name2id(USER, username));
@@ -1071,7 +1069,7 @@ static void group_inodes_limit_test(long isoftlimit, long bsoftlimit,
 		user_index = i % user_num;
 		snprintf(username, USERNAME_SZ, "%s-quotauser-%d", groupname,
 			 user_index);
-		snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%d",
+		snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%ld",
 			 workplace, hostname, username, i);
 			ret = unlink(filename);
 		if (ret < 0) {
@@ -1083,7 +1081,7 @@ static void group_inodes_limit_test(long isoftlimit, long bsoftlimit,
 	}
 	
 	for (i = 0; i < user_num; i++) {
-		snprintf(username, USERNAME_SZ, "%s-quotauser-%d", groupname, i);
+		snprintf(username, USERNAME_SZ, "%s-quotauser-%ld", groupname, i);
 		add_rm_user_group(USERDEL_BIN, REMOVE, USER, username, NULL);
 	}
 
@@ -1093,12 +1091,10 @@ static void group_inodes_limit_test(long isoftlimit, long bsoftlimit,
 static void quota_corrupt_test(long isoftlimit, long bsoftlimit, int user_postfix)
 {
 	int ret, fd;
-	long i, j;
-	int o_uid, o_gid;
-	int user_index;
+	long i;
+	int o_uid;
 	struct if_dqblk s_dq, d_dq;
-	
-	char username[USERNAME_SZ], groupname[GROUPNAME_SZ];
+	char username[USERNAME_SZ];
 
 	snprintf(username, USERNAME_SZ, "quotauser-rank%d-%d", rank,
                  user_postfix);
@@ -1117,7 +1113,7 @@ static void quota_corrupt_test(long isoftlimit, long bsoftlimit, int user_postfi
 	ret =  seteuid(name2id(USER, username));
 
 	for (i = 0; i < isoftlimit; i++) {
-		snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%d",
+		snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%ld",
 			 workplace, hostname, username, i);
 		
 		fd = open(filename, O_RDWR | O_CREAT | O_TRUNC, FILE_MODE);
@@ -1143,7 +1139,7 @@ static void quota_corrupt_test(long isoftlimit, long bsoftlimit, int user_postfi
 			     d_dq.dqb_curinodes);
 
 	for (i = 0; i < isoftlimit; i++) {
-		snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%d",
+		snprintf(filename, PATH_SZ, "%s/%s-%s-quotafile-%ld",
 			 workplace, hostname, username, i);
 		ret = unlink(filename);
 		if (ret < 0) {
@@ -1159,8 +1155,8 @@ static void quota_corrupt_test(long isoftlimit, long bsoftlimit, int user_postfi
 static void concurrent_rw_test(long isoftlimit, long bsoftlimit,
 			      long user_postfix)
 {
-	int ret, fd, o_uid, j;
-	long i, file_index, writen_size = 0;
+	int ret, fd, o_uid;
+	long i, writen_size = 0;
 	struct if_dqblk s_dq, d_dq;
 	char username[USERNAME_SZ];
 	char *write_buf;
@@ -1170,7 +1166,7 @@ static void concurrent_rw_test(long isoftlimit, long bsoftlimit,
 	
 	if (!rank) {
 	
-		snprintf(username, USERNAME_SZ, "quota-user-rank%d-%d", rank,
+		snprintf(username, USERNAME_SZ, "quota-user-rank%d-%ld", rank,
 		         user_postfix);
 		
 		add_rm_user_group(USERADD_BIN, ADD, USER, username, NULL);
@@ -1184,7 +1180,7 @@ static void concurrent_rw_test(long isoftlimit, long bsoftlimit,
 		setquota(QUOTAUSER, device, name2id(USER, username), s_dq);
 
 	} else
-		snprintf(username, USERNAME_SZ, "quota-user-rank0-%d",
+		snprintf(username, USERNAME_SZ, "quota-user-rank0-%ld",
 			 user_postfix);
 	if (!rank) {
 		o_uid = getuid();
@@ -1253,10 +1249,7 @@ static void concurrent_rw_test(long isoftlimit, long bsoftlimit,
 
 static void run_tests(void)
 {
-	int ret;
 	int i;
-	int fd;
-	int o_uid, o_gid;
 	struct if_dqblk s_dq, d_dq;
 	
 	char username[USERNAME_SZ], groupname[GROUPNAME_SZ];
@@ -1349,7 +1342,6 @@ static void run_tests(void)
 
 static void setup(int argc, char *argv[])
 {
-	unsigned long i;
 	int ret;
 	int o_umask;
 

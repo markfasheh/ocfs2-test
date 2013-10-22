@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 		printf("error %d: %s\n", errno, strerror(errno));
 		exit(1);
 	}
-	printf("seek to end at offset %llu\n", off);
+	printf("seek to end at offset %llu\n", (unsigned long long)off);
 
 	strcpy(buf, "123456789");
 	ts.tv_sec = (wait/1000);
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 		}
 
 		printf("write succeeded at offset %lld...  sleeping %d ms...\n",
-		       off, wait);
+		       (long long int) off, wait);
 
 		ret = nanosleep(&ts, &rem);
 		if (ret == -1) {

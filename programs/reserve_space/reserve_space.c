@@ -45,8 +45,8 @@ usage:
 	printf("File: %s\n", filename);
 	printf("cmd = %s\n", argv[1]);
 	printf("l_whence = %d\n", sr.l_whence);
-	printf("l_start = %lld\n", sr.l_start);
-	printf("l_len = %lld\n", sr.l_len);
+	printf("l_start = %lld\n", (long long int) sr.l_start);
+	printf("l_len = %lld\n", (long long int) sr.l_len);
 
 	fd = open(filename, O_WRONLY|O_CREAT, S_IRUSR|S_IWUSR|S_IRGRP|S_IROTH);
 	if (fd == -1) {

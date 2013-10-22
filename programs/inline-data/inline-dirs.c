@@ -309,7 +309,7 @@ static void run_large_dir_tests(void)
 	should_inlined_or_not(ret, 0, testno);
 	/*verify i_size should be one block size here*/
 	if (i_size != blocksize) {
-		fprintf(stderr, "i_size should be %d,while it's % here!\n",
+		fprintf(stderr, "i_size should be %d,while it's %lu here!\n",
 			blocksize, i_size);
 	}
 	destroy_dir();
@@ -328,7 +328,7 @@ static void run_large_dir_tests(void)
 	should_inlined_or_not(ret, 0, testno);
 	/*verify i_size should be one block size here*/
 	if (i_size != blocksize * 2) {
-		fprintf(stderr, "i_size should be %d,while it's % here!\n",
+		fprintf(stderr, "i_size should be %d,while it's %lu here!\n",
 			blocksize * 2, i_size);
 	}
 	destroy_dir();
@@ -454,7 +454,7 @@ static void del_semvalue(void)
 static void run_concurrent_test(void)
 {
 	int ret, rc;
-	int i, j, status;
+	int i, status;
 	struct my_dirent *old_dirents;
 	key_t sem_key = IPC_PRIVATE, shm_key = IPC_PRIVATE;
 
@@ -556,7 +556,7 @@ static void run_concurrent_test(void)
 
 static void run_multiple_test(void)
 {
-	int i, j, status;
+	int i,  status;
 
 	pid_t pid;
 	int ret, rc;
@@ -658,7 +658,7 @@ static void setup(int argc, char *argv[])
 	snprintf(dir_name, 255, "%s/%s", work_place, dirent_name);
 
 	printf("BlockSize:\t\t%d\nMax Inline Data Size:\t%d\n"
-	       "ClusterSize:\t\t%d\nPageSize:\t\t%d\nWorkingPlace:\t\t%s\n"
+	       "ClusterSize:\t\t%lu\nPageSize:\t\t%lu\nWorkingPlace:\t\t%s\n"
 	       "NumOfMaxInlinedEntries:\t\t%d\n\n", blocksize, max_inline_size,
 	       clustersize, page_size, work_place,
 	       get_max_inlined_entries(max_inline_size));

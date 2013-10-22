@@ -443,12 +443,10 @@ static void write_verify_blocks(int fd)
 {
 	int i;
 	unsigned int block;
-	char *buf = mapped_area + (block*blocksize);
 
 	for(i = 0; i < num_blocks; i++) {
 		block = i;
 
-		buf = mapped_area + (block * blocksize);
 		fill_with_expected_pattern(local_pattern, block);
 
 		if ((i % num_procs) == rank)
