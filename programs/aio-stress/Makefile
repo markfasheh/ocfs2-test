@@ -14,6 +14,6 @@ OBJECTS = $(patsubst %.c,%.o,$(SOURCES))
 DIST_FILES = $(SOURCES)
   
 aio-stress: $(OBJECTS)
-	$(LINK) -laio
+	$(LINK) -laio -lpthread
 
 include $(TOPDIR)/Postamble.make
