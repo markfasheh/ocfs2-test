@@ -29,7 +29,7 @@
 # Author	: Marcos E. Matsunaga 
 #
 #
-import os, sys, time, optparse, socket, string, o2tf, config, pdb, timing
+import os, sys, time, optparse, socket, string, o2tf, config, pdb
 import time, config
 #
 MAXDIRLEVEL = 64

@@ -30,7 +30,7 @@
 # E-mail      : Marcos.Matsunaga@oracle.com
 
 #
-import os, sys, time, optparse, socket, string, o2tf, pdb, timing, time, config
+import os, sys, time, optparse, socket, string, o2tf, pdb, config
 #
 DEBUGON = os.getenv('DEBUG',0)
 #

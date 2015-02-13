@@ -29,7 +29,7 @@
 # E-mail		  : Marcos.Matsunaga@oracle.com
 
 #
-import os, stat, sys, time, optparse, socket, string, o2tf, pdb, timing, time
+import os, stat, sys, time, optparse, socket, string, o2tf, pdb
 import config
 #
 #pdb.set_trace()

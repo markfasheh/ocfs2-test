@@ -25,7 +25,7 @@
 # Author	: Marcos E. Matsunaga 
 
 #
-import os, stat, sys, time, optparse, socket, string, o2tf, pdb, timing, config
+import os, stat, sys, time, optparse, socket, string, o2tf, pdb, config
 import random, os.path
 #
 # FUNCTIONS START
