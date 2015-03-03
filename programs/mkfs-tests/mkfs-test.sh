@@ -66,6 +66,10 @@ verify_sizes() {
 }
 
 get_partsz() {
+	if [ -h "${device}" ]; then
+		device=`readlink -f "${device}"`
+	fi
+
     dev=`echo ${device} | sed 's/\/dev\///'`
     num=`cat /proc/partitions | ${AWK} -v DEV=${dev} '
 		BEGIN{dev=DEV} // {split($0, a); if (a[4] == dev) {printf("%u\n", $3); exit 0;} }'`
