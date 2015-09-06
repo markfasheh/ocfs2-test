@@ -956,7 +956,7 @@ function f_multi_inodes_test()
 {
 
 	f_LogMsg ${LOG_FILE} "Activate inode discontig-bg on ${DEVICE}"
-	${DISCONTIG_ACTIVATE_BIN} -t inode -r 800 -b $BLOCKSIZE -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
+	${DISCONTIG_ACTIVATE_BIN} -t inode -r 800 -b $BLOCKSIZE -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
 
