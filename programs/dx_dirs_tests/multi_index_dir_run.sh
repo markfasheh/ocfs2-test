@@ -123,7 +123,7 @@ function f_setup()
 	f_getoptions $*
 	
 	if [ "$MPI_ACCESS_METHOD" = "rsh" ];then
-		MPI_PLS_AGENT_ARG="-mca pls_rsh_agent rsh:ssh"
+		MPI_PLS_AGENT_ARG="-mca pls_rsh_agent ssh:rsh"
 	fi
 
 	if [ -z "${MOUNT_POINT}" ];then 

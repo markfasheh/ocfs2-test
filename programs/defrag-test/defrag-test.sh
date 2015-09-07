@@ -72,7 +72,7 @@ MULTI_TEST=
 MPI_HOSTS=
 MPI_RANKS=
 MPI_ACCESS_METHOD="rsh"
-MPI_PLS_AGENT_ARG="-mca pls_rsh_agent rsh:ssh"
+MPI_PLS_AGENT_ARG="-mca pls_rsh_agent ssh:rsh"
 MPI_BTL_ARG="-mca btl tcp,self"
 MPI_BTL_IF_ARG=
 
@@ -173,7 +173,7 @@ function f_check()
 			}
 
 			if [ "$MPI_ACCESS_METHOD" = "rsh" ];then
-				MPI_PLS_AGENT_ARG="-mca pls_rsh_agent rsh:ssh"
+				MPI_PLS_AGENT_ARG="-mca pls_rsh_agent ssh:rsh"
 			else
 				MPI_PLS_AGENT_ARG="-mca pls_rsh_agent ssh:rsh"
 			fi
