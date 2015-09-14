@@ -459,14 +459,14 @@ run_fillverifyholes()
 
 	${CAT} > ${varfile} <<EOF
 2048	4096	nosparse,nounwritten,noinline-data	data=ordered	100000000	0	0
-2048	65536	sparse,unwritten,inline-data		data=writeback	5000000000	-M	-U
+2048	65536	sparse,unwritten,inline-data		data=writeback	2000000000	-M	-U
 4096	4096	sparse,unwritten,inline-data		data=ordered	5000000000	0	0
-4096	4096	sparse,unwritten,inline-data		data=ordered	5000000000	-M	0
+4096	4096	sparse,unwritten,inline-data		data=ordered	2000000000	-M	0
 4096	4096	sparse,unwritten,inline-data		data=ordered	5000000000	0	-U
-4096	4096	sparse,unwritten,inline-data		data=ordered	5000000000	-M	-U
+4096	4096	sparse,unwritten,inline-data		data=ordered	2000000000	-M	-U
 4096	8192	nosparse,nounwritten,noinline-data	data=writeback	100000000	0	0
 4096	131072	nosparse,nounwritten,noinline-data	data=ordered	100000000	-M	0
-4096	1048576	sparse,unwritten,inline-data		data=writeback	5000000000	-M	-U
+4096	1048576	sparse,unwritten,inline-data		data=writeback	2000000000	-M	-U
 EOF
 	if [ $? != 0 ]; then
 		${ECHO} "ERROR writing ${varfile}"
