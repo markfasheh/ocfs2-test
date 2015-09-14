@@ -339,7 +339,7 @@ run_xattr_test()
 	local logdir=${LOG_DIR}/multi-xattr-test
 
 	LogRunMsg "xattr-test"
-	${BINDIR}/xattr-multi-run.sh -r 4 -f ${NODE_LIST} -a rsh -o ${logdir} \
+	${BINDIR}/xattr-multi-run.sh -r 4 -f ${NODE_LIST} -a ssh -o ${logdir} \
 -d ${DEVICE} ${MOUNT_POINT} >> ${LOGFILE} 2>&1
 	LogRC $?
 }
