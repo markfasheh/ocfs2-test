@@ -11,7 +11,8 @@
 int main(int argc, char *argv[])
 {
 	int fd;
-	int slen;
+	long int slen = 0;
+	long int to_write = 1000000;
 
 	if (argc < 2) {
 		printf("Usage: ls | ./splice_write out\n");
@@ -22,11 +23,19 @@ int main(int argc, char *argv[])
 		printf("open file failed.\n");
 		exit(-1);
 	}
-	slen = splice(STDIN_FILENO, NULL, fd, NULL, 10000000, 0);
-	if (slen < 0)
-		fprintf(stderr, "splice failed.\n");
-	else
-		fprintf(stderr, "spliced length = %d\n",slen);
+	if (argc == 3)
+		to_write = atol(argv[2]);
+	while (to_write > 0) {
+		slen = splice(STDIN_FILENO, NULL, fd, NULL, to_write, 0);
+		if (slen < 0)
+			fprintf(stderr, "splice failed.\n");
+		else if (slen == 0)
+			break;
+		else {
+			to_write -= slen;
+			fprintf(stderr, "spliced length = %ld\n",slen);
+		}
+	}
 	close(fd);
 	if (slen < 0)
 		exit(-1);

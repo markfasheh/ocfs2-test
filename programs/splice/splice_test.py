@@ -70,8 +70,9 @@ def SpliceWrite():
 	from os import access, F_OK
 	if access(os.path.join(directory, filename), F_OK) ==1:
 		os.system('rm -fr ' + os.path.join(directory, filename))
-	os.system('cat %s | %s %s' % (os.path.join('/tmp', filename), \
-		SPLICEWRITE_BIN, os.path.join(directory, filename)))
+	os.system('cat %s | %s %s %i' % (os.path.join('/tmp', filename), \
+		SPLICEWRITE_BIN, os.path.join(directory, filename), \
+		os.stat(os.path.join('/tmp', filename)).st_size))
 	TEMPMD5SUM=getoutput('%s %s|cut -f1 -d" "' % \
 		(MD5SUM, os.path.join(directory, filename)))
 	if BASEMD5SUM == TEMPMD5SUM:
