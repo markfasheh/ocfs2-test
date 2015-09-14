@@ -18,6 +18,7 @@ SEQ=`which seq`
 SUDO="`which sudo` -u root"
 WGET=`which wget`
 WHOAMI=`which whoami`
+SED=`which sed`
 
 DWNLD_PATH="http://oss.oracle.com/~smushran/ocfs2-test"
 KERNEL_TARBALL="linux-kernel.tar.gz"
@@ -931,17 +932,18 @@ run_backup_super()
 
 usage()
 {
-	${ECHO} "usage: ${APP} [-k kerneltarball] -m mountpoint -l logdir -d device"
+	${ECHO} "usage: ${APP} [-k kerneltarball] -m mountpoint -l logdir -d device [-t testcases]"
 	exit 1
 }
 
-while getopts "d:m:k:l:h?" args
+while getopts "d:m:k:l:t:h:?" args
 do
 	case "$args" in
 		d) DEVICE="$OPTARG";;
 		m) MOUNTPOINT="$OPTARG";;
 		k) KERNELSRC="$OPTARG";;
 		l) OUTDIR="$OPTARG";;
+		t) TESTCASES="$OPTARG";;
     		h) usage;;
     		?) usage;;
   	esac
@@ -968,6 +970,21 @@ if [ -z ${OUTDIR} ]; then
 	usage
 fi
 
+if [ -z ${TESTCASES} ]; then
+	TESTCASES="all"
+fi
+
+SUPPORTED_TESTCASES="all create_and_open directaio fillverifyholes renamewriterace aiostress\
+  filesizelimits mmaptruncate buildkernel splice sendfile mmap reserve_space inline xattr reflink mkfs tunefs backup_super"
+for cas in ${TESTCASES}; do
+	echo ${SUPPORTED_TESTCASES} | grep -sqw $cas
+	if [ $? -ne 0 ]; then
+		echo "testcase [${cas}] not supported."
+		echo "supported testcases: [${SUPPORTED_TESTCASES}]"
+		exit 1
+	fi
+done
+
 RUNDATE=`${DATE} +%F_%H:%M`
 LOGDIR=${OUTDIR}/${RUNDATE}
 LOGFILE=${LOGDIR}/single_run.log
@@ -989,43 +1006,83 @@ log_message "*** Start Single Node test ***"
 
 ${ECHO} "Output log is ${LOGFILE}"
 
-run_create_and_open ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 
-run_directaio ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	if [ "$tc"X = "create_and_open"X -o "$tc"X = "all"X ];then
+		run_create_and_open ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	fi
 
-run_fillverifyholes ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	if [ "$tc"X = "directaio"X -o "$tc"X = "all"X ];then
+		run_directaio ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	fi
 
-run_renamewriterace ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	if [ "$tc"X = "fillverifyholes"X -o "$tc"X = "all"X ];then
+		run_fillverifyholes ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	fi
 
-run_aiostress ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	if [ "$tc"X = "renamewriterace"X -o "$tc"X = "all"X ];then
+		run_renamewriterace ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	fi
 
-run_filesizelimits ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	if [ "$tc"X = "aiostress"X -o "$tc"X = "all"X ];then
+		run_aiostress ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	fi
 
-run_mmaptruncate ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	if [ "$tc"X = "filesizelimits"X -o "$tc"X = "all"X ];then
+		run_filesizelimits ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	fi
 
-run_buildkernel ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${KERNELSRC}
+	if [ "$tc"X = "mmaptruncate"X -o "$tc"X = "all"X ];then
+		run_mmaptruncate ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	fi
 
-run_splice ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	if [ "$tc"X = "buildkernel"X -o "$tc"X = "all"X ];then
+		run_buildkernel ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${KERNELSRC}
+	fi
 
-run_sendfile ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	if [ "$tc"X = "splice"X -o "$tc"X = "all"X ];then
+		run_splice ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	fi
 
-run_mmap ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	if [ "$tc"X = "sendfile"X -o "$tc"X = "all"X ];then
+		run_sendfile ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	fi
 
-run_reserve_space ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	if [ "$tc"X = "mmap"X -o "$tc"X = "all"X ];then
+		run_mmap ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	fi
 
-run_inline_data ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	if [ "$tc"X = "reserve_space"X -o "$tc"X = "all"X ];then
+		run_reserve_space ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	fi
 
-run_xattr_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	if [ "$tc"X = "inline"X -o "$tc"X = "all"X ];then
+		run_inline_data ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	fi
 
-run_reflink_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	if [ "$tc"X = "xattr"X -o "$tc"X = "all"X ];then
+		run_xattr_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	fi
+
+	if [ "$tc"X = "reflink"X -o "$tc"X = "all"X ];then
+		run_reflink_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	fi
 
 # For tools test.
 
-run_mkfs ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	if [ "$tc"X = "mkfs"X -o "$tc"X = "all"X ];then
+		run_mkfs ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	fi
 
-run_tunefs ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	if [ "$tc"X = "tunefs"X -o "$tc"X = "all"X ];then
+		run_tunefs ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	fi
 
-run_backup_super ${LOGDIR} ${DEVICE}
+	if [ "$tc"X = "backup_super"X -o "$tc"X = "all"X ];then
+		run_backup_super ${LOGDIR} ${DEVICE}
+	fi
+
+done
 
 ENDRUN=$(date +%s)
 

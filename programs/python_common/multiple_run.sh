@@ -34,6 +34,7 @@ ECHO="`which echo` -e"
 
 SUDO="`which sudo` -u root"
 IFCONFIG_BIN="`which ifconfig`"
+SED=`which sed`
 
 REMOTE_MOUNT_BIN="${BINDIR}/remote_mount.py"
 REMOTE_UMOUNT_BIN="${BINDIR}/remote_umount.py"
@@ -61,6 +62,7 @@ FEATURES=
 JOURNALSIZE=0
 BLOCKS=0
 MOUNT_OPTS=
+TESTCASES=
 
 set -o pipefail
 
@@ -70,13 +72,14 @@ set -o pipefail
 f_usage()
 {
     echo "usage: `basename ${0}` <-k kerneltarball> <-n nodes> [-i nic] \
-[-a access_method] [-o logdir] <-d device> <mountpoint path>"
+[-a access_method] [-o logdir] <-d device> [-t testcases] <mountpoint path>"
     echo "       -k kerneltarball should be path of tarball for kernel src."
     echo "       -n nodelist,should be comma separated."
     echo "       -o output directory for the logs"
     echo "       -i network interface name to be used for MPI messaging."
     echo "       -a access method for mpi execution,should be ssh or rsh"
     echo "       -d device name used for ocfs2 volume."
+    echo "       -t sepcify testcases to run."
     echo "       <mountpoint path> path of mountpoint where test will be performed."
     echo 
     echo "Eaxamples:"
@@ -93,7 +96,7 @@ f_getoptions()
 		exit 1
 	fi
 
-	while getopts "n:d:i:a:o:k:h:" options; do
+	while getopts "n:d:i:a:o:k:t:h:" options; do
 		case $options in
 		n ) NODE_LIST="$OPTARG";;
 		d ) DEVICE="$OPTARG";;
@@ -101,6 +104,7 @@ f_getoptions()
 		a ) ACCESS_METHOD="$OPTARG";;
 		o ) LOG_DIR="$OPTARG";;
 		k ) KERNELSRC="$OPTARG";;
+		t ) TESTCASES="$OPTARG";;
 		h ) f_usage
 		    exit 1;;
                 * ) f_usage
@@ -191,6 +195,20 @@ f_setup()
 
         RUN_LOGFILE="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/multiple-run-\
 `uname -m`-`date +%F-%H-%M-%S`.log"
+
+	if [ -z $TESTCASES ];then
+		TESTCASES="all"
+	fi
+
+	SUPPORTED_TESTCASES="all xattr inline reflink write_append_truncate multi_mmap create_racer flock_unit cross_delete open_delete lvb_torture"
+	for cas in ${TESTCASES}; do
+		echo ${SUPPORTED_TESTCASES} | grep -sqw $cas
+		if [ $? -ne 0 ]; then
+			echo "testcase [${cas}] not supported."
+			echo "supported testcases: [${SUPPORTED_TESTCASES}]"
+			exit 1
+		fi
+	done
 }
 
 LogRC()
@@ -456,39 +474,61 @@ f_setup $*
 STARTRUN=$(date +%s)
 ${ECHO} "`date` - Starting Multiple Nodes Regress test" > ${LOGFILE}
 
-START=$(date +%s)
-run_xattr_test 
-
-START=$(date +%s)
-run_inline_test
-
-START=$(date +%s)
-run_reflink_test
-
-for BLOCKSIZE in 512 1024 4096;do
-	for CLUSTERSIZE in 4096 32768 1048576;do
-		${ECHO} "Tests with \"-b ${BLOCKSIZE} -C ${CLUSTERSIZE}\"" | \
-${TEE_BIN} -a ${LOGFILE}
+for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
+	if [ "$tc"X = "xattr"X -o "$tc"X = "all"X ]; then
 		START=$(date +%s)
-		run_write_append_truncate_test
+		run_xattr_test
+	fi
 
+	if [ "$tc"X = "inline"X -o "$tc"X = "all"X ]; then
 		START=$(date +%s)
-		run_multi_mmap_test
+		run_inline_test
+	fi
 
+	if [ "$tc"X = "reflink"X -o "$tc"X = "all"X ]; then
 		START=$(date +%s)
-		run_create_racer_test
+		run_reflink_test
+	fi
 
-		START=$(date +%s)
-		run_flock_unit_test
+	for BLOCKSIZE in 512 1024 4096;do
+		for CLUSTERSIZE in 4096 32768 1048576;do
+			${ECHO} "Tests with \"-b ${BLOCKSIZE} -C ${CLUSTERSIZE}\"" | \
+				${TEE_BIN} -a ${LOGFILE}
+			if [ "$tc"X = "write_append_truncate"X -o "$tc"X = "all"X ]; then
+				START=$(date +%s)
+				run_write_append_truncate_test
+			fi
 
-		START=$(date +%s)
-		run_cross_delete_test
+			if [ "$tc"X = "multi_mmap"X -o "$tc"X = "all"X ]; then
+				START=$(date +%s)
+				run_multi_mmap_test
+			fi
 
-		START=$(date +%s)
-		run_open_delete_test
+			if [ "$tc"X = "create_racer"X -o "$tc"X = "all"X ]; then
+				START=$(date +%s)
+				run_create_racer_test
+			fi
 
-		START=$(date +%s)
-		run_lvb_torture_test
+			if [ "$tc"X = "flock_unit"X -o "$tc"X = "all"X ]; then
+				START=$(date +%s)
+				run_flock_unit_test
+			fi
+
+			if [ "$tc"X = "cross_delete"X -o "$tc"X = "all"X ]; then
+				START=$(date +%s)
+				run_cross_delete_test
+			fi
+
+			if [ "$tc"X = "open_delete"X -o "$tc"X = "all"X ]; then
+				START=$(date +%s)
+				run_open_delete_test
+			fi
+
+			if [ "$tc"X = "lvb_torture"X -o "$tc"X = "all"X ]; then
+				START=$(date +%s)
+				run_lvb_torture_test
+			fi
+		done
 	done
 done
 
