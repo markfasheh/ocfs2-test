@@ -360,14 +360,14 @@ run_reflink_test()
 
 	LogRunMsg "reflink-test"
 	LogMsg "reflink 'data=ordered' mode test"
-	${BINDIR}/multi_reflink_test_run.sh -r 4 -f ${NODE_LIST} -a rsh -o \
+	${BINDIR}/multi_reflink_test_run.sh -r 4 -f ${NODE_LIST} -a ssh -o \
 ${logdir} -d ${DEVICE} ${MOUNT_POINT} >> ${LOGFILE} 2>&1 || {
 	RET=$?
 	LogRC $RET
 	return $RET
 }
 	LogMsg "reflink 'data=writeback' mode test"
-	${BINDIR}/multi_reflink_test_run.sh -r 4 -f ${NODE_LIST} -a rsh -o \
+	${BINDIR}/multi_reflink_test_run.sh -r 4 -f ${NODE_LIST} -a ssh -o \
 ${logdir} -W -d ${DEVICE} ${MOUNT_POINT} >> ${LOGFILE} 2>&1
 	LogRC $?
 }
