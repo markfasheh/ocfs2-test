@@ -256,6 +256,21 @@ function f_fillup_ebg()
 		filename=${filename_prefix}${i}
 		if [ "${i}" -gt "$OCFS2_LINK_MAX" ];then
 			mkdir -p ${WORK_PLACE}/${filename}
+			# We should not trying to make more directories
+			# if the test run out of inodes against the test
+			# file system, which means that the test failed
+			# to make the test storage fragmented this time
+			# so that the discontig block group did not took
+			# affected.  By breaking the test per mkdir failure,
+			# we can fix the test hanging issue with meaningful
+			# log information to indicate that.
+			# TODO: Figure out a better approach to make discontig
+			# block group ASAP.
+                        if [ "$?" -ne "0" ];then
+                                f_LogMsg ${LOG_FILE} "mkdir ${WORK_PLACE}/${filename} failed."
+                                break;
+                        fi
+
 			i=1
 			filename_prefix=${filename}/
 			continue
