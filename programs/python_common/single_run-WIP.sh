@@ -880,9 +880,10 @@ run_mkfs()
 
 	logdir=$1
 	device=$2
+	mountpoint=$3
 
 	log_start "mkfs_test"
-	mkfs-test.sh -o ${logdir} -d ${device}
+	mkfs-test.sh -o ${logdir} -d ${device} -m ${mountpoint}
 	RC=$?
 	log_end ${RC}
 }
@@ -1019,7 +1020,7 @@ run_reflink_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
 
 # For tools test.
 
-run_mkfs ${LOGDIR} ${DEVICE}
+run_mkfs ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
 
 run_tunefs ${LOGDIR} ${DEVICE}
 
