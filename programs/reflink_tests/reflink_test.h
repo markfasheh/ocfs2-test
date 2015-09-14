@@ -53,6 +53,10 @@
 
 #include "aio.h"
 
+#ifndef O_DIRECT
+#define O_DIRECT		040000 /* direct disk access hint */
+#endif
+
 #define OCFS2_MAX_FILENAME_LEN	255
 #define FILE_RW_FLAGS		(O_CREAT|O_RDWR)
 #define FILE_RO_FLAGS		(O_RDONLY)
