@@ -245,7 +245,7 @@ f_run_data_test()
         echo "==========================================================">>${DATA_LOG_FILE}
 	echo -e "Testing Binary:\t\t${INLINE_DATA_BIN} -i 1 -u ${OCFS2_UUID} ${MOUNT_POINT}">>${DATA_LOG_FILE}
 
-	${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS} ${INLINE_DATA_BIN} -i 1 -u ${OCFS2_UUID} ${MOUNT_POINT}>>${DATA_LOG_FILE} 2>&1
+	${SUDO} ${MPIRUN} --allow-run-as-root ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS} ${INLINE_DATA_BIN} -i 1 -u ${OCFS2_UUID} ${MOUNT_POINT}>>${DATA_LOG_FILE} 2>&1
 	RET=$?
 	echo_status ${RET} |tee -a ${RUN_LOG_FILE}
 	exit_or_not ${RET}
@@ -259,7 +259,7 @@ f_run_data_test()
         echo "==========================================================">>${DATA_LOG_FILE}
 	echo -e "Testing Binary:\t\t${INLINE_DATA_BIN} -i 200 -u ${OCFS2_UUID} ${MOUNT_POINT}">>${DATA_LOG_FILE}
 
-        ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS} ${INLINE_DATA_BIN} -i 200 -u ${OCFS2_UUID} ${MOUNT_POINT}>>${DATA_LOG_FILE} 2>&1
+        ${SUDO} ${MPIRUN} --allow-run-as-root ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS} ${INLINE_DATA_BIN} -i 200 -u ${OCFS2_UUID} ${MOUNT_POINT}>>${DATA_LOG_FILE} 2>&1
 	RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -276,7 +276,7 @@ f_run_dirs_test()
         echo "==========================================================">>${DIRS_LOG_FILE}
 	echo -e "Testing Binary:\t\t${INLINE_DIRS_BIN} -i 1 -s 20 -u ${OCFS2_UUID} ${MOUNT_POINT}">>${DIRS_LOG_FILE}
 
-	${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS}  ${INLINE_DIRS_BIN} -i 1 -s 20 -u ${OCFS2_UUID} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
+	${SUDO} ${MPIRUN} --allow-run-as-root ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS}  ${INLINE_DIRS_BIN} -i 1 -s 20 -u ${OCFS2_UUID} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
 	RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -290,7 +290,7 @@ f_run_dirs_test()
         echo "==========================================================">>${DIRS_LOG_FILE}
 	echo -e "Testing Binary:\t\t${INLINE_DIRS_BIN} -i 1 -s 100 -u ${OCFS2_UUID} ${MOUNT_POINT}">>${DIRS_LOG_FILE}
 
-        ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS}  ${INLINE_DIRS_BIN} -i 1 -s 100 -u ${OCFS2_UUID} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
+        ${SUDO} ${MPIRUN} --allow-run-as-root ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS}  ${INLINE_DIRS_BIN} -i 1 -s 100 -u ${OCFS2_UUID} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
 	RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -304,7 +304,7 @@ f_run_dirs_test()
         echo "==========================================================">>${DIRS_LOG_FILE}
 	echo -e "Testing Binary:\t\t${INLINE_DIRS_BIN} -i 5 -s 20 -u ${OCFS2_UUID} ${MOUNT_POINT}">>${DIRS_LOG_FILE}
 
-        ${MPIRUN} ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS}  ${INLINE_DIRS_BIN} -i 5 -s 20 -u ${OCFS2_UUID} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
+        ${SUDO} ${MPIRUN} --allow-run-as-root ${MPI_PLS_AGENT_ARG} -mca btl tcp,self -np ${MPI_RANKS} --host ${MPI_HOSTS}  ${INLINE_DIRS_BIN} -i 5 -s 20 -u ${OCFS2_UUID} ${MOUNT_POINT}>>${DIRS_LOG_FILE} 2>&1
 	RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
