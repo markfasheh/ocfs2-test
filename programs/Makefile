@@ -59,7 +59,6 @@ SUBDIRS =			\
 	reflink_tests		\
 	directio_test		\
 	discontig_bg_test	\
-	defrag-test		\
 	verify_readonly
 
 ifdef OCFS2_TEST_DX_DIRS
