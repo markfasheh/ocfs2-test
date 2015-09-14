@@ -448,8 +448,8 @@ ${WORK_PLACE} -D 10 -a ${LISTENER_ADDR} -P ${LISTENER_PORT} >>${LOG_FILE} 2>&1
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Basic Fucntional Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Basic Fucntional Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -f ${AIO_OPT}"
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w \
+${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -f ${AIO_OPT}"
+	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} -w \
 ${WORK_PLACE} -f ${AIO_OPT} >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -464,8 +464,8 @@ ${WORK_PLACE} -f ${AIO_OPT} >>${LOG_FILE} 2>&1
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Random Refcount Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Random Refcount Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -f -r ${AIO_OPT}"
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w \
+${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -f -r ${AIO_OPT}"
+	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} -w \
 ${WORK_PLACE} -r ${AIO_OPT} >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -480,8 +480,8 @@ ${WORK_PLACE} -r ${AIO_OPT} >>${LOG_FILE} 2>&1
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Mmap Refcount Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Mmap Refcount Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -m"
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w \
+${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -m"
+	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} -w \
 ${WORK_PLACE} -m >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -512,9 +512,9 @@ ${WORK_PLACE} -b >>${LOG_FILE} 2>&1
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Concurrent Refcount Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Concurrent Refcount Test, \
-CMD:${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} \
+CMD:${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} \
 -w ${WORK_PLACE} -c 100 "
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w \
+	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} -w \
 ${WORK_PLACE} -c 100 >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -529,8 +529,8 @@ ${WORK_PLACE} -c 100 >>${LOG_FILE} 2>&1
 	((TEST_NO++))
         f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] O_DIRECT Refcount Test:"
         f_LogMsg ${LOG_FILE} "[${TEST_NO}] O_DIRECT Refcount Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -O ${AIO_OPT}"
-        ${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 104857600 -d ${DEVICE} -w \
+${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -O ${AIO_OPT}"
+        ${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} -w \
 ${WORK_PLACE} -O ${AIO_OPT} >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -546,9 +546,9 @@ ${WORK_PLACE} -O ${AIO_OPT} >>${LOG_FILE} 2>&1
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Verificationl CoW Test On \
 Punching Holes:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Verification CoW Test On Punching \
-Holes, CMD:${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 3276800 -d ${DEVICE} \
+Holes, CMD:${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 3276800 -d ${DEVICE} \
 -w ${WORK_PLACE} -H "
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 3276800 -d ${DEVICE} -w \
+	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 3276800 -d ${DEVICE} -w \
 ${WORK_PLACE} -H >>${LOG_FILE} 2>&1
 	RET=$?
 	f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -564,9 +564,9 @@ ${WORK_PLACE} -H >>${LOG_FILE} 2>&1
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Verificationl CoW Test On \
 Truncating:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Verification CoW Test On Truncating\
-, CMD:${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 3276800 -d ${DEVICE} \
+, CMD:${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 3276800 -d ${DEVICE} \
 -w ${WORK_PLACE} -T "
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 3276800 -d ${DEVICE} -w \
+	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 3276800 -d ${DEVICE} -w \
 ${WORK_PLACE} -T >>${LOG_FILE} 2>&1
 	RET=$?
 	f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -628,7 +628,7 @@ ${WORK_PLACE} -h 500 -m -o ${VERIFY_HOLES_LOG_FILE} >>${LOG_FILE} 2>&1
 
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] OracleVM Data Integrity Test:"
-	f_ovmtest 8048 10 >>${LOG_FILE} 2>&1
+	f_ovmtest 1000 3 >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
         f_exit_or_not ${RET}
@@ -642,9 +642,9 @@ ${WORK_PLACE} -h 500 -m -o ${VERIFY_HOLES_LOG_FILE} >>${LOG_FILE} 2>&1
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Inline-data Refcount Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Inline-data Refcount Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 100 -l $((${BLOCKSIZE}-200)) -d ${DEVICE} -w ${WORK_PLACE} \
+${REFLINK_TEST_BIN} -i 1 -n 10 -l $((${BLOCKSIZE}-200)) -d ${DEVICE} -w ${WORK_PLACE} \
 -I "
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l $((${BLOCKSIZE}-200)) -d ${DEVICE} -w \
+	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l $((${BLOCKSIZE}-200)) -d ${DEVICE} -w \
 ${WORK_PLACE} -I >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -676,9 +676,9 @@ ${WORK_PLACE} -x 5000 >>${LOG_FILE} 2>&1
 	((TEST_NO++))
         f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Stress Refcount Test:"
         f_LogMsg ${LOG_FILE} "[${TEST_NO}] Stress Refcount Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 10000 -l 2048576000 -p 20000 -d ${DEVICE} -w \
+${REFLINK_TEST_BIN} -i 1 -n 100 -l 2048576000 -p 20000 -d ${DEVICE} -w \
 ${WORK_PLACE} -s "
-        ${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10000 -l 2048576000 -p 20000 -d \
+        ${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 2048576000 -p 20000 -d \
 ${DEVICE} -w ${WORK_PLACE} -s >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -690,22 +690,22 @@ ${DEVICE} -w ${WORK_PLACE} -s >>${LOG_FILE} 2>&1
         RET=$?
         f_exit_or_not ${RET}
 
-	((TEST_NO++))
-	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] OracleVM Simulation Test:"
-	f_LogMsg ${LOG_FILE} "[${TEST_NO}] OracleVM Simulation Test, CMD:\
-${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 20485760000 -p 1000 -d ${DEVICE} -w \
-${WORK_PLACE} -s "
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 20485760000 -p 1000 -d \
-${DEVICE} -w ${WORK_PLACE} -s >>${LOG_FILE} 2>&1
-        RET=$?
-        f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
-        f_exit_or_not ${RET}
-	((TEST_PASS++))
-	f_LogMsg ${LOG_FILE} "Cleanup working place"
-	${SUDO} ${CHMOD_BIN} -R 777 ${MOUNT_POINT}  >>${LOG_FILE} 2>&1
-        ${RM_BIN} -rf ${WORK_PLACE}/* >>${LOG_FILE} 2>&1
-        RET=$?
-        f_exit_or_not ${RET}
+#	((TEST_NO++))
+#	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] OracleVM Simulation Test:"
+#	f_LogMsg ${LOG_FILE} "[${TEST_NO}] OracleVM Simulation Test, CMD:\
+#${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 20485760000 -p 1000 -d ${DEVICE} -w \
+#${WORK_PLACE} -s "
+#	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 20485760000 -p 1000 -d \
+#${DEVICE} -w ${WORK_PLACE} -s >>${LOG_FILE} 2>&1
+#        RET=$?
+#        f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
+#        f_exit_or_not ${RET}
+#	((TEST_PASS++))
+#	f_LogMsg ${LOG_FILE} "Cleanup working place"
+#	${SUDO} ${CHMOD_BIN} -R 777 ${MOUNT_POINT}  >>${LOG_FILE} 2>&1
+#        ${RM_BIN} -rf ${WORK_PLACE}/* >>${LOG_FILE} 2>&1
+#        RET=$?
+#        f_exit_or_not ${RET}
 
 	f_LogRunMsg ${RUN_LOG_FILE} "[*] Umount device ${DEVICE} from ${MOUNT_POINT}:"
 	f_umount ${LOG_FILE} ${MOUNT_POINT}
@@ -735,8 +735,10 @@ f_LogRunMsg ${RUN_LOG_FILE} "=====================Reflink tests start:  `date`\
 f_LogMsg ${LOG_FILE} "=====================Reflink tests start:  `date`\
 ====================="
 
-for BLOCKSIZE in 512 1024 4096;do
-	for CLUSTERSIZE in 4096 32768 1048576;do
+#for BLOCKSIZE in 512 1024 4096;do
+#	for CLUSTERSIZE in 4096 32768 1048576;do
+for BLOCKSIZE in 4096;do
+	for CLUSTERSIZE in 1048576;do
 		f_LogRunMsg ${RUN_LOG_FILE} "<- Running test with ${BLOCKSIZE} \
 bs and ${CLUSTERSIZE} cs ->\n"
 		f_LogMsg ${LOG_FILE} "<- Running test with ${BLOCKSIZE} bs \

@@ -384,9 +384,9 @@ ${logdir} -d ${DEVICE} ${MOUNT_POINT} >> ${LOGFILE} 2>&1 || {
 	LogRC $RET
 	return $RET
 }
-	LogMsg "reflink 'data=writeback' mode test"
-	${BINDIR}/multi_reflink_test_run.sh -r 4 -f ${NODE_LIST} -a ssh -o \
-${logdir} -W -d ${DEVICE} ${MOUNT_POINT} >> ${LOGFILE} 2>&1
+#	LogMsg "reflink 'data=writeback' mode test"
+#	${BINDIR}/multi_reflink_test_run.sh -r 4 -f ${NODE_LIST} -a ssh -o \
+#${logdir} -W -d ${DEVICE} ${MOUNT_POINT} >> ${LOGFILE} 2>&1
 	LogRC $?
 }
 

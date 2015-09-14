@@ -864,8 +864,8 @@ run_reflink_test()
 	}
 
 	#writeback mount option
-	log_start "reflink_test" "writeback"
-	./reflink_test_run.sh -W -o ${logdir} -d ${device} ${mountpoint}
+	#log_start "reflink_test" "writeback"
+	#./reflink_test_run.sh -W -o ${logdir} -d ${device} ${mountpoint}
 	RC=$?
 	log_end ${RC}
 }

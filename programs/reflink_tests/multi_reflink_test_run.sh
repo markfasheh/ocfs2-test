@@ -211,10 +211,10 @@ ${DEVICE} "refcount,xattr" ${JOURNALSIZE} ${BLOCKS}
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Basic Functional Test, CMD:\
 ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np \
 ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 \
--n 100 -w ${WORK_PLACE} -f ${AIO_OPT}"
+-n 10 -w ${WORK_PLACE} -f ${AIO_OPT}"
 	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np \
 ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 \
--n 100 -w ${WORK_PLACE} -f ${AIO_OPT} >>${LOG_FILE} 2>&1
+-n 10 -w ${WORK_PLACE} -f ${AIO_OPT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_echo_status ${RET}| tee -a ${RUN_LOG_FILE}
 	f_exit_or_not ${RET}
@@ -228,11 +228,11 @@ ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 \
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Random Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Random Test, CMD:${MPIRUN} \
 ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np ${MPI_RANKS} --host \
-${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 -n 100 -w \
+${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 -n 10 -w \
 ${WORK_PLACE} -r ${AIO_OPT}"
 	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np \
 ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 -n \
-100 -w ${WORK_PLACE} -r ${AIO_OPT} >>${LOG_FILE} 2>&1
+10 -w ${WORK_PLACE} -r ${AIO_OPT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_echo_status ${RET}| tee -a ${RUN_LOG_FILE}
 	f_exit_or_not ${RET}
@@ -246,11 +246,11 @@ ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 -n 
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Mmap Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Mmap Test, CMD:${MPIRUN} \
 ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np ${MPI_RANKS} --host \
-${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 -n 100 -w \
+${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 -n 10 -w \
 ${WORK_PLACE} -m "
 	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np \
 ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 -n \
-100 -w ${WORK_PLACE} -m >>${LOG_FILE} 2>&1
+10 -w ${WORK_PLACE} -m >>${LOG_FILE} 2>&1
 	RET=$?
 	f_echo_status ${RET}| tee -a ${RUN_LOG_FILE}
 	f_exit_or_not ${RET}
@@ -264,11 +264,11 @@ ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 -n 
         f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] O_DIRECT Test:"
         f_LogMsg ${LOG_FILE} "[${TEST_NO}] O_DIRECT Test, CMD:${MPIRUN} \
 ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np ${MPI_RANKS} --host \
-${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 41943040 -n 100 -w \
+${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 41943040 -n 10 -w \
 ${WORK_PLACE} -O ${AIO_OPT}"
         ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np \
 ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 41943040 -n \
-100 -w ${WORK_PLACE} -O ${AIO_OPT} >>${LOG_FILE} 2>&1
+10 -w ${WORK_PLACE} -O ${AIO_OPT} >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET}| tee -a ${RUN_LOG_FILE}
         f_exit_or_not ${RET}
@@ -282,11 +282,11 @@ ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 41943040 -n \
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Concurrent Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Concurrent Test, CMD:${MPIRUN} \
 ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np ${MPI_RANKS} --host \
-${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 10485760 -n 1000 -w \
+${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 10485760 -n 100 -w \
 ${WORK_PLACE} -c "
 	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np \
 ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 10485760 -n \
-1000 -w ${WORK_PLACE} -c >>${LOG_FILE} 2>&1
+100 -w ${WORK_PLACE} -c >>${LOG_FILE} 2>&1
 	RET=$?
 	f_echo_status ${RET}| tee -a ${RUN_LOG_FILE}
 	f_exit_or_not ${RET}
@@ -301,10 +301,10 @@ ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 10485760 -n \
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Inline-data Refcount Test, CMD:\
 ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np \
 ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l $((${BLOCKSIZE}-200)) \
--n 100 -w ${WORK_PLACE} -f "
+-n 10 -w ${WORK_PLACE} -f "
 	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np \
 ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l $((${BLOCKSIZE}-200)) \
--n 100 -w ${WORK_PLACE} -f >>${LOG_FILE} 2>&1
+-n 10 -w ${WORK_PLACE} -f >>${LOG_FILE} 2>&1
 	RET=$?
 	f_echo_status ${RET}| tee -a ${RUN_LOG_FILE}
 	f_exit_or_not ${RET}
@@ -319,10 +319,10 @@ ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l $((${BLOCKSIZ
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Xattr Combination Test, CMD:\
 ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np \
 ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 \
--n 10 -w ${WORK_PLACE} -x 1000 "
+-n 10 -w ${WORK_PLACE} -x 100 "
 	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np \
 ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 \
--n 10 -w ${WORK_PLACE} -x 1000 >>${LOG_FILE} 2>&1
+-n 10 -w ${WORK_PLACE} -x 100 >>${LOG_FILE} 2>&1
 	RET=$?
 	f_echo_status ${RET}| tee -a ${RUN_LOG_FILE}
 	f_exit_or_not ${RET}
@@ -336,11 +336,11 @@ ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -l 104857600 \
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Stress Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Stress Test, CMD:${MPIRUN} \
 ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np ${MPI_RANKS} --host \
-${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -p 1000 -l 2147483648 -n 2000 \
+${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -p 100 -l 2147483648 -n 200 \
 -w ${WORK_PLACE} -s "
 	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np \
-${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -p 1000 -l \
-2147483648 -n 2000 -w ${WORK_PLACE} -s >>${LOG_FILE} 2>&1
+${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -p 100 -l \
+2147483648 -n 200 -w ${WORK_PLACE} -s >>${LOG_FILE} 2>&1
 	RET=$?
 	f_echo_status ${RET}| tee -a ${RUN_LOG_FILE}
 	f_exit_or_not ${RET}
@@ -378,8 +378,10 @@ start:  `date`=====================\n"
 f_LogMsg ${LOG_FILE} "=====================Multi-nodes refcount tests \
 start:  `date`====================="
 
-for BLOCKSIZE in 512 1024 2048 4096;do
-	for CLUSTERSIZE in  4096 32768 1048576;do
+#for BLOCKSIZE in 512 1024 2048 4096;do
+#	for CLUSTERSIZE in  4096 32768 1048576;do
+for BLOCKSIZE in 4096;do
+	for CLUSTERSIZE in 1048576;do
 		f_LogRunMsg ${RUN_LOG_FILE} "<- Running test with ${BLOCKSIZE} \
 bs and ${CLUSTERSIZE} cs ->\n"
                 f_LogMsg ${LOG_FILE} "<- Running test with ${BLOCKSIZE} \
