@@ -898,9 +898,10 @@ run_tunefs()
 
 	logdir=$1
 	device=$2
+	mountpoint=$3
 
 	log_start "tunefs_test"
-	tunefs-test.sh --with-mkfs=/sbin/mkfs.ocfs2 --log-dir=${logdir} ${device}
+	tunefs-test.sh -o ${logdir} -d ${device} -m ${mountpoint}
 	RC=$?
 	log_end ${RC}
 }
@@ -1022,7 +1023,7 @@ run_reflink_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
 
 run_mkfs ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
 
-run_tunefs ${LOGDIR} ${DEVICE}
+run_tunefs ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
 
 run_backup_super ${LOGDIR} ${DEVICE}
 

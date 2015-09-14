@@ -25,26 +25,20 @@
 
 . `dirname ${0}`/config.sh
 
-MKFS_PATH=`which mkfs.ocfs2`
-FSCK_PATH=`which fsck.ocfs2`
-DEBUGFS_PATH=`which debugfs.ocfs2`
-TUNEFS_PATH=`which tunefs.ocfs2`
-MOUNTED_PATH=`which mounted.ocfs2`
-MOUNT_PATH=`which mount.ocfs2`
-UMOUNT_PATH=`which umount`
-
-MOUNT_BIN="`which sudo` -u root ${MOUNT_PATH}"
-UMOUNT_BIN="`which sudo` -u root ${UMOUNT_PATH}"
+MOUNT_BIN="`which sudo` -u root `which mount`"
+UMOUNT_BIN="`which sudo` -u root `which umount`"
 TEE_BIN=`which tee`
-MKDIR_BIN=`which mkdir`
-RM_BIN=`which rm`
+CHOWN_BIN="`which sudo` -u root `which chown`"
+RM_BIN="`which sudo` -u root `which rm`"
 GAWK=`which gawk`
 GREP=`which grep`
 STAT=`which stat`
-LOG_DIR=${O2TDIR}/log
+USERNAME="`id -un`"
+GROUPNAME="`id -gn`"
 
-BLOCKDEV=`which blockdev`
+BLOCKDEV="`which sudo` -u root `which blockdev`"
 DEVICE=""
+MOUNT_POINT=""
 
 BLOCKSIZE=4k
 CLUSTERSIZE=8k
@@ -66,47 +60,17 @@ BLKCNT2=1048576		# 2nd blk count 4GB
 BLKCNT3=3145728		# 3rd blk count 12GB
 
 FS_FEATURES=
-MOUNT_POINT=/tmp/storage.$$
 
 #
 # usage			Display help information and exit.
 #
 function usage()
 {
-	local script="${0##*/}"
-	cat <<EOF
-	Usage: ${script} [options] device
-
-	Options:
-	      --help                       display this help and exit
-	      --log-dir=DIRECTORY          use the DIRECTORY to store the log
-	      --with-fsck=PROGRAM          use the PROGRAM as fsck.ocfs2
-	      --with-mkfs=PROGRAM          use the PROGRAM as mkfs.ocfs2
-	      --with-mounted=PROGRAM       use the PROGRAM as mounted.ocfs2
-	      --with-debugfs=PROGRAM       use the PROGRAM as debugfs.ocfs2
-	      --with-tunefs=PROGRAM        use the PROGRAM as tunefs.ocfs2
-
-	Examples:
-
-	  ${script} --with-debugfs=../debugfs.ocfs2/debugfs.ocfs2 /dev/sde2
-	  ${script} --with-mkfs=/sbin/mkfs.ocfs2 --log-dir=/tmp /dev/sde2
-EOF
-}
-#
-# check_executes
-#
-function check_executes()
-{
-	LogMsg "checking the programs we need in the test...";
-	for PROGRAM in ${MKFS_PATH} ${FSCK_PATH} ${DEBUGFS_PATH} ${TUNEFS_PATH} ${MOUNTED_PATH} ${MOUNT_PATH} ${UMOUNT_PATH}
-	do
-		which ${PROGRAM} 2>&1 >> ${LOGFILE}
-		if [ "$?" != "0" ]; then
-			LogMsg "${PROGRAM} not exist" 
-			usage
-			exit 1
-		fi
-	done
+    echo "usage: ${TUNEFS_TEST} -o <outdir> -d <device> -m <mountpoint>"
+    echo "       -o output directory for the logs"
+    echo "       -d device"
+    echo "       -m mountpoint"
+    exit 1
 }
 # 
 # set_log_file
@@ -440,8 +404,8 @@ Change_Mount_Type()
 	echo "y"|${TUNEFS_BIN} -M local ${DEVICE} 2>&1 >> ${TUNEFSLOG};
 	Check_Volume;
 	SB_MTYPE=`${DEBUGFS_BIN} -n -R "stats" ${DEVICE}|${GREP} Incompat:| \
-		${GAWK} '{print \$3; exit}'`;
-	if [ ${SB_MTYPE} -ne 8 || ${SB_MTYPE} -ne 24 ]; then
+		${GREP} local|wc -l`;
+	if [ ${SB_MTYPE} -ne 1 ]; then
 	   test_fail;
 	   LogMsg "tunefs_test : Mount Type change failed. Superblock \c"
 	   LogMsg "Feature Incompat (${SB_MTYPE})";
@@ -548,8 +512,6 @@ Enable_Disable_Inline_Data()
         O_BLOCKSIZE=${BLOCKSIZE}
         O_CLUSTERSIZE=${CLUSTERSIZE}
 
-        ${MKDIR_BIN} -p ${MOUNT_POINT}
-
         for BLOCKSIZE in 512 1k 4k;do
                 for CLUSTERSIZE in 32k;do
                         
@@ -568,6 +530,7 @@ Enable_Disable_Inline_Data()
                                 test_fail
                         else
                                 ${MOUNT_BIN} -t ocfs2 ${DEVICE} ${MOUNT_POINT}
+				${CHOWN_BIN} -R ${USERNAME}:${GROUPNAME} ${MOUNT_POINT}
                                 for FILE_INDEX in `seq ${FILE_NUM}`;do
                                         #make sure file size less than max_inline_sz
                                         TEST_FILE=${MOUNT_POINT}/TEST_EXTENT_FILE_${FILE_INDEX}
@@ -597,6 +560,7 @@ Enable_Disable_Inline_Data()
                         RC=$?
                         if [ "$RC" -eq "0" ];then
                                 ${MOUNT_BIN} -t ocfs2 ${DEVICE} ${MOUNT_POINT}
+				${CHOWN_BIN} -R ${USERNAME}:${GROUPNAME} ${MOUNT_POINT}
                                 for FILE_INDEX in `seq ${FILE_NUM}`;do
                                         #make sure file size less than max_inline_sz
                                         TEST_FILE=${MOUNT_POINT}/TEST_INLINE_FILE_${FILE_INDEX}
@@ -651,7 +615,7 @@ Enable_Disable_Inline_Data()
                 done    #done for cluster_sz  loop
         done    #done for blk_sz  loop
 
-        ${RM_BIN} -rf ${MOUNT_POINT}
+        ${RM_BIN} -rf ${MOUNT_POINT}/*
         
         BLOCKSIZE=${O_BLOCKSIZE}
         CLUSTERSIZE=${O_CLUSTERSIZE}
@@ -672,43 +636,27 @@ then
 	exit 255
 fi
 
-while [ "$#" -gt "0" ]
+MKFS_BIN="`which sudo` -u root `which mkfs.ocfs2`"
+FSCK_BIN="`which sudo` -u root `which fsck.ocfs2`"
+DEBUGFS_BIN="`which sudo` -u root `which debugfs.ocfs2`"
+TUNEFS_BIN="`which sudo` -u root `which tunefs.ocfs2`"
+MOUNTED_BIN="`which sudo` -u root `which mounted.ocfs2`"
+
+TUNEFS_TEST=`basename $0`
+
+bindir=`basename ${0}`
+LOG_DIR=`basename ${bindir}`
+
+while getopts "d:o:m:" args
 do
-	case "$1" in
-	"--help")
-		usage
-		exit 255
-		;;
-	"--log-dir="*)
-		LOG_DIR="${1#--log-dir=}"
-		;;
-	"--with-fsck="*)
-		FSCK_PATH="${1#--with-fsck=}"
-		;;
-	"--with-mkfs="*)
-		MKFS_PATH="${1#--with-mkfs=}"
-		;;
-	"--with-debugfs="*)
-		DEBUGFS_PATH="${1#--with-debugfs=}"
-		;;
-	"--with-tunefs="*)
-		TUNEFS_PATH="${1#--with-tunefs=}"
-		;;
-	"--with-mounted="*)
-		MOUNTED_PATH="${1#--with-mounted=}"
-		;;
-	*)
-		DEVICE="$1"
-		;;
-	esac
-	shift
+  case "$args" in
+    o) LOG_DIR="$OPTARG";;
+    d) DEVICE="$OPTARG";;
+    m) MOUNT_POINT="$OPTARG";;
+  esac
 done
 
-MKFS_BIN="`which sudo` -u root ${MKFS_PATH}"
-FSCK_BIN="`which sudo` -u root ${FSCK_PATH}"
-DEBUGFS_BIN="`which sudo` -u root ${DEBUGFS_PATH}"
-TUNEFS_BIN="`which sudo` -u root ${TUNEFS_PATH}"
-MOUNTED_BIN="`which sudo` -u root ${MOUNTED_PATH}"
+set_log_file
 
 MKFSLOG=${LOG_DIR}/$$_mkfs.log
 FSCKLOG=${LOG_DIR}/$$_fsck.log
@@ -716,6 +664,12 @@ TUNEFSLOG=${LOG_DIR}/$$_tunefs.log
 
 if [ ! -b "${DEVICE}" ]; then
 	LogMsg "invalid block device - ${DEVICE}" 
+	usage
+	exit 1
+fi
+
+if [ -z "${MOUNT_POINT}" ]; then
+	LogMsg "invalid mount point: ${MOUNT_POINT}"
 	usage
 	exit 1
 fi
@@ -736,16 +690,11 @@ declare -i NUM_OF_PASS=0
 declare -i NUM_OF_FAIL=0
 declare -i NUM_OF_BROKEN=0
 
-
-set_log_file
-
 #Add Ctrl ^C signal handler for tunefs-test
 trap 'echo -ne "\n\n">>${LOGFILE};echo  "Interrupted by Ctrl ^C,Cleanuping... "|${TEE_BIN} -a ${LOGFILE};exit 1' SIGINT
 
 LogMsg "\ntunefs_test: Starting test \c"
 LogMsg "(`date +%F-%H-%M-%S`)\n\n"
-
-check_executes
 
 Test_Query
 
