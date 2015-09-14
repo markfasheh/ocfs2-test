@@ -282,7 +282,7 @@ def openmpi_run(DEBUGON, nproc, cmd, nodes, remote_sh, interface, logfile, w_fla
 				logfile, 0, '')
 		pid = os.spawnv(os.P_NOWAIT,
 			'/bin/bash', ['bash', '-xc',
-			config.MPIRUN + ' -mca btl tcp,self %s %s %s --host %s %s' % \
+			config.MPIRUN + ' --allow-run-as-root -mca btl tcp,self %s %s %s --host %s %s' % \
 			(shopt, iface, nprocopt, nodes, cmd)])
 		if w_flag == 'NOWAIT':
 			return pid

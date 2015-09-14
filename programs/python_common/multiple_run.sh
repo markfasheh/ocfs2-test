@@ -429,7 +429,7 @@ ${DEVICE} ${FEATURES} ${JOURNALSIZE} ${BLOCKS}
 
 	LogMsg "Run lvb_torture, CMD: ${BINDIR}/run_lvb_torture.py -d /dlm/ -i 60000 \
 -H ${DEVICE} -l ${logfile} -n ${NODE_LIST} "${UUID}" "${LOCK}""
-	${BINDIR}/run_lvb_torture.py -d /dlm/ -c 60000 -i ${INTERFACE} -H ${DEVICE} -l \
+	${SUDO} ${BINDIR}/run_lvb_torture.py -d /dlm/ -c 60000 -i ${INTERFACE} -l \
 ${logfile} -n ${NODE_LIST} "${UUID}" "${LOCK}" >> ${LOGFILE} 2>&1
 	LogRC $?
 
