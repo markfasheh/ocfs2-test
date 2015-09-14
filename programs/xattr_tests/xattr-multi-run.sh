@@ -84,7 +84,7 @@ DEFAULT_RANKS=4
 declare -i MPI_RANKS
 MPI_HOSTS=
 MPI_ACCESS_METHOD="ssh"
-MPI_PLS_AGENT_ARG="-mca plm_rsh_agent ssh:rsh"
+MPI_PLS_AGENT_ARG="-mca orte_rsh_agent ssh:rsh"
 MPI_MCA_BTL="-mca btl tcp,self"
 MPI_MCA_BTL_IF=""
 
@@ -191,7 +191,7 @@ f_setup()
 	f_getoptions $*
 	
 	if [ "$MPI_ACCESS_METHOD" = "rsh" ];then
-		MPI_PLS_AGENT_ARG="-mca plm_rsh_agent rsh:ssh"
+		MPI_PLS_AGENT_ARG="-mca orte_rsh_agent rsh:ssh"
 		REMOTE_SH_BIN=${RSH_BIN}
 	fi
 

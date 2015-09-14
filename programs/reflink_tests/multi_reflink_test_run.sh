@@ -75,7 +75,7 @@ DEFAULT_RANKS=4
 MPI_RANKS=
 MPI_HOSTS=
 MPI_ACCESS_METHOD="ssh"
-MPI_PLS_AGENT_ARG="-mca plm_rsh_agent ssh:rsh"
+MPI_PLS_AGENT_ARG="-mca orte_rsh_agent ssh:rsh"
 MPI_BTL_ARG="-mca btl tcp,self"
 MPI_BTL_IF_ARG=
 

@@ -220,9 +220,9 @@ so just do a sanity check here to test if all nodes are available.
 	nodelen = len(nodelist)
 
 	if remote_sh == '' or remote_sh == 'ssh':
-		shopt = '-mca plm_rsh_agent ssh:rsh'
+		shopt = '-mca orte_rsh_agent ssh:rsh'
 	else:
-		shopt = '-mca plm_rsh_agent rsh:ssh'
+		shopt = '-mca orte_rsh_agent rsh:ssh'
 
 	fd = open(config.MPIHOSTS,'w',0)
 	for i in range(nodelen):
@@ -265,9 +265,9 @@ def openmpi_run(DEBUGON, nproc, cmd, nodes, remote_sh, interface, logfile, w_fla
 		iface = '-mca btl_tcp_if_include '+interface
 
 	if remote_sh == '' or remote_sh == 'ssh':
-		shopt = '-mca plm_rsh_agent ssh:rsh'
+		shopt = '-mca orte_rsh_agent ssh:rsh'
 	else:
-		shopt = '-mca plm_rsh_agent rsh:ssh'
+		shopt = '-mca orte_rsh_agent rsh:ssh'
 	try:
 		if DEBUGON:
 			printlog('o2tf.mpi_run: MPIRUN = %s' % config.MPIRUN,
