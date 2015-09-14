@@ -485,6 +485,7 @@ function f_extents_test()
 
 	#use punch_hole to change extent_list then to update
 	f_LogMsg ${LOG_FILE} "Update extent blocks by punching holes"
+	rm_start=1
 	offset=0
 	num=0
 	count=$((${filesize}/${CLUSTERSIZE}))
@@ -496,8 +497,16 @@ function f_extents_test()
 	while :;do
 		if [ "$((${RANDOM}%2))" -eq "0" ];then
 			${PUNCH_HOLE_BIN} -f ${filename} -s ${offset} -l ${CLUSTERSIZE} >>/dev/null 2>&1 || {
-				f_LogMsg ${LOG_FILE} "Punch hole at offset:${offset} failed."
-				return 1
+				if [ $rm_start -ne 10 ]; then
+					f_LogMsg ${LOG_FILE} "Punch hole at offset:${offset} failed, rm addup-${rm_start} and try again."
+					rm -rf ${WORK_PLACE}/extents_testfile_xattr_addup-${rm_start}*
+					sync
+					rm_start=$(($rm_start+1))
+					continue
+				else
+					f_LogMsg ${LOG_FILE} "Punch hole at offset:${offset} failed."
+					return 1
+				fi
 			}
 		fi
 		num=$((${num}+${inc}))
