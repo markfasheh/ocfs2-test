@@ -37,7 +37,7 @@ LOG_FILE=
 BLOCKSIZE=4096
 CLUSTERSIZE=4096
 TYPE=inode
-SLOTS=0
+SLOTS=1
 JOURNALSIZE=0
 LABELNAME="ocfs2-discontig-bg-tests"
 MOUNT_OPTS="localalloc=0"
@@ -261,9 +261,9 @@ function f_fillup_volume_almost_full()
 	local -i recs=`f_get_recs_in_eb`
 
 	FILL_CONTIG_IBG_NUM=`f_get_inodes_num_of_contig_bg`
-	FILL_CONTIG_EBG_M=$((${extents}*${recs}*${BLOCKSIZE}/1024/1024))
+	FILL_CONTIG_EBG_M=$((${extents}*${recs}*${CLUSTERSIZE}/1024/1024))
 
-
+	f_LogMsg ${LOG_FILE} "IBG_NUM: ${FILL_CONTIG_IBG_NUM} FILL_CONTIG_EBG_M: ${FILL_CONTIG_EBG_M} extents: ${extents} recs: ${recs} disk_free: ${DISK_FREE_M} resv_mem: ${RESV_SIZE_M} slots: ${SLOTS}"
 	if [ "${TYPE}" == "extent" ];then
 		if [ "${DISK_FREE_M}" -le "$((2*${RESV_SIZE_M}+2*${FILL_CONTIG_EBG_M}*${SLOTS}))" ]; then
 			RESV_SIZE_M=$((${DISK_FREE_M}/2-${FILL_CONTIG_EBG_M}*${SLOTS}))
@@ -276,7 +276,7 @@ function f_fillup_volume_almost_full()
 		FILE_MAJOR_SIZE_M=$((${DISK_FREE_M}-2*${RESV_SIZE_M}))
 	fi
 
-	f_LogMsg ${LOG_FILE} "[*] Reserve ${FILE_MAJOR_SIZE_M}M space for a LARGE file"
+	f_LogMsg ${LOG_FILE} "[*] Reserve ${FILE_MAJOR_SIZE_M}M space for a LARGE file, reserve ${RESV_SIZE_M}M space for future test."
 	${RESV_UNWRITTEN_BIN} -f ${WORK_PLACE}/large_testfile -s 0 -l $((${FILE_MAJOR_SIZE_M}*1024*1024)) >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}

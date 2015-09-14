@@ -162,6 +162,7 @@ function f_fillup_ibg()
 	local filename_prefix=
 	local filename=
 	local inode_alloc="//inode_alloc:000${SLOTNUM}"
+	local bitmap_total=`${DEBUGFS_BIN} -R "stat ${inode_alloc}" ${DEVICE} | grep "Bitmap Total" | awk -F ' ' '{print $3}'`
 
 	f_LogMsg ${LOG_FILE} "Fill inode block groups by touching ${FILL_CONTIG_IBG_NUM} files."
 	filename_prefix=fill_contig_igb_testfile
@@ -175,41 +176,14 @@ function f_fillup_ibg()
 	done
 
 	sync
-
-	${DEBUGFS_BIN} -R "stat ${inode_alloc}" ${DEVICE} |grep -q "Tree Depth" && {
+	cur_bitmap_total=`${DEBUGFS_BIN} -R "stat ${inode_alloc}" ${DEVICE} | grep "Bitmap Total" | awk -F ' ' '{print $3}'`
+	if [ $cur_bitmap_total -gt $bitmap_total ]; then
 		f_LogMsg ${LOG_FILE} "Oh, boy, now we have activated discontiguous inode block group."
 		return 0
-	}
-
-	i=1
-	filename_prefix=fill_contig_igb_testfile_addup_inode
-	while :;do
-		filename=${filename_prefix}${i}
-		if [ "${i}" -gt "$OCFS2_LINK_MAX" ];then
-			mkdir -p ${WORK_PLACE}/${filename}
-			i=1
-			filename_prefix=${filename}/
-			continue
-		else
-			dd if=/dev/zero of=${WORK_PLACE}/$filename bs=4k count=1 >/dev/null  2>&1|| {
-				f_LogMsg ${LOG_FILE} "No discontig block group created until volume gets full."
-				RET=1
-				break
-			}
-		fi
-
-		sync
-
-		${DEBUGFS_BIN} -R "stat ${WORK_PLACE_DIRENT}/${filename}" ${DEVICE} |grep -q "Sub Alloc Group" && {
-			f_LogMsg ${LOG_FILE} "Oh, boy, now we have activated one discontiguous inode block group."
-			break;
-		}
-
-		((i++))
-	done
-	RET=$?
-
-	return $RET
+	else
+		f_LogMsg ${LOG_FILE} "sorry, activated discontiguous inode block group failed."
+		return 1
+	fi
 }
 
 function f_is_xattr_in_block()
@@ -229,8 +203,9 @@ function f_fillup_ebg()
 	local filename=${WORK_PLACE}/fill_contig_egb_testfile_`hostname`
 	local fileszie=
 	local extent_alloc="//extent_alloc:000${SLOTNUM}"
+	local bitmap_total=`${DEBUGFS_BIN} -R "stat ${extent_alloc}" ${DEVICE} | grep "Bitmap Total" | awk -F ' ' '{print $3}'`
 
-	filesize=$((${FILL_CONTIG_EBG_M}*1024*1024/2))
+	filesize=$((${FILL_CONTIG_EBG_M}*1024*1024/2+1))
 
 	f_LogMsg ${LOG_FILE} "Fill contiguous extent block groups by gen_extents"
 	f_LogMsg ${LOG_FILE} "CMD: ${GEN_EXTENTS_BIN} -f ${filename} -l ${filesize} -c ${CLUSTERSIZE} -k 1"
@@ -241,73 +216,14 @@ function f_fillup_ebg()
 
 	sync
 
-	${DEBUGFS_BIN} -R "stat ${extent_alloc}" ${DEVICE} |grep -q "Tree Depth" && {
+	cur_bitmap_total=`${DEBUGFS_BIN} -R "stat ${extent_alloc}" ${DEVICE} | grep "Bitmap Total" | awk -F ' ' '{print $3}'`
+	if [ $cur_bitmap_total -gt $bitmap_total ]; then
 		f_LogMsg ${LOG_FILE} "Oh, boy, now we have activated one discontiguous extent block group."
 		return 0
-	}
-
-	# if above operation didn't consume up the contig extent block
-	# exactly, we need to slowly force the filling-up by populating
-	# xattr blocks from exteng bg.
-	local -i i=1
-	local filename_prefix=fill_contig_egb_testfile_addup_xattr
-	f_LogMsg ${LOG_FILE} "Use additional xattr extents to activate the discontig."
-	while :;do
-		filename=${filename_prefix}${i}
-		if [ "${i}" -gt "$OCFS2_LINK_MAX" ];then
-			mkdir -p ${WORK_PLACE}/${filename}
-			# We should not trying to make more directories
-			# if the test run out of inodes against the test
-			# file system, which means that the test failed
-			# to make the test storage fragmented this time
-			# so that the discontig block group did not took
-			# affected.  By breaking the test per mkdir failure,
-			# we can fix the test hanging issue with meaningful
-			# log information to indicate that.
-			# TODO: Figure out a better approach to make discontig
-			# block group ASAP.
-                        if [ "$?" -ne "0" ];then
-                                f_LogMsg ${LOG_FILE} "mkdir ${WORK_PLACE}/${filename} failed."
-                                break;
-                        fi
-
-			i=1
-			filename_prefix=${filename}/
-			continue
-		else
-			${TOUCH_BIN} ${WORK_PLACE}/$filename >>${LOG_FILE} 2>&1|| {
-				f_LogMsg ${LOG_FILE} "touch ${filename} failed."
-				RET=1
-				break
-			}
-
-			sync
-
-			for j in $(seq 100);do
-				${SETXATTR} -n user.name${j} -v value${j} ${WORK_PLACE}/${filename} >>${LOG_FILE} 2>&1 || {
-					f_LogMsg ${LOG_FILE} "setxattr failed."
-					break
-				}
-
-				f_is_xattr_in_block ${WORK_PLACE_DIRENT}/${filename} ${DEVICE} && {
-					break
-				}
-			done
-
-		fi
-
-		sync
-
-		${DEBUGFS_BIN} -R "stat ${extent_alloc}" ${DEVICE} |grep -q "Tree Depth" && {
-			f_LogMsg ${LOG_FILE} "Oh, boy, now we have activated one discontiguous extent block group."
-			break;
-		}
-
-		((i++))
-	done
-	RET=$?
-
-	return $RET
+	else
+		f_LogMsg ${LOG_FILE} "discontig extent block group is not enabled, old bitmap $bitmap_total new bitmap $cur_bitmap_total"
+		return 1
+	fi
 }
 
 function f_fillup_bg()
