@@ -1,1 +1,136 @@
-These are tests for the OCFS2 filesystem.
+Ocfs2 test suite
+
+Installation
+============
+
+1. Before installation, the following rpms should be installed:
+
+* For OL6 or OL7:
+openmpi libgomp openmpi-devel mpi-selector gcc autoconf libaio-devel e2fsprogs-devel nc reflink
+and ocfs2-tools(>1.6) ocfs2-tools-devel(>1.6)
+
+* For OL5:
+openmpi libgomp openmpi-devel openmpi-libs mpi-selector gcc autoconf libaio-devel e2fsprogs-devel
+and ocfs2-2.6.18-348 ocfs2-tools(>1.6) ocfs2-tools-devel(>1.6)
+
+2. Add user "ocfs2test" for all nodes
+
+3. The following environment parameters should be set in /home/ocfs2test/.bash_profile for all nodes:
+
+* For OL6 or OL7:
+PATH=$PATH:$HOME/bin:/usr/lib64/openmpi/bin:$HOME/bin/ocfs2/bin
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib64/openmpi/lib
+export PATH
+export LD_LIBRARY_PATH
+
+* For OL5:
+PATH=$PATH:$HOME/bin:/usr/lib64/openmpi/1.4-gcc/bin:$HOME/bin/ocfs2/bin
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib64/openmpi/1.4-gcc/lib
+export PATH
+export LD_LIBRARY_PATH
+
+4. Install OCFS2 testing suite for all nodes through steps as follows:
+
+*  su - ocfs2test
+*  clone ocfs2 testing suite source git://oss.oracle.com/git/ocfs2-test.git
+*  cd ocfs2-test
+*  make clean
+*  ./autogen.sh prefix=/
+*  make
+*   make install DESTDIR=/home/ocfs2test/bin/ocfs2
+
+Setup test environment
+======================
+
+1. Get access to other nodes
+
+* add the all hosts in cluster.conf info into /etc/hosts for EACH node.
+* as "root" user and "ocfs2test" user, generate ssh id on the first node, and ssh-copy-id to other nodes
+
+2. Add "ocfs2test" user into sudo list
+
+* add this line into /etc/sudoers
+  ocfs2test ALL=(ALL) NOPASSWD:ALL
+* comment 'Defaults    requiretty' in /etc/sudoers
+
+3. chmod 777 /dev/sdax by root on EACH node
+
+4. Stop iptables service for all nodes
+
+Run the test
+============
+
+1. single node test
+
+* login as "ocfs2test"
+* cd ~/bin/ocfs2/bin;
+* single_run-WIP.sh -m <mount point> -l <log_location> [-t testcase] -d <device>
+
+e.g. ./single_run-WIP.sh -k ~/linux-kernel.tar.gz -m /mnt/ocfs2 -l ~/ocfs2log -d/dev/sdax
+e.g. ./single_run-WIP.sh -k ~/linux-kernel.tar.gz -m /mnt/ocfs2 -l ~/ocfs2log -t directaio -d/dev/sdax
+
+2. multiple nodes test
+
+* login as "ocfs2test"
+* cd ~/bin/ocfs2/bin;
+* multiple_run.sh -k /kernel/linux-2.6.tgz -n node1.us.oracle.com,node2.us.oracle.com -d <device> [-t testcase] <mount point>
+
+e.g. ./multiple_run.sh -i eth0 -k ~/linux-kernel.tar.gz -n ocfs2-test8.cn.oracle.com,ocfs2-test9.cn.oracle.com -d /dev/sdax /mnt/ocfs2
+e.g. ./multiple_run.sh -i eth0 -k ~/linux-kernel.tar.gz -n ocfs2-test8.cn.oracle.com,ocfs2-test9.cn.oracle.com -d /dev/sdax -t multi_mmap /mnt/ocfs2
+
+3. discontig single node test
+
+* login as "ocfs2test"
+* cd ~/bin/ocfs2/bin;
+* discontig_runner.sh <-d device> [-o logdir] [-a access_method] <mount point>
+
+e.g../discontig_runner.sh -d /dev/sdax -o ~/ocfs2log/ /mnt/ocfs2
+
+4. discontig multiple nodes test
+
+* login as "ocfs2test"
+* cd ~/bin/ocfs2/bin;
+* discontig_runner.sh <-d device> [-o logdir] [-m multi_hosts] [-a access_method] <mount point>
+
+e.g. ./discontig_runner.sh -d /dev/sdax -o ~/ocfs2log/ -m ocfs2-test8.cn.oracle.com,ocfs2-test9.cn.oracle.com /mnt/ocfs2
+
+Available Testcases
+===================
+
+1. Single node testcases
+
+The following testcases run in one node ocfs2 cluster.
+
+[create_and_open]	- file create and open test
+[directaio]			- aio/dio test
+[fillverifyholes]	- file hole write and verify test
+[renamewriterace]	- file rename and extend write race test
+[aiostress]			- aio stress test
+[filesizelimits]	- file size limitation test
+[mmaptruncate]		- mmap truncate race test
+[buildkernel]		- kernel building test
+[splice]			- ocfs2 splice feature test
+[sendfile]			- sendfile() test
+[mmap]				- mmap test
+[reserve_space]		- unwritten extent test
+[inline]			- inline data test
+[xattr]				- xattr test
+[reflink]			- reflink test
+[mkfs]				- ocfs2 tools mkfs test
+[tunefs]			- ocfs2 tools tunefs test
+[backup_super]		- ocfs2 tools backup super block test
+
+2. multiple nodes testcases
+
+The following testcases run in multiple nodes ocfs2 cluster.
+
+[xattr]					- xattr test
+[inline]				- inline data test
+[reflink]				- reflink test
+[write_append_truncate]	- extend write truncate race test
+[multi_mmap]			- mmap test
+[create_racer]			- file create and access race test
+[flock_unit]			- file lock test
+[cross_delete]			- cross delete file test
+[open_delete]			- delete opened file test
+[lvb_torture]			- dlm lock lvb test
