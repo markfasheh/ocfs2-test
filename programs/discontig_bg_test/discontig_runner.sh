@@ -1015,6 +1015,9 @@ function f_multi_extents_test()
 	RET=$?
 	f_exit_or_not ${RET}
 
+	${RM_BIN} -rf ${MOUNT_POINT}/ocfs2-fillup-contig-bg-dir-*
+	sync
+
 	WORK_PLACE=${MOUNT_POINT}/${WORK_PLACE_DIRENT}
 	${MKDIR_BIN} -p ${WORK_PLACE}
 

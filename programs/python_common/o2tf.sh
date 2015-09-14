@@ -28,6 +28,7 @@ export PATH=$PATH:.
 . ./config.sh
 
 MKFS_BIN="`which sudo` -u root `which mkfs.ocfs2`"
+FSCK_BIN="`which sudo` -u root `which fsck.ocfs2`"
 MOUNT_BIN="`which sudo` -u root `which mount`"
 UMOUNT_BIN="`which sudo` -u root `which umount`"
 DEBUGFS_BIN="`which sudo` -u root `which debugfs.ocfs2`"
