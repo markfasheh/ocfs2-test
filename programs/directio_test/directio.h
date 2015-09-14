@@ -20,6 +20,7 @@
 #define _GNU_SOURCE
 #define _XOPEN_SOURCE 500
 #define _LARGEFILE64_SOURCE
+
 #include <unistd.h>
 #include <errno.h>
 #include <sys/types.h>
@@ -47,6 +48,10 @@
 
 #include <ocfs2/byteorder.h>
 #include "crc32table.h"
+
+#ifndef O_DIRECT
+#define O_DIRECT		040000 /* direct disk access hint */
+#endif
 
 #define FILE_RW_FLAGS		(O_CREAT|O_RDWR)
 #define FILE_RO_FLAGS		(O_RDONLY)
