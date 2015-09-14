@@ -1068,9 +1068,11 @@ START_TIME=${SECONDS}
 echo "=====================Single node xattr testing starts: `date`=====================" |tee -a ${RUN_LOG_FILE}
 echo "=====================Single node xattr testing starts: `date`=====================" >> ${DETAIL_LOG_FILE}
 
-for BLOCKSIZE in 512 1024 2048 4096
+#for BLOCKSIZE in 512 1024 2048 4096
+for BLOCKSIZE in 512 4096
 do
-        for CLUSTERSIZE in 4096 32768 1048576
+#        for CLUSTERSIZE in 4096 32768 1048576
+        for CLUSTERSIZE in 4096 1048576
         do
                 echo "++++++++++xattr tests with \"-b ${BLOCKSIZE} -C ${CLUSTERSIZE}\"++++++++++" |tee -a ${RUN_LOG_FILE}
                 echo "++++++++++xattr tests with \"-b ${BLOCKSIZE} -C ${CLUSTERSIZE}\"++++++++++">>${DETAIL_LOG_FILE}
