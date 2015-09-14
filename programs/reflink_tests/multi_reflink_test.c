@@ -1466,7 +1466,7 @@ static int stress_test(void)
 			if (get_rand(0, 1))
 				continue;
 
-			snprintf(ref_path, PATH_MAX, "%s_%dr%ld", orig_path,
+			snprintf(ref_path, PATH_MAX, "%s_%dr%ld", dest,
 				 rank, i);
 
 			if (truncate(ref_path, 0) < 0) {
