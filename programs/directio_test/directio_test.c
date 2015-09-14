@@ -359,7 +359,12 @@ static int basic_test(void)
 						fprintf(stdout, "#%d process "
 							"tries to crash the "
 							"box.\n", getpid());
-						system("echo b>/proc/sysrq-trigger");
+						if (system("echo b>/proc/sysrq-trigger") < 0) {
+							fprintf(stderr, "#%d process "
+								"tries to enable sysrq-trigger "
+								"but failed.\n", getpid());
+							goto child_bail;
+						}
 					}
 				} else if (j == num_chunks - 1) {
 
@@ -371,7 +376,12 @@ static int basic_test(void)
 						fprintf(stdout, "#%d process "
 							"tries to crash the "
 							"box.\n", getpid());
-						system("echo b>/proc/sysrq-trigger");
+						if (system("echo b>/proc/sysrq-trigger") < 0) {
+							fprintf(stderr, "#%d process "
+								"tries to enable sysrq-trigger "
+								"but failed.\n", getpid());
+							goto child_bail;
+						}
 				}
 			}
 child_bail:
