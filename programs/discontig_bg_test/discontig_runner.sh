@@ -635,16 +635,16 @@ function f_xattr_test()
 	${MKDIR_BIN} -p ${WORK_PLACE}
 
 	f_LogMsg ${LOG_FILE} "Stress xattr filling-up test with multiple processes."
-	f_LogMsg ${LOG_FILE} "CMD: ${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 50 -s 150 -f 5000 -r -k ${WORK_PLACE}"
-	${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 50 -s 150 -f 5000 -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
+	f_LogMsg ${LOG_FILE} "CMD: ${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 50 -s 150 -f 500 -r -k ${WORK_PLACE}"
+	${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 50 -s 150 -f 500 -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
 		f_LogMsg "Volume get filled up with xattr blocks."
 	}
 	
 	f_LogMsg ${LOG_FILE} "Remove all xattr blocks"
 	${RM_BIN} -rf ${WORK_PLACE}/*
 
-	f_LogMsg ${LOG_FILE} "CMD: ${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 30 -s 80 -f 8000 -r -k ${WORK_PLACE}"
-	${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 30 -s 80 -f 8000 -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
+	f_LogMsg ${LOG_FILE} "CMD: ${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 30 -s 80 -f 800 -r -k ${WORK_PLACE}"
+	${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 30 -s 80 -f 800 -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
 		f_LogMsg "Volume get filled up with xattr blocks."
 	}
 	
@@ -652,8 +652,8 @@ function f_xattr_test()
 	${RM_BIN} -rf ${WORK_PLACE}/*
 
 	f_LogMsg ${LOG_FILE} "Stress&Random xattr filling-up test with multiple processes."
-	f_LogMsg ${LOG_FILE} "CMD: ${XATTR_TEST_BIN} -i 1 -x 200 -n user -t normal -l 50 -s 150 -f 5000 -r -k ${WORK_PLACE}"
-	${XATTR_TEST_BIN} -i 1 -x 200 -n user -t normal -l 50 -s 150 -f 5000 -r -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
+	f_LogMsg ${LOG_FILE} "CMD: ${XATTR_TEST_BIN} -i 1 -x 200 -n user -t normal -l 50 -s 150 -f 500 -r -k ${WORK_PLACE}"
+	${XATTR_TEST_BIN} -i 1 -x 200 -n user -t normal -l 50 -s 150 -f 500 -r -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
 		f_LogMsg "Volume get filled up with xattr blocks."
 	}
 
@@ -1084,8 +1084,8 @@ function f_multi_xattr_test()
 	${MKDIR_BIN} -p ${WORK_PLACE}
 
 	f_LogMsg ${LOG_FILE} "Stress xattr filling-up test with multiple processes."
-        f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 50 -s 150 -f 5000 -r -k ${WORK_PLACE}"
-        ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 50 -s 150 -f 5000 -r -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
+        f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 50 -s 150 -f 500 -r -k ${WORK_PLACE}"
+        ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 50 -s 150 -f 500 -r -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
                 f_LogMsg ${LOG_FILE} "Volume get filled up with xattr blocks."
 	}
 
