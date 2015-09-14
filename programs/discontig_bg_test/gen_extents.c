@@ -197,6 +197,8 @@ int prep_file(char *file_name, uint64_t size, uint64_t chunksize, int keep)
 		offset += write_size;
 	}
 
+	ret = 0;
+
 bail:
 	if (pattern)
 		free(pattern);
