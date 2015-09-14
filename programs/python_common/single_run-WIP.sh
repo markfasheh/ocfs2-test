@@ -918,7 +918,7 @@ run_backup_super()
 	device=$2
 
 	log_start "backup_super_test"
-	test_backup_super.sh --with-mkfs=/sbin/mkfs.ocfs2 --log-dir=${logdir} ${device}
+	test_backup_super.sh --log-dir=${logdir} ${device}
 	RC=$?
 	log_end ${RC}
 }

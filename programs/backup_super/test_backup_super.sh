@@ -36,14 +36,16 @@
 # will resides at 1G byte offset.
 #
 
-MKFS_BIN=`which mkfs.ocfs2`
-FSCK_BIN=`which fsck.ocfs2`
-DEBUGFS_BIN=`which debugfs.ocfs2`
-TUNEFS_BIN=`which tunefs.ocfs2`
+MKFS_BIN="`which sudo` -u root `which mkfs.ocfs2`"
+FSCK_BIN="`which sudo` -u root `which fsck.ocfs2`"
+DEBUGFS_BIN="`which sudo` -u root `which debugfs.ocfs2`"
+TUNEFS_BIN="`which sudo` -u root `which tunefs.ocfs2`"
+DD_BIN="`which sudo` -u root `which dd`"
 LOG_DIR=$PWD
 
-BLOCKDEV=`which blockdev`
+BLOCKDEV="`which sudo` -u root `which blockdev`"
 DEVICE=""
+LOGFILE=""
 FIRST_BACKUP_OFF=1073741824	#1G
 MAX_NUM=6
 
@@ -91,8 +93,7 @@ function warn_if_bad()
 
 	# Broken
 	shift
-	echo "$script: $@">&2
-	echo "$script: $@">&3
+	echo "$script: $@" |tee -a ${LOGFILE}
 	return "$rc"
 }
 
@@ -112,31 +113,14 @@ function exit_if_bad()
 	return 0
 }
 
-function check_executes()
-{
-	echo "checking the programs we need in the test..."
-	for PROGRAM in $MKFS_BIN $FSCK_BIN $DEBUGFS_BIN $TUNEFS_BIN
-	do
-		which $PROGRAM
-		if [ "$?" != "0" ]; then
-			echo "$PROGRAM not exist"
-			usage
-			exit 1
-		fi
-	done
-}
-
 function set_log_file()
 {
-	mkdir -p $LOG_DIR
 	if [ ! -d $LOG_DIR ]; then
 		echo "log_dir[$LOG_DIR] not exist, use [$PWD] instead."
 		LOG_DIR=$PWD
 	fi
 	
-	output_log="$LOG_DIR/`date +%F-%H-%M-%S`-output.log"
-	exec 3>&1
-	exec 1>$output_log 2>&1
+	LOGFILE="$LOG_DIR/`date +%F-%H-%M-%S`-backup_super_test_output.log"
 }
 
 #clear all the backup blocks in the device
@@ -148,7 +132,7 @@ function clear_backup_blocks()
 	do
 		#clear the last blocksize
 		seek_block=`expr $backup_off / 512`
-		dd if=/dev/zero of=$DEVICE bs=512 count=1 seek=$seek_block
+		${DD_BIN} if=/dev/zero of=$DEVICE bs=512 count=1 seek=$seek_block
 
 		backup_off=`expr $backup_off \* 4`
 	done
@@ -163,7 +147,7 @@ function clear_backup_blocks()
 ##################################
 function test_mkfs()
 {
-	echo "testing mkfs.ocfs2..." >&3
+	echo "testing mkfs.ocfs2..." |tee -a ${LOGFILE}
 	#mkfs and debugfs test.
 	#vol_byte_size is always set to be one of the backup
 	#superblock offset, say 1G, 4G, 16G...
@@ -173,21 +157,21 @@ function test_mkfs()
 	#we empty the first block first.
 	#we also need to clear all the backup blocks in the device
 	#in case they are written by prevoius format.
-	dd if=/dev/zero of=$DEVICE bs=4096 count=3
+	${DD_BIN} if=/dev/zero of=$DEVICE bs=4096 count=3
 	clear_backup_blocks
 
 	msg="debugfs shouldn't be sucess"
 	msg1="debugfs should be sucess"
 
 	blkcount=`expr $vol_byte_size / $blocksize`
-	$MKFS_BIN -b $blocksize -C $clustersize -N 4  -J size=64M $DEVICE $blkcount
+	echo "y" |${MKFS_BIN} -b $blocksize -C $clustersize -N 4  -J size=64M ${DEVICE} $blkcount
 	#first check whether mkfs is success
-	echo "ls //"|$DEBUGFS_BIN $DEVICE|grep global_bitmap
+	echo "ls //"|${DEBUGFS_BIN} ${DEVICE}|grep global_bitmap
 	exit_if_bad $? 0 $msg $LINENO
 
 	#this time there is the block represented by the last_backup_num isn't
 	#in the volume, so we can't open the device by the num.
-	echo "ls //"|$DEBUGFS_BIN $DEVICE -s $last_backup_num|grep global_bitmap
+	echo "ls //"|${DEBUGFS_BIN} ${DEVICE} -s $last_backup_num|grep global_bitmap
 	exit_if_bad $? 1 $msg1 $LINENO
 
 	#increase the blkcount so that the blocks represented by the last_backup_num
@@ -195,11 +179,11 @@ function test_mkfs()
 	bpc=`expr $clustersize / $blocksize`
 	blkcount=`expr $blkcount + $bpc`
 
-	dd if=/dev/zero of=$DEVICE bs=4096 count=3
+	${DD_BIN} if=/dev/zero of=$DEVICE bs=4096 count=3
 	clear_backup_blocks
-	$MKFS_BIN -b $blocksize -C $clustersize -N 4  -J size=64M $DEVICE $blkcount
+	echo "y" |${MKFS_BIN} -b $blocksize -C $clustersize -N 4  -J size=64M ${DEVICE} $blkcount
 	#first check whether mkfs is success
-	echo "ls //"|$DEBUGFS_BIN $DEVICE|grep global_bitmap
+	echo "ls //"|${DEBUGFS_BIN} ${DEVICE}|grep global_bitmap
 	exit_if_bad $? 0 $msg1 $LINENO
 
 	#check whether all the backup blocks including last_backup_num
@@ -208,10 +192,10 @@ function test_mkfs()
 	#while [ `expr $i` -le `expr $last_backup_num` ];
 	for((i=1;$i<=$last_backup_num;i++))
 	do
-		cmd="$DEBUGFS_BIN $DEVICE -s $i"
+		cmd="${DEBUGFS_BIN} ${DEVICE} -s $i"
 		echo "ls //"|$cmd|grep global_bitmap
 		exit_if_bad $? 0 $msg1 $LINENO
-		echo $cmd " is ok." >&3
+		echo $cmd " is ok." |tee -a ${LOGFILE}
 	#	i=`expr $i + 1`
 	done
 }
@@ -223,25 +207,25 @@ function test_mkfs()
 ##################################
 function test_fsck()
 {
-	echo "testing fsck.ocfs2..." >&3
+	echo "testing fsck.ocfs2..." |tee -a ${LOGFILE}
 
-	dd if=/dev/zero of=$DEVICE bs=4096 count=3
+	${DD_BIN} if=/dev/zero of=$DEVICE bs=4096 count=3
 	clear_backup_blocks
 
-	$MKFS_BIN -b $blocksize -C $clustersize -N 4  -J size=64M $DEVICE $blkcount
+	echo "y" |${MKFS_BIN} -b $blocksize -C $clustersize -N 4  -J size=64M ${DEVICE} $blkcount
 	#corrupt the superblock
-	dd if=/dev/zero of=$DEVICE bs=$blocksize count=3
-	$FSCK_BIN -fy $DEVICE	#This should failed.
+	${DD_BIN} if=/dev/zero of=${DEVICE} bs=$blocksize count=3
+	${FSCK_BIN} -fy ${DEVICE}	#This should failed.
 	exit_if_bad $? 8 "fsck.ocfs2" $LINENO
 
 	#recover the superblock
-	cmd="$FSCK_BIN -y -r $last_backup_num $DEVICE"
+	cmd="${FSCK_BIN} -y -r $last_backup_num ${DEVICE}"
 	$cmd
 	exit_if_bad $? 0 "fsck.ocfs2" $LINENO
-	echo $cmd "is ok" >&3
+	echo $cmd "is ok" |tee -a ${LOGFILE}
 
 	#go on the normal process to see whether the recovery is sucess.
-	$FSCK_BIN -fy $DEVICE
+	${FSCK_BIN} -fy ${DEVICE}
 	exit_if_bad $? 0 "fsck.ocfs2" $LINENO
 }
 
@@ -252,31 +236,33 @@ function test_fsck()
 ##################################
 function test_tunefs_resize()
 {
-	dd if=/dev/zero of=$DEVICE bs=4096 count=3
+	echo "test tunefs resize..." |tee -a ${LOGFILE}
+
+	${DD_BIN} if=/dev/zero of=$DEVICE bs=4096 count=3
 	clear_backup_blocks
 
 	#mkfs a volume with no backup superblock
-	$MKFS_BIN -b $blocksize -C $clustersize -N 4  -J size=64M $DEVICE $blkcount
+	echo "y" |${MKFS_BIN} -b $blocksize -C $clustersize -N 4  -J size=64M ${DEVICE} $blkcount
 
 	local bpc=`expr $clustersize / $blocksize`
 	local blkcount=`expr $blkcount + $bpc`
 
 	#we can't open it by the last_backup_num now.
-	cmd="$DEBUGFS_BIN $DEVICE -s $last_backup_num"
+	cmd="${DEBUGFS_BIN} ${DEVICE} -s $last_backup_num"
 	echo "ls //"|$cmd|grep global_bitmap
 	exit_if_bad $? 1 "tunefs.ocfs2" $LINENO
 
 	#tunefs a volume to add a cluster which will hold a backup superblock.
-	cmd="$TUNEFS_BIN -S $DEVICE $blkcount"
+	cmd="${TUNEFS_BIN} -S ${DEVICE} $blkcount"
 	echo "y"|$cmd
 	exit_if_bad $? 0 "tunefs.ocfs2" $LINENO
-	echo $cmd "is ok" >&3
+	echo $cmd "is ok" |tee -a ${LOGFILE}
 
 	#test whether the new backup superblock works.
-	cmd="$DEBUGFS_BIN $DEVICE -s $last_backup_num"
+	cmd="${DEBUGFS_BIN} ${DEVICE} -s $last_backup_num"
 	echo "ls //"|$cmd|grep global_bitmap
 	exit_if_bad $? 0 "tunefs.ocfs2" $LINENO	#we can open with a backup block
-	echo $cmd "is ok." >&3
+	echo $cmd "is ok." |tee -a ${LOGFILE}
 }
 
 ##################################
@@ -286,35 +272,37 @@ function test_tunefs_resize()
 ##################################
 function test_tunefs_add_backup()
 {
-	dd if=/dev/zero of=$DEVICE bs=4096 count=3
+	echo "test tunefs and backup..." |tee -a ${LOGFILE}
+
+	${DD_BIN} if=/dev/zero of=$DEVICE bs=4096 count=3
 	clear_backup_blocks
 
 	#mkfs a volume with no backup superblock supported
-	$MKFS_BIN -b $blocksize -C $clustersize -N 4  -J size=64M --no-backup-super $DEVICE $blkcount
+	echo "y" |${MKFS_BIN} -b $blocksize -C $clustersize -N 4  -J size=64M --no-backup-super ${DEVICE} $blkcount
 
 	#We can't open the volume by backup superblock now
-	echo "ls //"|$DEBUGFS_BIN $DEVICE -s 1|grep global_bitmap
+	echo "ls //"|${DEBUGFS_BIN} ${DEVICE} -s 1|grep global_bitmap
 	exit_if_bad $? 1 "tunefs.ocfs2" $LINENO
 
 	#tunefs a volume to add backup superblocks
-	cmd="$TUNEFS_BIN --backup-super $DEVICE"
+	cmd="${TUNEFS_BIN} --backup-super ${DEVICE}"
 	echo "y"|$cmd
 	exit_if_bad $? 0 "tunefs.ocfs2" LINENO
-	echo $cmd "is ok" >&3
+	echo $cmd "is ok" |tee -a ${LOGFILE}
 
 	#We can open the volume now with a backup block
-	echo "ls //"|$DEBUGFS_BIN $DEVICE -s 1|grep global_bitmap
+	echo "ls //"|${DEBUGFS_BIN} ${DEVICE} -s 1|grep global_bitmap
 	exit_if_bad $? 0 "tunefs.ocfs2" $LINENO
 }
 
 function check_vol()
 {
-	fsck_result=`$FSCK_BIN -fy $DEVICE|grep label`
+	fsck_result=`${DEBUGFS_BIN} -R "stats" ${DEVICE}|grep Label`
 	label_name=`echo $fsck_result | awk '{print $2}'`
 
-	echo "label=$label_name, 1=$1"
+	echo "label=$label_name, wanted=$1"
 	if [ $label_name != $1 ]; then
-		echo "check volume name [$1]failed">&3
+		echo "check volume name [$1]failed" |tee -a ${LOGFILE}
 		exit 1
 	fi
 }
@@ -327,22 +315,24 @@ function check_vol()
 ##################################
 function test_tunefs_refresh()
 {
-	dd if=/dev/zero of=$DEVICE bs=4096 count=3
+	echo "test tunefs refresh..." |tee -a ${LOGFILE}
+
+	${DD_BIN} if=/dev/zero of=$DEVICE bs=4096 count=3
 	clear_backup_blocks
 
 	local old_vol_name="old_ocfs2"
 	local new_vol_name="new_ocfs2"
-	$MKFS_BIN -b $blocksize -C $clustersize -N 4  -J size=64M -L $old_vol_name $DEVICE $blkcount
+	echo "y" |${MKFS_BIN} -b $blocksize -C $clustersize -N 4  -J size=64M -L $old_vol_name ${DEVICE} $blkcount
 	check_vol $old_vol_name
 
 	#change the volume name
-	echo "y"|$TUNEFS_BIN -L $new_vol_name $DEVICE
+	echo "y"|${TUNEFS_BIN} -L $new_vol_name ${DEVICE}
 	#corrupt the superblock
-	dd if=/dev/zero of=$DEVICE bs=$blocksize count=3
-	cmd="$FSCK_BIN -fy -r $last_backup_num $DEVICE"
+	${DD_BIN} if=/dev/zero of=${DEVICE} bs=$blocksize count=3
+	cmd="${FSCK_BIN} -fy -r $last_backup_num ${DEVICE}"
 	echo "y"|$cmd
 	exit_if_bad $? 0 $cmd $LINENO
-	echo $cmd " is ok" >&3
+	echo $cmd " is ok" |tee -a ${LOGFILE}
 	#check whether the recover superblock has the new volume name
 	check_vol $new_vol_name
 }
@@ -356,7 +346,7 @@ function test_tunefs_refresh()
 ##################################
 function volume_small_test()
 {
-	dd if=/dev/zero of=$DEVICE bs=4096 count=3
+	${DD_BIN} if=/dev/zero of=$DEVICE bs=4096 count=3
 	clear_backup_blocks
 
 	#generate a tmp vol size which is less than 1G
@@ -364,14 +354,14 @@ function volume_small_test()
 	local tmp_vol_size=`expr $RANDOM \* $FIRST_BACKUP_OFF / 32767`
 	local tmp_block_count=`expr $tmp_vol_size / 1024`
 	#If block count is too small, mkfs will failed.
-	if [`expr $tmp_block_count` -lt 20000]; then
+	if [ `expr $tmp_block_count` -lt 20000 ]; then
 		$tmp_block_count=20000
 	fi
 
 	# Since tunefs will return 0, we need to grep
 	# the output of stderr and find what we want.
-	$MKFS_BIN -b 1K -C 4K $DEVICE -N 4 --no-backup-super $tmp_block_count
-	err=`$TUNEFS_BIN --backup-super $DEVICE 2>&1`
+	echo "y" |${MKFS_BIN} -b 1K -C 4K ${DEVICE} -N 4 --no-backup-super $tmp_block_count
+	err=`${TUNEFS_BIN} --backup-super ${DEVICE} 2>&1`
 	echo $err|grep "too small to contain backup superblocks"
 	exit_if_bad $? 0 "tunefs.ocfs2" $LINENO
 }
@@ -400,7 +390,7 @@ function normal_test()
 			while [ `expr $vol_byte_size` -le `expr $byte_total` ] ;
 			do
 				echo "vol_size = $vol_byte_size, blocksize = $blocksize,"	\
-				     " clustersize = $clustersize" >&3
+				     " clustersize = $clustersize" |tee -a ${LOGFILE}
 
 				bpc=`expr $clustersize / $blocksize`
 
@@ -479,13 +469,13 @@ do
 	shift
 done
 
-if [ ! -b "$DEVICE" ]; then
+if [ ! -b "${DEVICE}" ]; then
 	echo "invalid block device - $DEVICE"
 	usage
 	exit 1
 fi
 
-sect_total=`$BLOCKDEV --getsize $DEVICE`
+sect_total=`${BLOCKDEV} --getsize $DEVICE`
 byte_total=`expr $sect_total \* 512`
 
 # We must have at least 1 cluster above the FIRST_BACKUP_OFF for our test.
@@ -495,12 +485,9 @@ if [ `expr $byte_total` -lt `expr $min_vol_size` ]; then
 	exit 1
 fi
 
-check_executes
-
 set_log_file
 
 #from now on all the command and log will be recorded to the logfile.
-#set -x
 
 normal_test
 
