@@ -742,7 +742,7 @@ static int test_regular_file(int test_no)
 		    test_num);
 	if (rank == 0) {
 		fill_pattern(PATTERN_SZ);
-		fd = prep_file_no_fill(max_inline_size, 0);
+		fd = prep_file_no_fill(max_inline_size, 1);
 		if (fd < 0)
 			abort_printf("prep file no fill failed!\n");
 		send_pattern_to_ranks();
@@ -849,6 +849,7 @@ static int test_regular_file(int test_no)
 		ret = extend_pattern(fd, old_size, new_size);
 		if (ret)
 			abort_printf("extend pattern failed!\n");
+		sync();
 		send_pattern_to_ranks();
 	} else {
 		recv_pattern_from_ranks();
@@ -901,6 +902,7 @@ static int test_regular_file(int test_no)
 				abort_printf("extend pattern failed!\n");
 			send_pattern_to_ranks();
 		}
+		sync();
 	} else {
 		recv_pattern_from_ranks();
 	}

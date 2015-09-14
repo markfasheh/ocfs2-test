@@ -702,6 +702,10 @@ static void run_basic_tests(void)
 		abort_printf("MPI_Barrier failed: %d\n", ret);
 
 	root_printf("Test %d: fill directory\n", testno);
+
+	/*initialize the value of operated_entries for all ranks*/
+	get_max_inlined_entries(max_inline_size);
+
 	if (rank == 0) {
 		create_and_prep_dir();
 		get_directory_almost_full(0);
@@ -736,6 +740,7 @@ static void run_basic_tests(void)
 		      MS_SYNC);
 		msync(mmap_shared_num_region, mmap_num_size,
 		      MS_SYNC);
+		sync();
 	}
 
 	ret = MPI_Barrier(MPI_COMM_WORLD);

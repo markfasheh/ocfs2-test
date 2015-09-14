@@ -349,7 +349,7 @@ run_inline_test()
 	local logdir=${LOG_DIR}/multi-inline-test
 
 	LogRunMsg "inline-test"
-	${BINDIR}/multi-inline-run.sh -r 4 -f ${NODE_LIST} -a rsh -o ${logdir} \
+	${BINDIR}/multi-inline-run.sh -r 2 -f ${NODE_LIST} -a ssh -o ${logdir} \
 -d ${DEVICE} ${MOUNT_POINT} >> ${LOGFILE} 2>&1
 	LogRC $?
 }

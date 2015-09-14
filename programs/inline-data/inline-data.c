@@ -101,7 +101,8 @@ static int do_multi_file_test;
 static unsigned long child_nums = 2;
 static unsigned long file_nums = 2;
 
-pid_t *child_pid_list;
+pid_t *child_pid_list_mp = NULL;
+pid_t *child_pid_list_mf = NULL;
 
 extern unsigned long get_rand(unsigned long min, unsigned long max);
 extern char rand_char(void);
@@ -208,9 +209,9 @@ static int setup(int argc, char *argv[])
 	}
 
 	if (do_multi_process_test)
-		child_pid_list = (pid_t *)malloc(sizeof(pid_t) * child_nums);
+		child_pid_list_mp = (pid_t *)malloc(sizeof(pid_t) * child_nums);
 	if (do_multi_file_test)
-		child_pid_list = (pid_t *)malloc(sizeof(pid_t) * file_nums);
+		child_pid_list_mf = (pid_t *)malloc(sizeof(pid_t) * file_nums);
 
 	ret = posix_memalign((void *)&pattern, blocksize, PATTERN_SZ);
 	if (ret) {
@@ -242,8 +243,10 @@ static int setup(int argc, char *argv[])
 
 static int teardown(void)
 {
-	if (child_pid_list)
-		free(child_pid_list);
+	if (child_pid_list_mp)
+		free(child_pid_list_mp);
+	if (child_pid_list_mf)
+		free(child_pid_list_mf);
 
 	rmdir(work_place);
 
@@ -265,17 +268,18 @@ static void sigchld_handler()
 static void kill_all_children()
 {
 	int i;
-	int process_nums;
 
-	if (do_multi_process_test)
-		process_nums = child_nums;
-	else
-		process_nums = file_nums;
+	if (do_multi_process_test) {
+		for (i = 0; i < child_nums; i++)
+			kill(child_pid_list_mp[i], SIGTERM);
+		free(child_pid_list_mp);
+	}
 
-	for (i = 0; i < process_nums; i++)
-		kill(child_pid_list[i], SIGTERM);
-
-	free(child_pid_list);
+	if (do_multi_process_test) {
+		for (i = 0; i < file_nums; i++)
+			kill(child_pid_list_mf[i], SIGTERM);
+		free(child_pid_list_mf);
+	}
 }
 static void sigint_handler()
 {
@@ -347,7 +351,7 @@ static int concurrent_rw_test(void)
 		}
 		/*Father attempt to control the children*/
 		if (pid > 0)
-			child_pid_list[i] = pid;
+			child_pid_list_mp[i] = pid;
 	}
 
 	signal(SIGINT, sigint_handler);
@@ -364,11 +368,11 @@ static int concurrent_rw_test(void)
 
 	/*father wait all children to leave*/
 	for (i = 0; i < child_nums; i++) {
-		ret = waitpid(child_pid_list[i], &status, 0);
+		ret = waitpid(child_pid_list_mp[i], &status, 0);
 		rc = WEXITSTATUS(status);
 		if (rc) {
 			fprintf(stderr, "Child %d exits abnormally with "
-				"RC=%d\n", child_pid_list[i], rc);
+				"RC=%d\n", child_pid_list_mp[i], rc);
 			return rc;
 		}
 	}
@@ -445,7 +449,7 @@ static int multi_file_rw_test(int test_num)
 			exit(0);
 		}
 		if (pid > 0)
-			child_pid_list[j] = pid;
+			child_pid_list_mf[j] = pid;
 	}
 
 	signal(SIGINT, sigint_handler);
@@ -453,11 +457,11 @@ static int multi_file_rw_test(int test_num)
 
 	/*father wait all children to leave*/
 	for (i = 0; i < file_nums; i++) {
-		ret = waitpid(child_pid_list[i], &status, 0);
+		ret = waitpid(child_pid_list_mf[i], &status, 0);
 		rc = WEXITSTATUS(status);
 		if (rc) {
 			fprintf(stderr, "Child %d exists abnormally with "
-				"RC=%d\n", child_pid_list[i], rc);
+				"RC=%d\n", child_pid_list_mf[i], rc);
 			return rc;
 		}
 	}
