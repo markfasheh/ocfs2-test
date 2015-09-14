@@ -45,7 +45,7 @@ KERNELSRC=
 
 ACCESS_METHOD="ssh"
 ACCESS_METHOD_ARG=
-INTERFACE=
+INTERFACE="eth0"
 INTERFACE_ARG=
 SLOTS=4
 
@@ -56,7 +56,6 @@ RUN_LOGFILE=
 
 CLUSTERSIZE=
 BLOCKSIZE=
-SLOTS=
 LABELNAME=
 FEATURES=
 JOURNALSIZE=0
@@ -406,7 +405,7 @@ ${DEVICE} ${FEATURES} ${JOURNALSIZE} ${BLOCKS}
 
 	#dd 2G file for testing.
 	LogMsg "dd 2G testfile under mount point."
-	${DD} if=/dev/zero of=${testfile} bs=1024 count=2097152 &>> ${LOGFILE}
+	${DD} if=/dev/zero of=${testfile} bs=1024 count=2097152 >> ${LOGFILE} 2>&1
 	local UUID="`${DEBUGFS_BIN} -R stats ${DEVICE} |grep UUID|cut -d: -f 2`"
 	local LOCK="`${DEBUGFS_BIN} -R 'encode lvb_torture_test_file' ${DEVICE}`"
 
