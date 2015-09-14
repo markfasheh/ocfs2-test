@@ -501,7 +501,7 @@ EOF
 
 		do_format ${blocksize} ${clustersize} ${features} ${device}
 
-		fill_verify_holes.sh -i 10000 -s ${filesize} -c 2 -m ${mountpoint} -l ${ldir} \
+		fill_verify_holes.sh -i 100 -s ${filesize} -c 1 -m ${mountpoint} -l ${ldir} \
 			-d ${device} -o ${mountopts} ${mmap} ${punchholes} >${outlog} 2>&1
 		RC=$?
 
