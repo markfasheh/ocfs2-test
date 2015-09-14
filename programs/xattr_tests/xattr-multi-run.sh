@@ -294,10 +294,10 @@ f_runtest()
 	do
 		for filetype in normal directory symlink
 		do
-			echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_MCA_BTL} ${MPI_MCA_BTL_IF} -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 20 -n ${namespace} -t ${filetype} -l 50 -s 200 ${WORKPLACE}">>${LOG_FILE}
+			echo -e "Testing Binary:\t\t${SUDO} ${MPIRUN} --allow-run-as-root ${MPI_PLS_AGENT_ARG} ${MPI_MCA_BTL} ${MPI_MCA_BTL_IF} -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 20 -n ${namespace} -t ${filetype} -l 50 -s 200 ${WORKPLACE}">>${LOG_FILE}
 			echo "********${namespace} mode on ${filetype}********">>${LOG_FILE}
 
-			${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_MCA_BTL} ${MPI_MCA_BTL_IF} -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 20 -n ${namespace} -t ${filetype} -l 50 -s 200 ${WORKPLACE}>>${LOG_FILE} 2>&1
+			${SUDO} ${MPIRUN} --allow-run-as-root ${MPI_PLS_AGENT_ARG} ${MPI_MCA_BTL} ${MPI_MCA_BTL_IF} -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 20 -n ${namespace} -t ${filetype} -l 50 -s 200 ${WORKPLACE}>>${LOG_FILE} 2>&1
 			rc=$?
 			if [ "$rc" != "0" ];then
 				if [ "$namespace" == "user" -a "$filetype" == "symlink" ]; then
