@@ -52,7 +52,7 @@ Usage = """
 #
 # FUNCTIONS
 #
-def Cleanup():
+def Cleanup(ret):
 	from os import access, F_OK
 	filename = options.filename
 	if access(filename,F_OK) == 1:
@@ -60,7 +60,7 @@ def Cleanup():
 			o2tf.printlog('write_append_truncate: Removing filename (%s)' 
 				      % filename, logfile, 0, '')
 			os.system('rm -f %s' % filename)
-	sys.exit()
+	sys.exit(ret)
 #
 # MAIN
 #
@@ -149,11 +149,11 @@ if DEBUGON:
 		logfile, 0, '')
 #
 if options.cleanup:
-	Cleanup()
+	Cleanup(0)
 o2tf.OpenMPIInit(DEBUGON, options.nodelist, logfile, 'ssh')
 #
 ret = o2tf.openmpi_run(DEBUGON, procs, 
-	str('%s %s %s 2>&1 | tee -a %s' % (cmd, 
+	str('%s %s %s 2>&1 >> %s' % (cmd,
 	filename,
 	nloops,
 	logfile)), 
@@ -166,4 +166,4 @@ ret = o2tf.openmpi_run(DEBUGON, procs,
 if not ret:
 	o2tf.printlog('write_append_truncate: main - execution successful.',
 		logfile, 0, '')
-Cleanup()
+Cleanup(ret)

@@ -158,7 +158,7 @@ if DEBUGON:
 o2tf.OpenMPIInit(DEBUGON, options.nodelist, logfile, 'ssh')
 #
 ret = o2tf.openmpi_run(DEBUGON, procs, 
-	str('%s -d %s %s -i %s %s %s 2>&1 | tee -a %s' % (cmd, 
+	str('%s -d %s %s -i %s %s %s 2>&1 >> %s' % (cmd,
 	dlmfs, 
 	hbdev, 
 	count, 

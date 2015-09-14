@@ -159,7 +159,7 @@ if DEBUGON:
 o2tf.OpenMPIInit(DEBUGON, options.nodelist, logfile, 'rsh')
 #
 ret = o2tf.openmpi_run(DEBUGON, procs, 
-	str('%s %s %s %s %s %s 2>&1 | tee -a %s' % (cmd, 
+	str('%s %s %s %s %s %s 2>&1 >> %s' % (cmd,
 	iter_arg,
 	user_arg,
 	group_arg,
@@ -174,3 +174,5 @@ ret = o2tf.openmpi_run(DEBUGON, procs,
 if not ret:
 	o2tf.printlog('quota_multi_test: main - execution successful.',
 		logfile, 0, '')
+
+sys.exit(ret)

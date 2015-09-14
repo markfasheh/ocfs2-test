@@ -54,7 +54,7 @@ Usage = '\n	 %prog [-c|--count] \
 #
 # FUNCTIONS
 #
-def Cleanup():
+def Cleanup(ret):
 	from os import access, F_OK
 	for i in range(options.count):
 		filename = options.path+'/create_racer:'+str(i).zfill(6)
@@ -64,7 +64,7 @@ def Cleanup():
 				'filename (%s)' % filename,
 				logfile, 0, '')
 			os.system('rm -f %s' % filename)
-	sys.exit()
+	sys.exit(ret)
 #
 # MAIN
 #
@@ -150,11 +150,11 @@ if DEBUGON:
 		logfile, 0, '')
 #
 if options.cleanup:
-	Cleanup()
+	Cleanup(0)
 o2tf.OpenMPIInit(DEBUGON, options.nodelist, logfile, 'ssh')
 #
 ret = o2tf.openmpi_run(DEBUGON, procs, 
-	str('%s -i %s %s 2>&1 | tee -a %s' % (cmd, 
+	str('%s -i %s %s 2>&1 >> %s' % (cmd,
 	options.count, 
 	options.path, 
 	options.logfile)), 
@@ -167,4 +167,4 @@ ret = o2tf.openmpi_run(DEBUGON, procs,
 if not ret:
 	o2tf.printlog('run_create_racer: main - execution successful.',
 		logfile, 0, '')
-Cleanup()
+Cleanup(ret)
