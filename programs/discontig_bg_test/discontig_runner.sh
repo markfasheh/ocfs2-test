@@ -429,6 +429,9 @@ function f_extents_test()
         RET=$?
         f_exit_or_not ${RET}
 
+	${RM_BIN} -rf ${MOUNT_POINT}/ocfs2-fillup-contig-bg-dir-*
+	sync
+
 	WORK_PLACE=${MOUNT_POINT}/${WORK_PLACE_DIRENT}
 	${MKDIR_BIN} -p ${WORK_PLACE}
 
@@ -549,55 +552,62 @@ function f_inline_test()
 	RET=$?
 	f_exit_or_not ${RET}
 
+	${RM_BIN} -rf ${MOUNT_POINT}/ocfs2-fillup-contig-bg-dir-*
+	sync
+
 	f_LogMsg ${LOG_FILE} "Regular inline-file test."
 	${INLINE_DATA_TEST_BIN} -i 1 -d ${DEVICE} ${MOUNT_POINT}>>${LOG_FILE} 2>&1 || {
 		return 1
 	}
 
-	${RM_BIN} -rf ${MOUNT_POINT}/inline-data-test
+	${SUDO} ${RM_BIN} -rf ${MOUNT_POINT}/inline-data-test
 
 	f_LogMsg ${LOG_FILE} "Multiple inline-file test."
-	${INLINE_DATA_TEST_BIN} -i 1 -m 1000 -d ${DEVICE} ${MOUNT_POINT}>>${LOG_FILE} 2>&1 || {
+	${INLINE_DATA_TEST_BIN} -i 1 -m 100 -d ${DEVICE} ${MOUNT_POINT}>>${LOG_FILE} 2>&1 || {
 		return 1
 	}
 
-	${RM_BIN} -rf ${MOUNT_POINT}/inline-data-test
+	${SUDO} ${RM_BIN} -rf ${MOUNT_POINT}/inline-data-test
 
 	f_LogMsg ${LOG_FILE} "Concurrent inline-file test."
 	${INLINE_DATA_TEST_BIN} -i 1 -c 100 -d ${DEVICE} ${MOUNT_POINT}>>${LOG_FILE} 2>&1 || {
 		return 1
 	}
 
-	${RM_BIN} -rf ${MOUNT_POINT}/inline-data-test
+	${SUDO} ${RM_BIN} -rf ${MOUNT_POINT}/inline-data-test
 
 	f_LogMsg ${LOG_FILE} "Stress inline-file test."
 	${INLINE_DATA_TEST_BIN} -i 10 -c 50 -m 100 -d ${DEVICE} ${MOUNT_POINT}>>${LOG_FILE} 2>&1 || {
 		return 1
 	}
 	
-	${RM_BIN} -rf ${MOUNT_POINT}/inline-data-test
+	${SUDO} ${RM_BIN} -rf ${MOUNT_POINT}/inline-data-test
 
 	f_LogMsg ${LOG_FILE} "Regular inline-dir test."
 	${INLINE_DIRS_TEST_BIN} -i 1 -s 20 -d ${DEVICE} ${MOUNT_POINT}>>${LOG_FILE} 2>&1 || {
 		return 1
 	}
 
-	${RM_BIN} -rf ${MOUNT_POINT}/inline-data-test
+	${SUDO} ${RM_BIN} -rf ${MOUNT_POINT}/inline-data-test
 
 	f_LogMsg ${LOG_FILE} "Multiple inline-dir test."
-	${INLINE_DIRS_TEST_BIN} -i 1 -s 5 -m 1000 -d ${DEVICE} ${MOUNT_POINT}>>${LOG_FILE} 2>&1 || {
+	${INLINE_DIRS_TEST_BIN} -i 1 -s 5 -m 100 -d ${DEVICE} ${MOUNT_POINT}>>${LOG_FILE} 2>&1 || {
 		return 1
 	}
 
-	${RM_BIN} -rf ${MOUNT_POINT}/inline-data-test
+	${SUDO} ${RM_BIN} -rf ${MOUNT_POINT}/inline-data-test
 
 	f_LogMsg ${LOG_FILE} "Concurrent inline-dir test."
 	${INLINE_DIRS_TEST_BIN} -i 1 -s 5 -c 100 -d ${DEVICE} ${MOUNT_POINT}>>${LOG_FILE} 2>&1 || {
 		return 1
 	}
 
-	${RM_BIN} -rf ${MOUNT_POINT}/inline-data-test
+	${SUDO} ${RM_BIN} -rf ${MOUNT_POINT}/inline-data-test
 
+	f_LogMsg ${LOG_FILE} "[*] Umount device ${DEVICE} from ${MOUNT_POINT}:"
+	f_umount ${LOG_FILE} ${MOUNT_POINT}
+	RET=$?
+	f_exit_or_not ${RET}
 }
 
 function f_xattr_test()

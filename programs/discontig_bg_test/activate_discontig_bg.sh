@@ -120,6 +120,10 @@ function f_verify_hosts()
 		((slots++))
 	done
 
+	if [ "$slots" -eq "0" ];then
+		slots=1
+	fi
+
 	SLOTS=${slots}
 
 	return 0
