@@ -954,7 +954,7 @@ function f_single_runner()
 	f_exit_or_not ${RET}
 
 	f_LogRunMsg ${RUN_LOG_FILE} "[*] Refcount Block Test:"
-	f_LogMsg ${LOG_FILE} "[*] Xattr Block Group Test:"
+	f_LogMsg ${LOG_FILE} "[*] Refcount Block Group Test:"
 	f_refcount_test
 	RET=$?
 	f_echo_status ${RET}| tee -a ${RUN_LOG_FILE}
