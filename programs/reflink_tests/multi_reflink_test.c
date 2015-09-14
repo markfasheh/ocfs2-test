@@ -561,7 +561,6 @@ static int basic_test(void)
 			truncate_size = file_size / (rank + 1);
 
 		ret = truncate(dest, truncate_size);
-
 		if (ret < 0) {
 			if (write_buf)
 				free(write_buf);
@@ -1461,7 +1460,6 @@ static int stress_test(void)
 	MPI_Barrier_Sync();
 
 	if (rank) {
-
 		for (i = 0; i < ref_counts; i++) {
 
 			if (get_rand(0, 1))
@@ -1470,7 +1468,12 @@ static int stress_test(void)
 			snprintf(ref_path, PATH_MAX, "%s_%dr%ld", orig_path,
 				 rank, i);
 
-			truncate(ref_path, 0);
+			if (truncate(ref_path, 0) < 0) {
+				ret = errno;
+				abort_printf("truncate refcount file %s failed: %d:%s\n",
+					     ref_path, ret, strerror(ret));
+				goto bail;
+			}
 		}
 	}
 
