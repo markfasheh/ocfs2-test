@@ -718,8 +718,8 @@ function f_refcount_test()
 	${MKDIR_BIN} -p ${WORK_PLACE}
 	
 	f_LogMsg ${LOG_FILE} "Tremendous refcount block testing."
-	f_LogMsg ${LOG_FILE} "CMD: ${REFCOUNT_TEST_BIN} -i 1 -n 10 -p 40000 -l 1048576 -d ${DEVICE} -w ${WORK_PLACE} -s"
-	${REFCOUNT_TEST_BIN} -i 1 -n 10 -p 20000 -l 1048576 -d ${DEVICE} -w ${WORK_PLACE} -s >>${LOG_FILE} 2>&1 || {
+	f_LogMsg ${LOG_FILE} "CMD: ${REFCOUNT_TEST_BIN} -i 1 -n 10 -p 2000 -l 1048576 -d ${DEVICE} -w ${WORK_PLACE} -s"
+	${REFCOUNT_TEST_BIN} -i 1 -n 10 -p 2000 -l 1048576 -d ${DEVICE} -w ${WORK_PLACE} -s >>${LOG_FILE} 2>&1 || {
 		f_LogMsg ${LOG_FILE} "Tremendous refcount block testing failed."
 		return 1
 	}
@@ -840,36 +840,36 @@ function f_refcount_test()
 	${RM_BIN} -rf ${WORK_PLACE}/*
 
 	sync
-	disk_free_m=`f_get_disk_usage`
-	f_LogMsg ${LOG_FILE} "Refcount Fill-up Testing."
-	f_LogMsg ${LOG_FILE} "CMD: ${REFCOUNT_TEST_BIN} -i 1 -n 2 -l $((${disk_free_m}*1024*1024))  -d ${DEVICE} -w ${WORK_PLACE} -s"
-	${REFCOUNT_TEST_BIN} -i 1 -n 2 -l $((${disk_free_m}*1024*1024))  -d ${DEVICE} -w ${WORK_PLACE} -s >>${LOG_FILE} 2>&1 || {
-		f_LogMsg ${LOG_FILE} "Refcount fill-up testing failed."
-		return 1
-	}
-
-	f_LogMsg ${LOG_FILE} "Remove all refcount blocks"
-	${RM_BIN} -rf ${WORK_PLACE}/*
-
-	f_LogMsg ${LOG_FILE} "Reflink stress test."
-	f_LogMsg ${LOG_FILE} "CMD: ${REFCOUNT_TEST_BIN} -i 1 -n 50000 -l 1048576  -d ${DEVICE} -w ${WORK_PLACE} -s"
-	${REFCOUNT_TEST_BIN} -i 1 -n 50000 -l 1048576  -d ${DEVICE} -w ${WORK_PLACE} -s >>${LOG_FILE} 2>&1 || {
-		f_LogMsg ${LOG_FILE} "Reflink stress test failed."
-		return 1
-	}
-
-	f_LogMsg ${LOG_FILE} "Remove all reflink files."
-	${RM_BIN} -rf ${WORK_PLACE}/*
-
-	f_LogMsg ${LOG_FILE} "Reflink & Xattr combination test"
-	f_LogMsg ${LOG_FILE} "CMD: ${REFCOUNT_TEST_BIN} -i 1 -n 10000 -l 1048576  -d ${DEVICE} -w ${WORK_PLACE} -x 1000"
-	${REFCOUNT_TEST_BIN} -i 1 -n 10000 -l 1048576  -d ${DEVICE} -w ${WORK_PLACE} -x 1000 >>${LOG_FILE} 2>&1 || {
-		f_LogMsg ${LOG_FILE} "Reflink & Xattr combination test failed."
-		return 1
-	}
-
-	f_LogMsg ${LOG_FILE} "Remove all reflink files."
-	${RM_BIN} -rf ${WORK_PLACE}/*
+#	disk_free_m=`f_get_disk_usage`
+#	f_LogMsg ${LOG_FILE} "Refcount Fill-up Testing."
+#	f_LogMsg ${LOG_FILE} "CMD: ${REFCOUNT_TEST_BIN} -i 1 -n 2 -l $((${disk_free_m}*1024*1024))  -d ${DEVICE} -w ${WORK_PLACE} -s"
+#	${REFCOUNT_TEST_BIN} -i 1 -n 2 -l $((${disk_free_m}*1024*1024))  -d ${DEVICE} -w ${WORK_PLACE} -s >>${LOG_FILE} 2>&1 || {
+#		f_LogMsg ${LOG_FILE} "Refcount fill-up testing failed."
+#		return 1
+#	}
+#
+#	f_LogMsg ${LOG_FILE} "Remove all refcount blocks"
+#	${RM_BIN} -rf ${WORK_PLACE}/*
+#
+#	f_LogMsg ${LOG_FILE} "Reflink stress test."
+#	f_LogMsg ${LOG_FILE} "CMD: ${REFCOUNT_TEST_BIN} -i 1 -n 50000 -l 1048576  -d ${DEVICE} -w ${WORK_PLACE} -s"
+#	${REFCOUNT_TEST_BIN} -i 1 -n 50000 -l 1048576  -d ${DEVICE} -w ${WORK_PLACE} -s >>${LOG_FILE} 2>&1 || {
+#		f_LogMsg ${LOG_FILE} "Reflink stress test failed."
+#		return 1
+#	}
+#
+#	f_LogMsg ${LOG_FILE} "Remove all reflink files."
+#	${RM_BIN} -rf ${WORK_PLACE}/*
+#
+#	f_LogMsg ${LOG_FILE} "Reflink & Xattr combination test"
+#	f_LogMsg ${LOG_FILE} "CMD: ${REFCOUNT_TEST_BIN} -i 1 -n 10000 -l 1048576  -d ${DEVICE} -w ${WORK_PLACE} -x 1000"
+#	${REFCOUNT_TEST_BIN} -i 1 -n 10000 -l 1048576  -d ${DEVICE} -w ${WORK_PLACE} -x 1000 >>${LOG_FILE} 2>&1 || {
+#		f_LogMsg ${LOG_FILE} "Reflink & Xattr combination test failed."
+#		return 1
+#	}
+#
+#	f_LogMsg ${LOG_FILE} "Remove all reflink files."
+#	${RM_BIN} -rf ${WORK_PLACE}/*
 
 	f_LogMsg ${LOG_FILE} "Remove all stuffs."
 	${RM_BIN} -rf ${MOUNT_POINT}/*
