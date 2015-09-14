@@ -40,7 +40,7 @@ TYPE=inode
 SLOTS=1
 JOURNALSIZE=0
 LABELNAME="ocfs2-discontig-bg-tests"
-MOUNT_OPTS="localalloc=0"
+MOUNT_OPTS=
 DEVICE=
 WORK_PLACE=
 
