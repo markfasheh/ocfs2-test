@@ -38,7 +38,7 @@ uname = os.uname()
 lhostname = str(socket.gethostname())
 logfile = config.LOGFILE
 interface = 'eth0'
-procs = 1
+procs = 2
 cmd = config.BINDIR+'/flock_unit_test'
 #
 Usage = """
@@ -126,13 +126,12 @@ if __name__=='__main__':
 		logfile = options.logfile
 
 	if options.nodelist:
-		nodelist = options.nodelist.split(',')
-		nodelen = len(nodelist)
-		procs = nodelen
+		tmplist = options.nodelist.split(',')
+		nodelen = len(tmplist)
 		if nodelen == 1:
-			nodelist = nodelist.append(options.nodelist)
+			options.nodelist = tmplist[0] + "," + tmplist[0]
 		else:
-			nodelist = options.nodelist.split(',')
+			options.nodelist = tmplist[0] + "," + tmplist[1]
 	else:
 		if not options.cleanup:
 			parser.error('Invalid node list.')
