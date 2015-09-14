@@ -1014,7 +1014,7 @@ function f_multi_extents_test()
 	local filename=
 
 	f_LogMsg ${LOG_FILE} "Activate extents discontig-bg on ${DEVICE}"
-	f_LogMsg ${LOG_FILE} "CMD: ${DISCONTIG_ACTIVATE_BIN} -t extent -r ${ramain_space} -b $BLOCKSIZE -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} ${MOUNT_POINT}"
+	f_LogMsg ${LOG_FILE} "CMD: ${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b $BLOCKSIZE -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} ${MOUNT_POINT}"
 	${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b $BLOCKSIZE -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
@@ -1070,7 +1070,7 @@ function f_multi_xattr_test()
 	local remain_space=1024
 
 	f_LogMsg ${LOG_FILE} "Activate extents discontig-bg on ${DEVICE}"
-	f_LogMsg ${LOG_FILE} "CMD: ${DISCONTIG_ACTIVATE_BIN} -t extent -r ${ramain_space} -b $BLOCKSIZE -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} ${MOUNT_POINT}"
+	f_LogMsg ${LOG_FILE} "CMD: ${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b $BLOCKSIZE -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} ${MOUNT_POINT}"
 	${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b $BLOCKSIZE -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
@@ -1136,7 +1136,7 @@ function f_multi_refcount_test()
 	local remain_space=1024
 
 	f_LogMsg ${LOG_FILE} "Activate extents discontig-bg on ${DEVICE}"
-	f_LogMsg ${LOG_FILE} "CMD: ${DISCONTIG_ACTIVATE_BIN} -t extent -r ${ramain_space} -b $BLOCKSIZE -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} ${MOUNT_POINT}"
+	f_LogMsg ${LOG_FILE} "CMD: ${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b $BLOCKSIZE -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} ${MOUNT_POINT}"
 	${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b $BLOCKSIZE -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
