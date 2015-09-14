@@ -1260,8 +1260,8 @@ f_LogRunMsg ${RUN_LOG_FILE} "=====================Discontiguous block group test
 f_LogMsg ${LOG_FILE} "=====================Discontiguous block groups tests start:  `date`\
 ====================="
 
-for BLOCKSIZE in 512 1024 2048 4096;do
-	for CLUSTERSIZE in 4096 8192 32768 1048576;do
+for BLOCKSIZE in 512 4096;do
+	for CLUSTERSIZE in 4096 8192;do
 		f_LogRunMsg ${RUN_LOG_FILE} "<- Running test with ${BLOCKSIZE} \
 bs and ${CLUSTERSIZE} cs ->\n"
 		f_LogMsg ${LOG_FILE} "<- Running test with ${BLOCKSIZE} bs \
