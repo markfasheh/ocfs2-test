@@ -1093,8 +1093,8 @@ function f_multi_xattr_test()
 	${RM_BIN} -rf ${WORK_PLACE}/*
 
 	f_LogMsg ${LOG_FILE} "Concurrent adding test."
-	f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 200 -s 1000 -o -r -k ${WORKPLACE}"
-	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 200 -s 1000 -o -r -k ${WORKPLACE} >>${LOG_FILE} 2>&1 || {
+	f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 200 -s 1000 -o -r -k ${WORK_PLACE}"
+	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 200 -s 1000 -o -r -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
 		f_LogMsg ${LOG_FILE} "concurrent xattr adding test failed"
 	}
 
@@ -1102,8 +1102,8 @@ function f_multi_xattr_test()
 	${RM_BIN} -rf ${WORK_PLACE}/*
 
 	f_LogMsg ${LOG_FILE} "Stress multi-nodes xattr test."
-	f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_XATTR_TEST_BIN} -i 1 -x 2000 -n user -t normal -l 255 -s 5000  -r -k ${WORKPLACE}"
-	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_XATTR_TEST_BIN} -i 1 -x 2000 -n user -t normal -l 255 -s 5000  -r -k ${WORKPLACE} >>${LOG_FILE} 2>&1 || {
+	f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_XATTR_TEST_BIN} -i 1 -x 2000 -n user -t normal -l 255 -s 5000  -r -k ${WORK_PLACE}"
+	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_XATTR_TEST_BIN} -i 1 -x 2000 -n user -t normal -l 255 -s 5000  -r -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
 		f_LogMsg ${LOG_FILE} "stress multi-nodes xattr test failed."
 	}
 
