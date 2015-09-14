@@ -1116,6 +1116,7 @@ static int do_xattr_data_cows(char *ref_pfx, unsigned long iter, int ea_nums)
 
 			if (xattr_value_sz > xattr_name_sz + 50) {
 
+				xattr_value_sz = XATTR_VALUE_MAX_SZ;
 				ret = read_ea(NORMAL, fd);
 				if (ret < 0)
 					goto bail;
