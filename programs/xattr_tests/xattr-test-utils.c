@@ -202,9 +202,10 @@ int read_ea(enum FILE_TYPE ft, int fd)
 				xattr_value_sz);
 		if (ret < 0) {
 			ret = errno;
-			fprintf(stderr, "Failed at fgetxattr(errno:%d, %s) "
-				"on %s,xattr_name=%s\n", ret, strerror(ret),
-				filename, xattr_name);
+			fprintf(stderr,
+				"Failed at fgetxattr(errno:%d, %s) "
+				"on %s, xattr_name=%s\n",
+				ret, strerror(ret), filename, xattr_name);
 			ret = -1;
 		}
 		break;
@@ -212,9 +213,11 @@ int read_ea(enum FILE_TYPE ft, int fd)
 		ret = lgetxattr(filename, xattr_name, xattr_value_get,
 				xattr_value_sz);
 		if (ret < 0) {
-			fprintf(stderr, "Failed at lgetxattr(errno:%d, %s) "
-				"on %s,xattr_name=%s\n", ret, strerror(ret),
-				filename, xattr_name);
+			ret = errno;
+			fprintf(stderr,
+				"Failed at lgetxattr(errno:%d, %s) "
+				"on %s,xattr_name=%s\n",
+				ret, strerror(ret), filename, xattr_name);
 			ret = -1;
 		}
 		break;
@@ -222,13 +225,17 @@ int read_ea(enum FILE_TYPE ft, int fd)
 		ret = getxattr(filename, xattr_name, xattr_value_get,
 			       xattr_value_sz);
 		if (ret < 0) {
-			fprintf(stderr, "Failed at getxattr(errno:%d, %s) "
-				"on %s,xattr_name=%s\n", ret, strerror(ret),
-				filename, xattr_name);
+			ret = errno;
+			fprintf(stderr,
+				"Failed at getxattr(errno:%d, %s) "
+				"on %s,xattr_name=%s\n",
+				ret, strerror(ret), filename, xattr_name);
 			ret = -1;
 		}
 		break;
 	default:
+		fprintf(stderr, "%s: Invalid file format\n", filename);
+		ret = -1;
 		break;
 	}
 
@@ -299,9 +306,10 @@ int remove_ea(enum FILE_TYPE ft, int fd)
 		ret = fremovexattr(fd, xattr_name);
 		if (ret < 0) {
 			ret = errno;
-			fprintf(stderr, "Failed at fremovexattr(errno:%d,%s) "
-				"on %s:xattr_name=%s\n", ret, strerror(ret),
-				filename, xattr_name);
+			fprintf(stderr,
+				"Failed at fremovexattr(errno:%d,%s) "
+				"on %s:xattr_name=%s\n",
+				ret, strerror(ret), filename, xattr_name);
 			ret = -1;
 		}
 		break;
@@ -319,13 +327,16 @@ int remove_ea(enum FILE_TYPE ft, int fd)
 		ret = removexattr(filename, xattr_name);
 		if (ret < 0) {
 			ret = errno;
-			fprintf(stderr, "Failed at removexattr(errno:%d,%s) "
-				"on %s:xattr_name=%s\n", ret, strerror(ret),
-				filename, xattr_name);
+			fprintf(stderr,
+				"Failed at removexattr(errno:%d,%s) "
+				"on %s:xattr_name=%s\n",
+				ret, strerror(ret), filename, xattr_name);
 			ret = -1;
 		}
 		break;
 	default:
+		fprintf(stderr, "%s: Invalid file format\n", filename);
+		ret = -1;
 		break;
 	}
 
@@ -345,12 +356,9 @@ void xattr_value_constructor(int xattr_entry_no)
 	strcpy(xattr_name, xattr_name_list_set[xattr_entry_no]);
 	memset(value_sz, 0, 6);
 
-	xattr_value_generator(xattr_entry_no,
-	XATTR_VALUE_LEAST_SZ,
-	xattr_value_sz -
-	strlen(value_prefix_magic) -
-	strlen(value_postfix_magic) -
-	strlen(xattr_name) - 5);
+	xattr_value_generator(xattr_entry_no, XATTR_VALUE_LEAST_SZ,
+		xattr_value_sz - strlen(value_prefix_magic) -
+		strlen(value_postfix_magic) - strlen(xattr_name) - 5);
 
 	snprintf(value_sz, 6, "%05d", (int)(strlen(value_prefix_magic) +
 		 strlen(xattr_name) + strlen(xattr_value) + 5 +

@@ -29,6 +29,7 @@
 #include <dirent.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include <time.h>
 
 #define HOSTNAME_MAX_SZ         100
 #define PATH_SZ                 100

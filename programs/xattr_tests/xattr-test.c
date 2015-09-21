@@ -293,8 +293,9 @@ static void judge_sys_return(int ret, const char *sys_func)
 		perror(sys_func);
 		teardown();
 		exit(1);
-	} else
-		return;
+	}
+
+	return;
 }
 
 static void sigchld_handler()
@@ -357,7 +358,7 @@ static void atexit_hook(void)
 
 static void one_round_run(enum FILE_TYPE ft, int round_no)
 {
-	int fd = 0, ret, status;
+	int fd = -1, ret, status;
 	pid_t pid;
 	unsigned long j;
 	int i, k;
@@ -380,6 +381,7 @@ static void one_round_run(enum FILE_TYPE ft, int round_no)
 				teardown();
 				exit(1);
 			}
+
 			/*child try to create/modify file,add/update xattr*/
 			if (pid == 0) {
 				memset(filename, 0, MAX_FILENAME_SZ + 1);
@@ -451,7 +453,8 @@ static void one_round_run(enum FILE_TYPE ft, int round_no)
 					}
 					/*append file content*/
 					if (ft == NORMAL) {
-						ftruncate(fd, 0);
+						ret = ftruncate(fd, 0);
+						judge_sys_return(ret, "ftruncate");
 						fsync(fd);
 						write_buf = realloc(write_buf,
 								    CLUSTER_SIZE);
@@ -506,15 +509,18 @@ static void one_round_run(enum FILE_TYPE ft, int round_no)
 		break;
 	}
 
-	/* Launch multiple processes to do concurrent operations
-	against one file*/
+	/*
+	 * Launch multiple processes to do concurrent operations
+	 * against one file.
+	 */
 	if (do_multi_process_test == 1) {
-
-		/*Father process add a series of xattr entries first*/
-		printf("Test %d: Doing Xattr operations on %s with %d "
-		       "processes.\n", testno, filename, child_nums + 1);
+		/* Father process add a series of xattr entries first */
+		fprintf(stdout,
+			"Test %d: Performing Xattr operations on %s with %d processes.\n",
+			testno, filename, child_nums + 1);
 		fflush(stdout);
 		fflush(stderr);
+
 		for (j = 0; j < xattr_nums; j++) {
 			memset(xattr_name, 0, xattr_name_sz + 1);
 			memset(xattr_value, 0, xattr_value_sz);
@@ -537,11 +543,12 @@ static void one_round_run(enum FILE_TYPE ft, int round_no)
 
 		signal(SIGCHLD, sigchld_handler);
 
-		/*Propagate a fixed number of children to perform update*/
+		/* Propagate a fixed number of children to perform update */
 		for (i = 0; i < child_nums; i++) {
 			pid = fork();
 			if (pid < 0) {
 				fprintf(stderr, "Fork process error!\n");
+				fflush(stderr);
 				teardown();
 				exit(1);
 			}
@@ -549,10 +556,8 @@ static void one_round_run(enum FILE_TYPE ft, int round_no)
 			if (pid == 0) {
 				for (k = 0; k < XATTR_CHILD_UPDATE_TIMES; k++) {
 					for (j = 0; j < xattr_nums; j++) {
-						strcpy(xattr_name,
-						       xattr_name_list_set[j]);
-						memset(xattr_value, 0,
-						       xattr_value_sz);
+						strcpy(xattr_name, xattr_name_list_set[j]);
+						memset(xattr_value, 0, xattr_value_sz);
 						xattr_value_constructor(j);
 						ret = add_or_update_ea(ft, fd,
 								 XATTR_REPLACE,
@@ -561,22 +566,26 @@ static void one_round_run(enum FILE_TYPE ft, int round_no)
 							teardown();
 							exit(1);
 						}
+
 						write_buf = realloc(write_buf,
 							      CLUSTER_SIZE);
-						ftruncate(fd, 0);
-						memset(write_buf, 'a'+j%26,
-						       CLUSTER_SIZE);
-						pwrite(fd, write_buf,
-						       CLUSTER_SIZE, 0);
+						ret = ftruncate(fd, 0);
+						judge_sys_return(ret, "ftruncate");
+
+						memset(write_buf, 'a'+j%26, CLUSTER_SIZE);
+						ret = pwrite(fd, write_buf, CLUSTER_SIZE, 0);
+						judge_sys_return(ret, "write");
 					}
 				}
 				free(write_buf);
 				exit(0);
 			}
+
 			if (pid > 0)
 				child_pid_list[i] = pid;
 		}
-		/*Father*/
+
+		/* Father */
 		signal(SIGINT, sigint_handler);
 		signal(SIGTERM, sigterm_handler);
 		atexit(atexit_hook);
@@ -609,10 +618,10 @@ static void one_round_run(enum FILE_TYPE ft, int round_no)
 		testno++;
 		return;
 	}
-	/* Do normal update/add test*/
-	printf("Test %d: Doing normal %lu EAs adding and updating on file %s.\n",
+	/* Do normal update/add test */
+	fprintf(stdout,
+		"Test %d: Doing normal %lu EAs adding and updating on file %s.\n",
 		testno, xattr_nums, filename);
-
 	fflush(stdout);
 
 	for (j = 0; j < xattr_nums; j++) {
@@ -628,22 +637,27 @@ static void one_round_run(enum FILE_TYPE ft, int round_no)
 					     xattr_name_sz);
 		memset(xattr_value, 'w', xattr_value_sz - 1);
 		xattr_value[xattr_value_sz - 1] = '\0';
-		/*add EA entry*/
+
+		/* Add EA entry */
 		ret = add_or_update_ea(ft, fd, XATTR_CREATE, "add");
 		if (ret < 0) {
 			teardown();
 			exit(1);
 		}
+
 		ret = read_ea(ft, fd);
 		if (ret < 0) {
 			teardown();
 			exit(1);
 		}
+
 		if (strcmp(xattr_value, xattr_value_get) != 0) {
 			fprintf(stderr, "Inconsistent Xattr Value Readed!\n");
+			fflush(stderr);
 			teardown();
 			exit(1);
 		}
+
 		/*update EA entry here */
 		memset(xattr_value, 0, xattr_value_sz);
 		memset(xattr_value_get, 0, xattr_value_sz);
@@ -654,13 +668,16 @@ static void one_round_run(enum FILE_TYPE ft, int round_no)
 			teardown();
 			exit(1);
 		}
+
 		ret = read_ea(ft, fd);
 		if (ret < 0) {
 			teardown();
 			exit(1);
 		}
+
 		if (strcmp(xattr_value, xattr_value_get) != 0) {
 			fprintf(stderr, "Inconsistent Xattr Value Readed!\n");
+			fflush(stderr);
 			teardown();
 			exit(1);
 		}
@@ -670,8 +687,11 @@ static void one_round_run(enum FILE_TYPE ft, int round_no)
 	/*Here we do random_size update and check*/
 	if (!do_random_test)
 		goto list_test;
-	printf("Test %d: Doing randomsize updating for %lu EAs on file %s.\n",
+
+	fprintf(stdout,
+		"Test %d: Doing randomsize updating for %lu EAs on file %s.\n",
 		testno, xattr_nums, filename);
+	fflush(stdout);
 
 	unsigned long update_iter;
 	for (update_iter = 0; update_iter < XATTR_RANDOMSIZE_UPDATE_TIMES;
@@ -683,14 +703,14 @@ static void one_round_run(enum FILE_TYPE ft, int round_no)
 		strcpy(xattr_name, xattr_name_list_set[j]);
 		xattr_value_generator(j, XATTR_VALUE_LEAST_SZ, xattr_value_sz);
 		if (j % 2 == 0) {
-			/*Random size update*/
+			/* Random size update */
 			ret = add_or_update_ea(ft, fd, XATTR_REPLACE, "update");
 			if (ret < 0) {
 				teardown();
 				exit(1);
 			}
 		} else {
-			/*Remove then add*/
+			/* Remove then add */
 			ret = remove_ea(ft, fd);
 			if (ret < 0) {
 				teardown();
@@ -729,8 +749,9 @@ list_test:
 	for (j = 0; j < xattr_nums; j++)
 		memset(xattr_name_list_get[j], 0, xattr_name_sz + 1);
 
-	printf("Test %d: Listing all replaced EAs on file %s.\n", testno,
-	       filename);
+	fprintf(stdout, "Test %d: Listing all replaced EAs on file %s.\n",
+		testno, filename);
+
 	switch (ft) {
 	case NORMAL:
 		ret = flistxattr(fd, (void *)list, list_sz);
@@ -753,18 +774,20 @@ list_test:
 	for (j = 0; j < xattr_nums; j++) {
 		if (!is_namelist_member(xattr_nums, xattr_name_list_get[j],
 		    xattr_name_list_set)) {
-			fprintf(stderr, "Xattr list name(%s) "
-				"did not match the orginal one\n",
+			fprintf(stderr,
+				"Xattr list name(%s) did not match the orginal one\n",
 				xattr_name_list_get[j]);
+			fflush(stdout);
 			teardown();
 			exit(1);
 		}
 	}
 	testno++;
+
 bail:
 	if (keep_ea == 0) {
-		printf("Test %d: Removing all EAs on file %s.\n", testno,
-		        filename);
+		fprintf(stdout, "Test %d: Removing all EAs on file %s.\n",
+			testno, filename);
 		for (j = 0; j < xattr_nums; j++) {
 			memset(xattr_name, 0, xattr_name_sz + 1);
 			strcpy(xattr_name, xattr_name_list_set[j]);
@@ -777,8 +800,9 @@ bail:
 		}
 		testno++;
 
-		printf("Test %d: Verifying if all EAs removed from file %s.\n",
-		       testno, filename);
+		fprintf(stdout, "Test %d: Verifying if all EAs removed from file %s.\n",
+			testno, filename);
+
 		char *veri_list;
 		unsigned long veri_list_sz;
 		veri_list_sz = (xattr_name_sz + 1) * xattr_nums;
@@ -812,9 +836,10 @@ bail:
 		free((void *)veri_list);
 		testno++;
 	}
+
 	/*Unlink the file*/
 #ifdef DO_UNLINK
-	printf("Test %d: Removing file %s...\n", testno, filename);
+	fprintf(stdout, "Test %d: Removing file %s...\n", testno, filename);
 	switch (ft) {
 	case NORMAL:
 		ret = unlink(filename);

@@ -355,21 +355,21 @@ static int one_round_run(enum FILE_TYPE ft, int round_no)
 			fd = open(filename, FILE_FLAGS_CREATE, FILE_MODE);
 			judge_sys_return(fd, "open");
 			printf("Test %d: Creating commonfile %s on %s(rank 0),"
-			       "to perform %d EAs.\n",
+			       "to perform %lu EAs.\n",
 			       testno, filename, hostname, xattr_nums);
 			break;
 		case SYMLINK:
 			ret = symlink("/no/such/file", filename);
 			judge_sys_return(ret, "symlink");
 			printf("Test %d: Creating symlink %s on %s(rank 0),"
-			       "to perform %d EAs.\n",
+			       "to perform %lu EAs.\n",
 			       testno, filename, hostname, xattr_nums);
 			break;
 		case DIRECTORY:
 			ret = mkdir(filename, FILE_MODE);
 			judge_sys_return(ret, "mkdir");
 			printf("Test %d: Creating directory %s on %s(rank 0),"
-			       "to perform %d EAs.\n",
+			       "to perform %lu EAs.\n",
 			       testno, filename, hostname, xattr_nums);
 			break;
 		default:
@@ -413,13 +413,13 @@ static int one_round_run(enum FILE_TYPE ft, int round_no)
 	if (only_do_add_test == 1) {
 		if (rank == 0) {
 			printf("Test %d: Performancing Xattr operations on %s,"
-			       "all ranks take race to add %d EAs.\n",
+			       "all ranks take race to add %lu EAs.\n",
 			       testno, filename, xattr_nums);
 		}
 		for (j = 0; j < xattr_nums; j++) {
 			memset(xattr_name, 0, xattr_name_sz + 1);
 			memset(xattr_value, 0, xattr_value_sz);
-			snprintf(xattr_name, xattr_name_sz, "%s.%s-rank%d-%d",
+			snprintf(xattr_name, xattr_name_sz, "%s.%s-rank%d-%lu",
 				 xattr_namespace_prefix, hostname, rank, j);
 			if (do_random_test == 1)
 				xattr_value_generator(j, XATTR_VALUE_LEAST_SZ,
@@ -444,7 +444,7 @@ static int one_round_run(enum FILE_TYPE ft, int round_no)
 	/*Do regular concurrent operations(update/add/remove) testing*/
 	if (rank == 0) {
 		printf("Test %d: Performancing Xattrs on %s,all ranks take "
-		       "race to do update/remove/add/read %d EAs.\n",
+		       "race to do update/remove/add/read %lu EAs.\n",
 		       testno, filename, xattr_nums);
 
 		fflush(stdout);
