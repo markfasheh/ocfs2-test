@@ -309,7 +309,7 @@ static void run_large_dir_tests(void)
 	should_inlined_or_not(ret, 0, testno);
 	/*verify i_size should be one block size here*/
 	if (i_size != blocksize) {
-		fprintf(stderr, "i_size should be %d,while it's %lu here!\n",
+		fprintf(stderr, "i_size should be %d, while it's %lu here!\n",
 			blocksize, i_size);
 	}
 	destroy_dir();
@@ -328,7 +328,7 @@ static void run_large_dir_tests(void)
 	should_inlined_or_not(ret, 0, testno);
 	/*verify i_size should be one block size here*/
 	if (i_size != blocksize * 2) {
-		fprintf(stderr, "i_size should be %d,while it's %lu here!\n",
+		fprintf(stderr, "i_size should be %d, while it's %lu here!\n",
 			blocksize * 2, i_size);
 	}
 	destroy_dir();
@@ -443,6 +443,11 @@ static int semaphore_v(void)
 	return 0;
 }
 
+#if 0
+/*
+ * This function is not in use for now, comment it out to suppress
+ * compiler warning.
+ */
 static void del_semvalue(void)
 {
 	union semun sem_union;
@@ -450,15 +455,15 @@ static void del_semvalue(void)
 	if (semctl(sem_id, 0, IPC_RMID, sem_union) == -1)
 		fprintf(stderr, "Failed to delete semaphore\n");
 }
+#endif
 
 static void run_concurrent_test(void)
 {
-	int ret, rc;
-	int i, status;
-	struct my_dirent *old_dirents;
 	key_t sem_key = IPC_PRIVATE, shm_key = IPC_PRIVATE;
-
+	struct my_dirent *old_dirents;
 	pid_t pid;
+	int i, status;
+	int ret, rc;
 
 	if (!do_multi_process_test)
 		return;
@@ -556,9 +561,8 @@ static void run_concurrent_test(void)
 
 static void run_multiple_test(void)
 {
-	int i,  status;
-
 	pid_t pid;
+	int i, status;
 	int ret, rc;
 
 	if (!do_multi_file_test)

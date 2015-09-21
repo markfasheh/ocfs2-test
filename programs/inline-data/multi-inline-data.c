@@ -204,7 +204,7 @@ static int should_inlined_or_not(int is_inlined, int should_inlined,
 		if (!is_inlined) {
 			fprintf(stderr, "After Test #%d, file %s should be "
 				"inlined here!\n", test_no, file_name);
-			fprintf(stderr, "File(%s): i_size = %d,id_count = %d\n",
+			fprintf(stderr, "File(%s): i_size = %lu, id_count = %d\n",
 				file_name, i_size, id_count);
 			abort_printf("A extented file detected!\n");
 		}
@@ -213,7 +213,7 @@ static int should_inlined_or_not(int is_inlined, int should_inlined,
 		if (is_inlined) {
 			fprintf(stderr, "After Test #%d, file %s should be "
 				"extented here!\n", test_no, file_name);
-			fprintf(stderr, "File(%s): i_size = %d,id_count = %d\n",
+			fprintf(stderr, "File(%s): i_size = %lu,id_count = %d\n",
 				file_name, i_size, id_count);
 			abort_printf("A inlined file detected!\n");
 

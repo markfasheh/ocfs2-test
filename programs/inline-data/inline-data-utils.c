@@ -325,8 +325,9 @@ int verify_pattern_mmap(int fd, unsigned int size)
 
 int uuid2dev(const char *uuid, char *dev)
 {
-	FILE *df;
 	char cmd[300];
+	FILE *df;
+	int ret;
 
 	snprintf(cmd, 300, "/sbin/blkid |grep %s|cut -d':' -f1", uuid);
 
@@ -337,9 +338,11 @@ int uuid2dev(const char *uuid, char *dev)
 		return -1;
 	}
 
-	fscanf(df, "%s\n", dev);
-
+	ret = fscanf(df, "%s\n", dev);
 	pclose(df);
+
+	if (ret != 1)
+		return -1;
 
 	return 0;
 }

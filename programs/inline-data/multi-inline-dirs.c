@@ -663,7 +663,7 @@ static void should_inlined_or_not(int is_inlined, int should_inlined,
 		if (!is_inlined) {
 			fprintf(stderr, "After Test #%d, dir %s should be "
 				"inlined here!\n", test_no, dir_name);
-			fprintf(stderr, "Dir(%s): i_size = %d,id_count = %d\n",
+			fprintf(stderr, "Dir(%s): i_size = %lu,id_count = %d\n",
 				dir_name, i_size, id_count);
 			abort_printf("inline-data check failed!\n");
 		}
@@ -672,7 +672,7 @@ static void should_inlined_or_not(int is_inlined, int should_inlined,
 		if (is_inlined) {
 			fprintf(stderr, "After Test #%d, dir %s should be "
 				"extented here!\n", test_no, dir_name);
-			fprintf(stderr, "Dir(%s): i_size = %d,id_count = %d\n",
+			fprintf(stderr, "Dir(%s): i_size = %lu,id_count = %d\n",
 				dir_name, i_size, id_count);
 			abort_printf("inline-data check failed!\n");
 
@@ -1048,7 +1048,7 @@ static void run_large_dir_tests(void)
 	should_inlined_or_not(ret, 0, testno);
 	/*verify i_size should be one block size here*/
 	if (i_size != blocksize * 2) {
-		fprintf(stderr, "i_size should be %d,while it's %d here!\n",
+		fprintf(stderr, "i_size should be %d, while it's %lu here!\n",
 			blocksize * 2, i_size);
 	}
 
