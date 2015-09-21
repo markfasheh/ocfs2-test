@@ -109,8 +109,8 @@ static unsigned long long ocfs2_max_file_offset(unsigned int bbits,
 	return (((unsigned long long)bytes) << bitshift) - trim;
 }
 
-static int parse_opts(int argc, char **argv, int *bbits, int *cbits,
-		      char **fname)
+static int parse_opts(int argc, char **argv, unsigned int *bbits,
+		      unsigned int *cbits, char **fname)
 {
 	int c;
 
