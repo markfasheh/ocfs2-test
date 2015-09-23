@@ -220,7 +220,7 @@ static int write_at_largest_off(int fd, unsigned long long max_off)
 int main(int argc, char **argv)
 {
 	int fd, ret;
-	int bbits = 0, cbits = 0;
+	unsigned int bbits = 0, cbits = 0;
 	char *fname = NULL;
 	unsigned long long max_off;
 
