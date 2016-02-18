@@ -13,12 +13,20 @@ and ocfs2-tools(>1.6) ocfs2-tools-devel(>1.6)
 openmpi libgomp openmpi-devel openmpi-libs mpi-selector gcc autoconf libaio-devel e2fsprogs-devel
 and ocfs2-2.6.18-348 ocfs2-tools(>1.6) ocfs2-tools-devel(>1.6)
 
+* For SLES/opensuse:
+$sudo zypper in openmpi openmpi-devel gcc autoconf libaio-devel e2fsprogs-devel ocfs2-kmp-default
+ocfs2-tools ocfs2-tools-devel ocfs2-tools-devel-static
+
+Note:
+For SLE12 later, dev packages(eg. ocfs2-tools-devel) now go into SDK repo. Please add it first, like:
+$sudo zypper ar sdk-repo-url sdk-repo-name
+
 2. Add user "ocfs2test" for all nodes
 
 3. The following environment parameters should be set in /home/ocfs2test/.bash_profile for all nodes:
 
 * For OL6 or OL7:
-PATH=$PATH:$HOME/bin:/usr/lib64/openmpi/bin:$HOME/bin/ocfs2/bin
+PATH=$PATH:$HOME/bin:/usr/sbin/:/usr/lib64/openmpi/bin:$HOME/bin/ocfs2/bin
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib64/openmpi/lib
 export PATH
 export LD_LIBRARY_PATH
@@ -29,15 +37,25 @@ LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib64/openmpi/1.4-gcc/lib
 export PATH
 export LD_LIBRARY_PATH
 
+* For SLES/opensuse:
+PATH=$PATH:$HOME/bin:/usr/lib64/mpi/gcc/openmpi/bin:$HOME/bin/ocfs2/bin
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib64/mpi/gcc/openmpi/lib64
+export PATH
+export LD_LIBRARY_PATH
+
+Note:
+Import above env variables by:
+$. ~/.bash_profile
+
 4. Install OCFS2 testing suite for all nodes through steps as follows:
 
 *  su - ocfs2test
-*  clone ocfs2 testing suite source git://oss.oracle.com/git/ocfs2-test.git
+*  git clone https://github.com/markfasheh/ocfs2-test   #or download from github website
 *  cd ocfs2-test
 *  make clean
 *  ./autogen.sh prefix=/
 *  make
-*   make install DESTDIR=/home/ocfs2test/bin/ocfs2
+*  make install DESTDIR=/home/ocfs2test/bin/ocfs2
 
 Setup test environment
 ======================
@@ -51,7 +69,7 @@ Setup test environment
 
 * add this line into /etc/sudoers
   ocfs2test ALL=(ALL) NOPASSWD:ALL
-* comment 'Defaults    requiretty' in /etc/sudoers
+* comment 'Defaults    requiretty' in /etc/sudoers      #no need for sles/opensuse now
 
 3. chmod 777 /dev/sdax by root on EACH node
 
