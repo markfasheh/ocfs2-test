@@ -59,7 +59,8 @@ SUBDIRS =			\
 	reflink_tests		\
 	directio_test		\
 	discontig_bg_test	\
-	verify_readonly
+	verify_readonly		\
+	online_filecheck
 
 ifdef OCFS2_TEST_DX_DIRS
 	SUBDIRS += dx_dirs_tests

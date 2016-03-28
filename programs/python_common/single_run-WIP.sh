@@ -870,6 +870,26 @@ run_reflink_test()
 	log_end ${RC}
 }
 
+run_filecheck_test()
+{
+	log_message "run filecheck_test" $@
+        if [ "$#" -lt "3" ]; then
+                echo "Error in run_filecheck()"
+                exit 1
+        fi
+
+	logdir=$1
+	device=$2
+	mountpoint=$3
+
+	log_start "filecheck_test"
+	filecheck_test_run.sh -o ${logdir} -d ${device} ${mountpoint}
+	RC=$?
+
+	log_end ${RC}
+}
+
+
 # Following cases aim to test tools
 run_mkfs()
 {
@@ -975,7 +995,8 @@ if [ -z ${TESTCASES} ]; then
 fi
 
 SUPPORTED_TESTCASES="all create_and_open directaio fillverifyholes renamewriterace aiostress\
-  filesizelimits mmaptruncate buildkernel splice sendfile mmap reserve_space inline xattr reflink mkfs tunefs backup_super"
+  filesizelimits mmaptruncate buildkernel splice sendfile mmap reserve_space inline xattr\
+  reflink mkfs tunefs backup_super filecheck"
 for cas in ${TESTCASES}; do
 	echo ${SUPPORTED_TESTCASES} | grep -sqw $cas
 	if [ $? -ne 0 ]; then
@@ -1066,6 +1087,10 @@ for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 
 	if [ "$tc"X = "reflink"X -o "$tc"X = "all"X ];then
 		run_reflink_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+	fi
+
+	if [ "$tc"X = "filecheck"X ];then
+		run_filecheck_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
 	fi
 
 # For tools test.
