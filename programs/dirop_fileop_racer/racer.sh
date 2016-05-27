@@ -37,37 +37,37 @@ DIR="race"
 #
 
 [ -e $DIR ] || mkdir $DIR
-./file_create.sh $DIR $MAX_FILES &
-./file_create.sh $DIR $MAX_FILES &
-./file_create.sh $DIR $MAX_FILES &
+file_create.sh $DIR $MAX_FILES &
+file_create.sh $DIR $MAX_FILES &
+file_create.sh $DIR $MAX_FILES &
 
-./dir_create.sh $DIR $MAX_FILES &
-./dir_create.sh $DIR $MAX_FILES &
-./dir_create.sh $DIR $MAX_FILES &
+dir_create.sh $DIR $MAX_FILES &
+dir_create.sh $DIR $MAX_FILES &
+dir_create.sh $DIR $MAX_FILES &
 
-./file_rename.sh $DIR $MAX_FILES &
-./file_rename.sh $DIR $MAX_FILES &
-./file_rename.sh $DIR $MAX_FILES &
+file_rename.sh $DIR $MAX_FILES &
+file_rename.sh $DIR $MAX_FILES &
+file_rename.sh $DIR $MAX_FILES &
 
-./file_link.sh $DIR $MAX_FILES &
-./file_link.sh $DIR $MAX_FILES &
-./file_link.sh $DIR $MAX_FILES &
+file_link.sh $DIR $MAX_FILES &
+file_link.sh $DIR $MAX_FILES &
+file_link.sh $DIR $MAX_FILES &
 
-./file_symlink.sh $DIR $MAX_FILES &
-./file_symlink.sh $DIR $MAX_FILES &
-./file_symlink.sh $DIR $MAX_FILES &
+file_symlink.sh $DIR $MAX_FILES &
+file_symlink.sh $DIR $MAX_FILES &
+file_symlink.sh $DIR $MAX_FILES &
 
-./file_concat.sh $DIR $MAX_FILES &
-./file_concat.sh $DIR $MAX_FILES &
-./file_concat.sh $DIR $MAX_FILES &
+file_concat.sh $DIR $MAX_FILES &
+file_concat.sh $DIR $MAX_FILES &
+file_concat.sh $DIR $MAX_FILES &
 
-./file_list.sh $DIR &
-./file_list.sh $DIR &
-./file_list.sh $DIR &
+file_list.sh $DIR &
+file_list.sh $DIR &
+file_list.sh $DIR &
 
-./file_rm.sh $DIR $MAX_FILES &
-./file_rm.sh $DIR $MAX_FILES &
-./file_rm.sh $DIR $MAX_FILES &
+file_rm.sh $DIR $MAX_FILES &
+file_rm.sh $DIR $MAX_FILES &
+file_rm.sh $DIR $MAX_FILES &
 
 echo "CTRL-C to exit"
 trap "

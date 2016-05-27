@@ -25,7 +25,7 @@
 PATH=$PATH:/sbin      # Add /sbin to the path for ocfs2 tools
 export PATH=$PATH:.
 
-. ./config.sh
+. `dirname ${0}`/config.sh
 
 MKFS_BIN="`which sudo` -u root `which mkfs.ocfs2`"
 FSCK_BIN="`which sudo` -u root `which fsck.ocfs2`"

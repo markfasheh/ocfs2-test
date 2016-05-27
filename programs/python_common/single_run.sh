@@ -207,7 +207,7 @@ LogRC $?;
 # MAIN
 #
 #
-. ./config.sh
+. `dirname ${0}`/config.sh
 #
 if [ $# -ne 2 ]; then
 	Usage;

@@ -32,7 +32,7 @@ exit 1;
 }
 if [ `dirname ${0}` == '.' ]; then
 	if [ -f config.sh ]; then
-		. ./config.sh;
+		. `dirname ${0}`/config.sh
 	fi;
 else
 	if [ -f `dirname ${0}`/config.sh ]; then

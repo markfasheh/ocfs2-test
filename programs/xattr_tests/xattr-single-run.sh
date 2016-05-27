@@ -35,7 +35,7 @@
 PATH=$PATH:/sbin      # Add /sbin to the path for ocfs2 tools
 export PATH=$PATH:.
 
-. ./config.sh
+. `dirname ${0}`/config.sh
 
 GETXATTR="`which sudo` -u root `which getfattr`"
 SETXATTR="`which sudo` -u root `which setfattr`"

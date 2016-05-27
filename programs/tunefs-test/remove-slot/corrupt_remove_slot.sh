@@ -128,7 +128,7 @@ function patch_tunefs()
 	cd $CORRUPT_SRC
 	patch -p1 < $pwd/corrupt_remove_slot.patch
 	exit_if_bad $? 0 "Can't patch the src directory."
-	./autogen.sh
+	autogen.sh
 	make
 	if [ ! -x "$CORRUPT_SRC/tunefs.ocfs2/tunefs.ocfs2" ];then
 		echo "Can't build the specified tunefs.ocfs2."

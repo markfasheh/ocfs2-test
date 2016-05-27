@@ -858,14 +858,14 @@ run_reflink_test()
 
 	#ordered mount option
 	log_start "reflink_test" "ordered"
-	./reflink_test_run.sh -o ${logdir} -d ${device} ${mountpoint} || {
+	reflink_test_run.sh -o ${logdir} -d ${device} ${mountpoint} || {
 		RC=$?
 		log_end ${RC}
 	}
 
 	#writeback mount option
 	#log_start "reflink_test" "writeback"
-	#./reflink_test_run.sh -W -o ${logdir} -d ${device} ${mountpoint}
+	#reflink_test_run.sh -W -o ${logdir} -d ${device} ${mountpoint}
 	RC=$?
 	log_end ${RC}
 }
