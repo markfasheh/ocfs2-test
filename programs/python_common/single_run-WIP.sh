@@ -781,6 +781,7 @@ run_reserve_space()
 				done
 
 				do_umount ${mountpoint}
+				RC=$?
 
 				log_end ${RC}
 			done
