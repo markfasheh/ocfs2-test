@@ -431,7 +431,7 @@ fi;
 echo "Test ${testnum}: -L mylabel" |tee -a ${LOGFILE}
 label="my_label_is_very_very_very_long_to_the_point_of_being_useless"
 echo -n "mkfs ..... " |tee -a ${LOGFILE}
-${MKFS} -x -F -b 4K -C 4K -N 1 -L ${label} ${device} 262144 >{OUt} 2>&1
+${MKFS} -x -F -b 4K -C 4K -N 1 -L ${label} ${device} 262144 >${OUT} 2>&1
 echo "OK" |tee -a ${LOGFILE}
 echo -n "verify ..... " |tee -a ${LOGFILE}
 ${DEBUGFS} -R "stats" ${device} >${OUT} 2>&1
