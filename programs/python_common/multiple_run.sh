@@ -31,6 +31,7 @@ DD=`which dd`
 GREP=`which grep`
 AWK=`which awk`
 ECHO="`which echo` -e"
+O2CLUSTER="`which o2cluster`"
 
 SUDO="`which sudo` -u root"
 IFCONFIG_BIN="`which ifconfig`"
@@ -398,6 +399,7 @@ run_lvb_torture_test()
         local logfile=${logdir}/lvb_torture_${DATE}.log
         local workplace=${MOUNT_POINT}
 	local testfile=${workplace}/lvb_torture_test_file
+	local dlmfs_path="/dlm"
 
 	${MKDIR_BIN} -p ${logdir}
 	${CHMOD_BIN} -R 777 ${logdir}
@@ -427,9 +429,15 @@ ${DEVICE} ${FEATURES} ${JOURNALSIZE} ${BLOCKS}
 	local UUID="`${DEBUGFS_BIN} -R stats ${DEVICE} |grep UUID|cut -d: -f 2`"
 	local LOCK="`${DEBUGFS_BIN} -R 'encode lvb_torture_test_file' ${DEVICE}`"
 
-	LogMsg "Run lvb_torture, CMD: ${BINDIR}/run_lvb_torture.py -d /dlm/ -i 60000 \
+	#dlmfs_path should be "NULL" if cluster stack is "pcmk"
+	local stack="`${SUDO} ${O2CLUSTER} -r | ${AWK} -F',' '{printf $1}'`"
+	if [ "$stack" = "pcmk" ];then
+		dlmfs_path="NULL"
+	fi
+
+	LogMsg "Run lvb_torture, CMD: ${BINDIR}/run_lvb_torture.py -d ${dlmfs_path} -i 60000 \
 -H ${DEVICE} -l ${logfile} -n ${NODE_LIST} "${UUID}" "${LOCK}""
-	${SUDO} ${BINDIR}/run_lvb_torture.py -d /dlm/ -c 60000 -i ${INTERFACE} -l \
+	${SUDO} ${BINDIR}/run_lvb_torture.py -d ${dlmfs_path} -c 60000 -i ${INTERFACE} -l \
 ${logfile} -n ${NODE_LIST} "${UUID}" "${LOCK}" >> ${LOGFILE} 2>&1
 	LogRC $?
 

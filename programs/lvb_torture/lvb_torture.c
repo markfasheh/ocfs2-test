@@ -180,6 +180,101 @@ static void run_test(struct o2dlm_ctxt *dlm, char *lockid)
 	}
 }
 
+/*
+ * Copied from run_test(), this is a ugly but straightforward workaround.
+ * "fsdlm" is used when using pcmk as cluster stack, which only supports
+ * 32-bits lvb so far.
+ */
+static void run_test_fsdlm(struct o2dlm_ctxt *dlm, char *lockid)
+{
+	unsigned long long iter = 0;
+	unsigned long long expected, to_write = 0;
+	int ret;
+	unsigned int read, written;
+	errcode_t err;
+	enum o2dlm_lock_level level;
+	__u32 lvb;
+
+	while (iter < max_iter && !caught_sig) {
+		expected = iter;
+
+		if ((iter % num_procs) == rank)
+			level = O2DLM_LEVEL_EXMODE;
+		else
+			level = O2DLM_LEVEL_PRMODE;
+
+		if (level == O2DLM_LEVEL_PRMODE) {
+			ret = MPI_Barrier(MPI_COMM_WORLD);
+			if (ret != MPI_SUCCESS)
+				rprintf(rank, "read MPI_Barrier failed: %d\n", ret);
+			err = o2dlm_lock(dlm, lockid, 0, level);
+			if (err)
+				rprintf(rank, "o2dlm_lock failed: %d\n", err);
+
+			expected++;
+		} else {
+			err = o2dlm_lock(dlm, lockid, 0, level);
+			if (err)
+				rprintf(rank, "o2dlm_lock failed: %d\n", err);
+
+			ret = MPI_Barrier(MPI_COMM_WORLD);
+			if (ret != MPI_SUCCESS)
+				rprintf(rank, "read MPI_Barrier failed: %d\n", ret);
+			to_write = iter + 1;
+		}
+
+		err = o2dlm_read_lvb(dlm, lockid, (char *)&lvb, sizeof(lvb),
+				     &read);
+		if (err)
+			rprintf(rank, "o2dlm_read_lvb failed: %d\n", err);
+
+		lvb = be32_to_cpu(lvb);
+
+		if (level == O2DLM_LEVEL_PRMODE)
+			printf("%s: read  iter: %llu, lvb: %llu exp: %llu\n",
+			       hostname, (unsigned long long)iter,
+			       (unsigned long long)lvb,
+			       (unsigned long long)expected);
+		else
+			printf("%s: write iter: %llu, lvb: %llu wri: %llu\n",
+			       hostname, (unsigned long long)iter,
+			       (unsigned long long)lvb,
+			       (unsigned long long)to_write);
+
+		fflush(stdout);
+
+		if (lvb != expected) {
+			printf("Test failed! %s: rank %d, read lvb %llu, expected %llu\n",
+			       hostname, rank, (unsigned long long) lvb,
+			       (unsigned long long) expected);
+			MPI_Abort(MPI_COMM_WORLD, 1);
+		}
+
+		if (level == O2DLM_LEVEL_EXMODE) {
+			lvb = cpu_to_be32(to_write);
+
+			err = o2dlm_write_lvb(dlm, lockid, (char *)&lvb,
+					      sizeof(lvb), &written);
+			if (err)
+				rprintf(rank, "o2dlm_write_lvb failed: %d\n", err);
+			if (written != sizeof(lvb))
+				rprintf(rank, "o2dlm_write_lvb() wrote %d, we asked for %d\n", written, sizeof(lvb));
+		}
+
+		err = o2dlm_unlock(dlm, lockid);
+		if (err)
+			rprintf(rank, "o2dlm_unlock failed: %d\n", err);
+
+		/* This second barrier is not necessary and can be
+		 * commented out to ramp the test up */
+		ret = MPI_Barrier(MPI_COMM_WORLD);
+		if (ret != MPI_SUCCESS)
+			rprintf(rank, "unlock MPI_Barrier failed: %d\n", ret);
+
+		iter++;
+	}
+}
+
 static void clear_lock(struct o2dlm_ctxt *dlm, char *lockid)
 {
 	char empty[O2DLM_LOCK_ID_MAX_LEN];
@@ -363,8 +458,7 @@ int main(int argc, char *argv[])
 
         printf("%s: rank: %d, nodes: %d, dlm: %s, dom: %s, lock: %s, iter: %llu\n", hostname, rank, num_procs, dlmfs_path, domain, lockid, (unsigned long long) max_iter);
 
-	
-	if (access(dlmfs_path, W_OK) < 0) {
+	if (strcmp(dlmfs_path, "NULL") != 0 && access(dlmfs_path, W_OK) < 0) {
 		sleep(2);
 		rprintf(rank, "%s has no write permission.\n", dlmfs_path);
 		return EACCES;
@@ -380,6 +474,13 @@ int main(int argc, char *argv[])
 			rprintf(rank, "start_heartbeat failed\n");
 	}
 
+	/*
+	 * "pcmk" is used as cluster stack if "NULL"
+	 * is passed here
+	 */
+	if (strcmp(dlmfs_path, "NULL") == 0)
+	    dlmfs_path = NULL;
+
 	error = o2dlm_initialize(dlmfs_path, domain, &dlm);
 	if (error)
 		rprintf(rank, "o2dlm_initialize failed: %d\n", error);
@@ -391,7 +492,10 @@ int main(int argc, char *argv[])
 	if (ret != MPI_SUCCESS)
 		rprintf(rank, "prep MPI_Barrier failed: %d\n", ret);
 
-	run_test(dlm, lockid);
+	if (dlmfs_path)
+		run_test(dlm, lockid);
+	else
+		run_test_fsdlm(dlm, lockid);
 
 	error = o2dlm_destroy(dlm);
 	if (error)
