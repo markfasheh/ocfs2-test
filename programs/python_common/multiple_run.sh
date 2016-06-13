@@ -339,7 +339,7 @@ run_multi_mmap_test()
 	local testfile=${workplace}/multi_mmap_test_file
 
 	run_common_testcase "multi_mmap" "sparse,unwritten,inline-data" \
-"${BINDIR}/run_multi_mmap.py -i 20000 -I ${INTERFACE} -n ${NODE_LIST} -c -b 6000 --hole -f ${testfile}"
+"${BINDIR}/run_multi_mmap.py -i 20000 -I ${INTERFACE} -l ${logfile} -n ${NODE_LIST} -c -b 6000 --hole -f ${testfile}"
 }
 
 run_create_racer_test()
