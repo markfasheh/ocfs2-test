@@ -201,7 +201,7 @@ f_setup()
 	fi
 
 	SUPPORTED_TESTCASES="all xattr inline reflink write_append_truncate multi_mmap create_racer flock_unit cross_delete open_delete lvb_torture"
-	for cas in ${TESTCASES}; do
+	for cas in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 		echo ${SUPPORTED_TESTCASES} | grep -sqw $cas
 		if [ $? -ne 0 ]; then
 			echo "testcase [${cas}] not supported."

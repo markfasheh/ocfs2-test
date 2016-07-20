@@ -997,7 +997,7 @@ fi
 SUPPORTED_TESTCASES="all create_and_open directaio fillverifyholes renamewriterace aiostress\
   filesizelimits mmaptruncate buildkernel splice sendfile mmap reserve_space inline xattr\
   reflink mkfs tunefs backup_super filecheck"
-for cas in ${TESTCASES}; do
+for cas in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 	echo ${SUPPORTED_TESTCASES} | grep -sqw $cas
 	if [ $? -ne 0 ]; then
 		echo "testcase [${cas}] not supported."
