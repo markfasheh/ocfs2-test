@@ -305,7 +305,7 @@ for y in range(count):
 		cmdline = os.path.join(config.BINDIR, 'crdel_gen_files.py')
 	ret = o2tf.openmpi_run( DEBUGON, nproc, str('%s -s %s -l %s -t %s' % \
 		(cmdline, stagedir,
-		options.logfile,
+		config.LOGFILE,
 		tarfile) ),
 		','.join(nodelist),
 		'ssh',
@@ -324,7 +324,7 @@ for y in range(count):
 	else:
 		cmdline = os.path.join(config.BINDIR, 'crdel_del_files.py')
 	ret = o2tf.openmpi_run( DEBUGON, nproc, str('%s -s %s -l %s ' % \
-		(cmdline, stagedir, options.logfile) ),
+		(cmdline, stagedir, config.LOGFILE) ),
 		','.join(nodelist),
 		'ssh',
 		options.interface,

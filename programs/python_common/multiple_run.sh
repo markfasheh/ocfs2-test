@@ -318,7 +318,7 @@ run_cross_delete_test()
 	local workplace=${MOUNT_POINT}/cross_delete_test
 
 	run_common_testcase "cross_delete" "sparse,unwritten,inline-data" \
-"${BINDIR}/cross_delete.py -c 1 -i ${INTERFACE} -d ${workplace} -n ${NODE_LIST} -t ${KERNELSRC}"
+"${BINDIR}/cross_delete.py -c 1 -l ${logfile} -i ${INTERFACE} -d ${workplace} -n ${NODE_LIST} -t ${KERNELSRC}"
 }
 
 run_write_append_truncate_test()
