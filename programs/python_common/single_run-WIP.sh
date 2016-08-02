@@ -197,7 +197,7 @@ do_mkdir() {
 run_create_and_open()
 {
 	log_message "run_create_and_open" $@
-        if [ "$#" -lt "3" ]; then
+        if [ "$#" -lt "5" ]; then
                 echo "Error in run_create_and_open()"
                 exit 1
         fi
@@ -205,10 +205,20 @@ run_create_and_open()
 	logdir=$1
 	device=$2
 	mountpoint=$3
+	if [ $4 != "NONE" ];then
+		blocksize=$4
+	else
+		blocksize=4096
+	fi
+
+	if [ $5 != "NONE" ];then
+		clustersize=$5
+	else
+		clustersize=32768
+	fi
+
 
 	workdir=${mountpoint}/create_and_open_test
-	blocksize=4096
-	clustersize=32768
 	features="sparse,unwritten,inline-data"
 
 	mountopts="defaults"
@@ -269,7 +279,7 @@ run_extend_and_write()
 run_directaio()
 {
 	log_message "run_directaio" $@
-        if [ "$#" -lt "3" ]; then
+        if [ "$#" -lt "5" ]; then
                 echo "Error in run_directaio()"
                 exit 1
         fi
@@ -277,10 +287,19 @@ run_directaio()
 	logdir=$1
 	device=$2
 	mountpoint=$3
+	if [ $4 != "NONE" ];then
+		blocksize=$4
+	else
+		blocksize=4096
+	fi
+
+	if [ $5 != "NONE" ];then
+		clustersize=$5
+	else
+		clustersize=32768
+	fi
 
 	workfile=${mountpoint}/directaio_testfile
-	blocksize=4096
-	clustersize=32768
 	features="sparse,unwritten,inline-data"
 
 	for mopt in writeback ordered
@@ -303,11 +322,11 @@ run_directaio()
 	done
 }
 
-# run_aiostress ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+# run_aiostress ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
 run_aiostress()
 {
 	log_message "run_aiostress" $@
-        if [ "$#" -lt "3" ]; then
+        if [ "$#" -lt "5" ]; then
                 echo "Error in run_aiostress()"
                 exit 1
         fi
@@ -315,10 +334,19 @@ run_aiostress()
 	logdir=$1
 	device=$2
 	mountpoint=$3
+	if [ $4 != "NONE" ];then
+		blocksize=$4
+	else
+		blocksize=4096
+	fi
+
+	if [ $5 != "NONE" ];then
+		clustersize=$5
+	else
+		clustersize=32768
+	fi
 
 	workdir=${mountpoint}/testme
-	blocksize=4096
-	clustersize=8192
 	features="sparse,unwritten,inline-data"
 
 	for mopt in writeback ordered
@@ -347,11 +375,11 @@ run_aiostress()
 	done
 }
 
-# run_buildkernel ${LOGDIR} ${DEVICE} {MOUNTPOINT} ${KERNELSRC}
+# run_buildkernel ${LOGDIR} ${DEVICE} {MOUNTPOINT} ${KERNELSRC} ${BLOCKSIZE} ${CLUSTERSIZE}
 run_buildkernel()
 {
 	log_message "run_buildkernel" $@
-        if [ "$#" -lt "4" ]; then
+        if [ "$#" -lt "6" ]; then
                 echo "Error in run_buildkernel()"
                 exit 1
         fi
@@ -360,11 +388,20 @@ run_buildkernel()
 	device=$2
 	mountpoint=$3
 	kernelsrc=$4
+	if [ $5 != "NONE" ];then
+		blocksize=$5
+	else
+		blocksize=4096
+	fi
+
+	if [ $6 != "NONE" ];then
+		clustersize=$6
+	else
+		clustersize=32768
+	fi
 
 	node=`${HOSTNAME}`
 	workdir=${mountpoint}/testme
-	blocksize=4096
-	clustersize=4096
 	features="sparse,unwritten,inline-data"
 
 	for mopt in writeback ordered
@@ -392,11 +429,11 @@ run_buildkernel()
 	done
 }
 
-# run_filesizelimits ${LOGDIR} ${DEVICE} {MOUNTPOINT}
+# run_filesizelimits ${LOGDIR} ${DEVICE} {MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
 run_filesizelimits()
 {
 	log_message "run_filesizelimits" $@
-        if [ "$#" -lt "3" ]; then
+        if [ "$#" -lt "5" ]; then
                 echo "Error in run_filesizelimits()"
                 exit 1
         fi
@@ -404,10 +441,19 @@ run_filesizelimits()
 	logdir=$1
 	device=$2
 	mountpoint=$3
+	if [ $4 != "NONE" ];then
+		blocksize=$4
+	else
+		blocksize=4096
+	fi
+
+	if [ $5 != "NONE" ];then
+		clustersize=$5
+	else
+		clustersize=32768
+	fi
 
 	mountopts=defaults
-	clustersize=4096
-	blocksize=4096
 
 	get_bits $blocksize
 	blocksize_bits=$?
@@ -566,11 +612,11 @@ EOF
 	done
 }
 
-# run_renamewriterace ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+# run_renamewriterace ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
 run_renamewriterace()
 {
 	log_message "run_renamewriterace" $@
-        if [ "$#" -lt "3" ]; then
+        if [ "$#" -lt "5" ]; then
                 echo "Error in run_renamewriterace()"
                 exit 1
         fi
@@ -578,10 +624,19 @@ run_renamewriterace()
 	logdir=$1
 	device=$2
 	mountpoint=$3
+	if [ $4 != "NONE" ];then
+		blocksize=$4
+	else
+		blocksize=4096
+	fi
+
+	if [ $5 != "NONE" ];then
+		clustersize=$5
+	else
+		clustersize=32768
+	fi
 
 	workdir=${mountpoint}/testme
-	blocksize=4096
-	clustersize=4096
 	features="sparse,unwritten,inline-data"
 
 	for mopt in writeback ordered
@@ -608,7 +663,7 @@ run_renamewriterace()
 run_splice()
 {
 	log_message "run_splice" $@
-        if [ "$#" -lt "3" ]; then
+        if [ "$#" -lt "5" ]; then
                 echo "Error in run_splice()"
                 exit 1
         fi
@@ -616,10 +671,19 @@ run_splice()
 	logdir=$1
 	device=$2
 	mountpoint=$3
+	if [ $4 != "NONE" ];then
+		blocksize=$4
+	else
+		blocksize=4096
+	fi
+
+	if [ $5 != "NONE" ];then
+		clustersize=$5
+	else
+		clustersize=32768
+	fi
 
 	workdir=${mountpoint}/testme
-	blocksize=4096
-	clustersize=32768
 	features="sparse,unwritten,inline-data"
 
 	for mopt in writeback ordered
@@ -646,7 +710,7 @@ run_splice()
 run_sendfile()
 {
 	log_message "run_sendfile" $@
-        if [ "$#" -lt "3" ]; then
+        if [ "$#" -lt "5" ]; then
                 echo "Error in run_sendfile()"
                 exit 1
         fi
@@ -655,11 +719,21 @@ run_sendfile()
 	device=$2
 	mountpoint=$3
 
+	if [ $4 != "NONE" ];then
+		blocksize=$4
+	else
+		blocksize=4096
+	fi
+
+	if [ $5 != "NONE" ];then
+		clustersize=$5
+	else
+		clustersize=32768
+	fi
+
 	workfile=${mountpoint}/ocfs2_sendfile_data
 	verifyfile=/tmp/sendfile_verify
 	
-	blocksize=4096
-	clustersize=32768
 	features="sparse,unwritten,inline-data"
 	port=8001
 
@@ -697,7 +771,7 @@ run_sendfile()
 run_mmap()
 {
 	log_message "run_mmap" $@
-        if [ "$#" -lt "3" ]; then
+        if [ "$#" -lt "5" ]; then
                 echo "Error in run_mmap()"
                 exit 1
         fi
@@ -705,12 +779,22 @@ run_mmap()
 	logdir=$1
 	device=$2
 	mountpoint=$3
+	if [ "$4" != "NONE" ];then
+		bslist="$4"
+	else
+		bslist="512 1024 2048 4096"
+	fi
+	if [ "$5" != "NONE" ];then
+		cslist="$5"
+	else
+		cslist="4096 32768 1048576"
+	fi
 
 	workfile=${mountpoint}/mmap_testfile
 	features="sparse,unwritten,inline-data"
 
-	for blocksize in 512 1024 2048 4096;do
-		for clustersize in 4096 32768 1048576;do
+	for blocksize in $(echo "$bslist");do
+		for clustersize in $(echo "$cslist");do
 			for mopt in writeback ordered;do
 				mountopts="data=${mopt}"
 
@@ -736,7 +820,7 @@ run_mmap()
 run_reserve_space()
 {
 	log_message "run_reserve_space" $@
-        if [ "$#" -lt "3" ]; then
+        if [ "$#" -lt "5" ]; then
                 echo "Error in run_reserve_space()"
                 exit 1
         fi
@@ -744,14 +828,24 @@ run_reserve_space()
 	logdir=$1
 	device=$2
 	mountpoint=$3
+	if [ "$4" != "NONE" ];then
+		bslist="$4"
+	else
+		bslist="512 1024 2048 4096"
+	fi
+	if [ "$5" != "NONE" ];then
+		cslist="$5"
+	else
+		cslist="4096 32768 1048576"
+	fi
 
 	workfile=${mountpoint}/reserve_space_testfile
 	features="sparse,unwritten,inline-data"
 	space_free=
 	iter=1000
 
-	for blocksize in 512 1024 2048 4096;do
-		for clustersize in 4096 32768 1048576;do
+	for blocksize in $(echo "$bslist");do
+		for clustersize in $(echo "$cslist");do
 			for mopt in writeback ordered;do
 				mountopts="data=${mopt}"
 
@@ -792,7 +886,7 @@ run_reserve_space()
 run_inline_data()
 {
 	log_message "run_inline_data" $@
-        if [ "$#" -lt "3" ]; then
+        if [ "$#" -lt "5" ]; then
                 echo "Error in run_inline_data()"
                 exit 1
         fi
@@ -800,9 +894,11 @@ run_inline_data()
 	logdir=$1
 	device=$2
 	mountpoint=$3
+	blocksize=$4
+	clustersize=$5
 
 	log_start "inline_data_test" 
-	single-inline-run.sh  -o ${logdir} -d ${device} ${mountpoint}
+	single-inline-run.sh  -o ${logdir} -d ${device} -b ${blocksize} -c ${clustersize} ${mountpoint}
 	RC=$?
 	log_end ${RC}
 }
@@ -810,7 +906,7 @@ run_inline_data()
 run_dx_dir()
 {
 	log_message "run_dx_dir" $@
-        if [ "$#" -lt "3" ]; then
+        if [ "$#" -lt "6" ]; then
                 echo "Error in run_dx_dir()"
                 exit 1
         fi
@@ -819,9 +915,11 @@ run_dx_dir()
 	device=$2
 	mountpoint=$3
         kernelsrc=$4
+	blocksize=$5
+	clustersize=$6
 
 	log_start "index_dir_test" 
-	index_dir_run.sh  -o ${logdir} -d ${device} -t ${kernelsrc} ${mountpoint}
+	index_dir_run.sh  -o ${logdir} -d ${device} -t ${kernelsrc} -b ${blocksize} -c ${clustersize} ${mountpoint}
 	RC=$?
 	log_end ${RC}
 }
@@ -829,7 +927,7 @@ run_dx_dir()
 run_xattr_test()
 {
 	log_message "run_xattr_test" $@
-        if [ "$#" -lt "3" ]; then
+        if [ "$#" -lt "5" ]; then
                 echo "Error in run_xattr_test()"
                 exit 1
         fi
@@ -837,9 +935,11 @@ run_xattr_test()
 	logdir=$1
 	device=$2
 	mountpoint=$3
+	blocksize=$4
+	clustersize=$5
 
 	log_start "xattr_test" 
-	xattr-single-run.sh -c -o ${logdir} -d ${device} ${mountpoint}
+	xattr-single-run.sh -c -o ${logdir} -d ${device} -b ${blocksize} -C ${clustersize} ${mountpoint}
 	RC=$?
 
 	log_end ${RC}
@@ -848,7 +948,7 @@ run_xattr_test()
 run_reflink_test()
 {
 	log_message "run_reflink_test" $@
-        if [ "$#" -lt "3" ]; then
+        if [ "$#" -lt "5" ]; then
                 echo "Error in run_reflink()"
                 exit 1
         fi
@@ -856,17 +956,19 @@ run_reflink_test()
 	logdir=$1
 	device=$2
 	mountpoint=$3
+	blocksize=$4
+	clustersize=$5
 
 	#ordered mount option
 	log_start "reflink_test" "ordered"
-	reflink_test_run.sh -o ${logdir} -d ${device} ${mountpoint} || {
+	reflink_test_run.sh -o ${logdir} -d ${device} -b ${blocksize} -c ${clustersize} ${mountpoint} || {
 		RC=$?
 		log_end ${RC}
 	}
 
 	#writeback mount option
 	#log_start "reflink_test" "writeback"
-	#reflink_test_run.sh -W -o ${logdir} -d ${device} ${mountpoint}
+	#reflink_test_run.sh -W -o ${logdir} -d ${device} -b ${blocksize} -c ${clustersize} ${mountpoint}
 	RC=$?
 	log_end ${RC}
 }
@@ -895,7 +997,7 @@ run_filecheck_test()
 run_mkfs()
 {
 	log_message "run_mkfs" $@
-        if [ "$#" -lt "2" ]; then
+        if [ "$#" -lt "5" ]; then
                 echo "Error in run_mkfs()"
                 exit 1
         fi
@@ -903,9 +1005,11 @@ run_mkfs()
 	logdir=$1
 	device=$2
 	mountpoint=$3
+	blocksize=$4
+	clustersize=$5
 
 	log_start "mkfs_test"
-	mkfs-test.sh -o ${logdir} -d ${device} -m ${mountpoint}
+	mkfs-test.sh -o ${logdir} -d ${device} -m ${mountpoint} -b ${blocksize} -c ${clustersize}
 	RC=$?
 	log_end ${RC}
 }
@@ -913,7 +1017,7 @@ run_mkfs()
 run_tunefs()
 {
 	log_message "run_tunefs" $@
-        if [ "$#" -lt "2" ]; then
+        if [ "$#" -lt "5" ]; then
                 echo "Error in run_tunefs()"
                 exit 1
         fi
@@ -921,9 +1025,11 @@ run_tunefs()
 	logdir=$1
 	device=$2
 	mountpoint=$3
+	blocksize=$4
+	clustersize=$5
 
 	log_start "tunefs_test"
-	tunefs-test.sh -o ${logdir} -d ${device} -m ${mountpoint}
+	tunefs-test.sh -o ${logdir} -d ${device} -m ${mountpoint} -b ${blocksize} -c ${clustersize}
 	RC=$?
 	log_end ${RC}
 }
@@ -931,16 +1037,18 @@ run_tunefs()
 run_backup_super()
 {
 	log_message "run_backup_super" $@
-        if [ "$#" -lt "2" ]; then
+        if [ "$#" -lt "4" ]; then
                 echo "Error in run_backup_super()"
                 exit 1
         fi
 
 	logdir=$1
 	device=$2
+	blocksize=$3
+	clustersize=$4
 
 	log_start "backup_super_test"
-	test_backup_super.sh --log-dir=${logdir} ${device}
+	test_backup_super.sh --log-dir=${logdir} --block-size=${blocksize} --cluster-size=${clustersize} ${device}
 	RC=$?
 	log_end ${RC}
 }
@@ -953,11 +1061,11 @@ run_backup_super()
 
 usage()
 {
-	${ECHO} "usage: ${APP} [-k kerneltarball] -m mountpoint -l logdir -d device [-t testcases]"
+	${ECHO} "usage: ${APP} [-k kerneltarball] -m mountpoint -l logdir -d device [-t testcases] [-b blocksize] [-c clustersize]"
 	exit 1
 }
 
-while getopts "d:m:k:l:t:h:?" args
+while getopts "d:m:k:l:t:b:c:h:?" args
 do
 	case "$args" in
 		d) DEVICE="$OPTARG";;
@@ -965,6 +1073,8 @@ do
 		k) KERNELSRC="$OPTARG";;
 		l) OUTDIR="$OPTARG";;
 		t) TESTCASES="$OPTARG";;
+		b) BLOCKSIZE="$OPTARG";;
+		c) CLUSTERSIZE="$OPTARG";;
     		h) usage;;
     		?) usage;;
   	esac
@@ -995,6 +1105,15 @@ if [ -z ${TESTCASES} ]; then
 	TESTCASES="all"
 fi
 
+# If we don't specify block size or cluster size
+if [ -z "$BLOCKSIZE" ]; then
+	BLOCKSIZE="NONE"
+fi
+
+if [ -z "$CLUSTERSIZE" ]; then
+	CLUSTERSIZE="NONE"
+fi
+
 SUPPORTED_TESTCASES="all create_and_open directaio fillverifyholes renamewriterace aiostress\
   filesizelimits mmaptruncate buildkernel splice sendfile mmap reserve_space inline xattr\
   reflink mkfs tunefs backup_super filecheck"
@@ -1021,11 +1140,11 @@ ${ECHO} "Output log is ${LOGFILE}"
 for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 
 	if [ "$tc"X = "create_and_open"X -o "$tc"X = "all"X ];then
-		run_create_and_open ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+		run_create_and_open ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
 	fi
 
 	if [ "$tc"X = "directaio"X -o "$tc"X = "all"X ];then
-		run_directaio ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+		run_directaio ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
 	fi
 
 	if [ "$tc"X = "fillverifyholes"X -o "$tc"X = "all"X ];then
@@ -1033,15 +1152,15 @@ for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 	fi
 
 	if [ "$tc"X = "renamewriterace"X -o "$tc"X = "all"X ];then
-		run_renamewriterace ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+		run_renamewriterace ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
 	fi
 
 	if [ "$tc"X = "aiostress"X -o "$tc"X = "all"X ];then
-		run_aiostress ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+		run_aiostress ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
 	fi
 
 	if [ "$tc"X = "filesizelimits"X -o "$tc"X = "all"X ];then
-		run_filesizelimits ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+		run_filesizelimits ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
 	fi
 
 	if [ "$tc"X = "mmaptruncate"X -o "$tc"X = "all"X ];then
@@ -1059,35 +1178,35 @@ for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 			usage
 		fi
 
-		run_buildkernel ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${KERNELSRC}
+		run_buildkernel ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${KERNELSRC} ${BLOCKSIZE} ${CLUSTERSIZE}
 	fi
 
 	if [ "$tc"X = "splice"X -o "$tc"X = "all"X ];then
-		run_splice ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+		run_splice ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
 	fi
 
 	if [ "$tc"X = "sendfile"X -o "$tc"X = "all"X ];then
-		run_sendfile ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+		run_sendfile ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
 	fi
 
 	if [ "$tc"X = "mmap"X -o "$tc"X = "all"X ];then
-		run_mmap ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+		run_mmap ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
 	fi
 
 	if [ "$tc"X = "reserve_space"X -o "$tc"X = "all"X ];then
-		run_reserve_space ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+		run_reserve_space ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
 	fi
 
 	if [ "$tc"X = "inline"X -o "$tc"X = "all"X ];then
-		run_inline_data ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+		run_inline_data ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
 	fi
 
 	if [ "$tc"X = "xattr"X -o "$tc"X = "all"X ];then
-		run_xattr_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+		run_xattr_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
 	fi
 
 	if [ "$tc"X = "reflink"X -o "$tc"X = "all"X ];then
-		run_reflink_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+		run_reflink_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
 	fi
 
 	if [ "$tc"X = "filecheck"X ];then
@@ -1097,15 +1216,15 @@ for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 # For tools test.
 
 	if [ "$tc"X = "mkfs"X -o "$tc"X = "all"X ];then
-		run_mkfs ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+		run_mkfs ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
 	fi
 
 	if [ "$tc"X = "tunefs"X -o "$tc"X = "all"X ];then
-		run_tunefs ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+		run_tunefs ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
 	fi
 
 	if [ "$tc"X = "backup_super"X -o "$tc"X = "all"X ];then
-		run_backup_super ${LOGDIR} ${DEVICE}
+		run_backup_super ${LOGDIR} ${DEVICE} ${BLOCKSIZE} ${CLUSTERSIZE}
 	fi
 
 done

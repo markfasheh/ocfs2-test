@@ -49,6 +49,9 @@ LOGFILE=""
 FIRST_BACKUP_OFF=1073741824	#1G
 MAX_NUM=6
 
+blocksize=
+clustersize=
+
 #
 # usage			Display help information and exit.
 #
@@ -65,11 +68,13 @@ function usage()
 	      --with-mkfs=PROGRAM          use the PROGRAM as fswreck
 	      --with-debugfs=PROGRAM        use the PROGRAM as mkfs.ocfs2
 	      --with-tunefs=PROGRAM        use the PROGRAM as tunefs.ocfs2
+	      --block-size=blocksize       block size
+	      --cluster-size=clustersize   cluster size
 
 	Examples:
 
-	  $script --with-debugfs=../debugfs.ocfs2/debugfs.ocfs2 /dev/sde2
-	  $script --with-mkfs=/sbin/mkfs.ocfs2 --log-dir=/tmp /dev/sde2
+	  $script --with-debugfs=../debugfs.ocfs2/debugfs.ocfs2 --block-size=4096 --clustersize=32768 /dev/sde2
+	  $script --with-mkfs=/sbin/mkfs.ocfs2 --log-dir=/tmp --block-size=4096 --clustersize=32768 /dev/sde2
 	EOF
 }
 
@@ -376,10 +381,20 @@ function volume_small_test()
 ##################################
 function normal_test()
 {
-	for blocksize in 512 4096
+	if [ "$blocksize" != "NONE" ];then
+		bslist="$blocksize"
+	else
+		bslist="512 4096"
+	fi
+	if [ "$clustersize" != "NONE" ];then
+		cslist="$clustersize"
+	else
+		cslist="4096 32768 1048576"
+	fi
+	for blocksize in $(echo "$bslist")
 	do
 		for clustersize in \
-			4096 32768 1048576
+			$(echo "$cslist")
 		do
 
 			vol_byte_size=$FIRST_BACKUP_OFF
@@ -461,6 +476,12 @@ do
 		;;
 	"--with-tunefs="*)
 		TUNEFS_BIN="${1#--with-tunefs=}"
+		;;
+	"--block-size="*)
+		blocksize="${1#--block-size=}"
+		;;
+	"--cluster-size="*)
+		clustersize="${1#--cluster-size=}"
 		;;
 	*)
 		DEVICE="$1"

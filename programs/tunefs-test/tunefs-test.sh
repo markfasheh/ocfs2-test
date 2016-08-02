@@ -40,8 +40,8 @@ BLOCKDEV="`which sudo` -u root `which blockdev`"
 DEVICE=""
 MOUNT_POINT=""
 
-BLOCKSIZE=4k
-CLUSTERSIZE=8k
+BLOCKSIZE=
+CLUSTERSIZE=
 
 LABEL1=ocfs2test
 LABEL2=ocfs2test1
@@ -66,10 +66,12 @@ FS_FEATURES=
 #
 function usage()
 {
-    echo "usage: ${TUNEFS_TEST} -o <outdir> -d <device> -m <mountpoint>"
+    echo "usage: ${TUNEFS_TEST} -o <outdir> -d <device> -m <mountpoint> -b <blocksize> -c <clustersize>"
     echo "       -o output directory for the logs"
     echo "       -d device"
     echo "       -m mountpoint"
+    echo "       -b blocksize"
+    echo "       -c clustersize"
     exit 1
 }
 # 
@@ -512,8 +514,20 @@ Enable_Disable_Inline_Data()
         O_BLOCKSIZE=${BLOCKSIZE}
         O_CLUSTERSIZE=${CLUSTERSIZE}
 
-        for BLOCKSIZE in 512 1k 4k;do
-                for CLUSTERSIZE in 32k;do
+	if [ "$BLOCKSIZE" != "NONE" ];then
+		bslist="$BLOCKSIZE"
+	else
+		bslist="512 1k 4k"
+	fi
+
+	if [ "$CLUSTERSIZE" != "NONE" ];then
+		cslist="$CLUSTERSIZE"
+	else
+		cslist="32k"
+	fi
+
+	for BLOCKSIZE in $(echo "$bslist");do
+		for CLUSTERSIZE in $(echo "$cslist");do
                         
                         #set none inline-data support for volume
                         LogMsg "tunefs_test : Enable/Disable Inline-data"
@@ -647,12 +661,14 @@ TUNEFS_TEST=`basename $0`
 bindir=`basename ${0}`
 LOG_DIR=`basename ${bindir}`
 
-while getopts "d:o:m:" args
+while getopts "d:o:m:b:c:" args
 do
   case "$args" in
     o) LOG_DIR="$OPTARG";;
     d) DEVICE="$OPTARG";;
     m) MOUNT_POINT="$OPTARG";;
+    b) BLOCKSIZE="$OPTARG";;
+    c) CLUSTERSIZE="$OPTARG";;
   esac
 done
 

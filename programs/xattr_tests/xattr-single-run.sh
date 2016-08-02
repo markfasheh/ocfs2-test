@@ -144,10 +144,12 @@ exit_or_not()
 ################################################################################
 f_usage()
 {
-    echo "usage: `basename ${0}` [-c] [-o output_log_dir] <-d <device>> <mountpoint path>"
+    echo "usage: `basename ${0}` [-c] [-o output_log_dir] <-d <device>> <-b <block size>> <-C <cluster size>> <mountpoint path>"
     echo "	 -c enable the combination test for inline-data and inline-xattr."
     echo "       -o output directory for the logs"
     echo "       -d specify the device which has been formated as an ocfs2 volume."
+    echo "	 -b block size."
+    echo "	 -C cluster size."
     echo "       <mountpoint path> path of mountpoint where the ocfs2 volume will be mounted on."
     exit 1;
 
@@ -160,11 +162,13 @@ f_getoptions()
                 exit 1
          fi
 
-	 while getopts "cho:d:" options; do
+	 while getopts "cho:d:b:C:" options; do
                 case $options in
 		c ) COMBIN_TEST="1";;
                 o ) LOG_OUT_DIR="$OPTARG";;
                 d ) OCFS2_DEVICE="$OPTARG";;
+		b ) BLOCKSIZE="$OPTARG";;
+		C ) CLUSTERSIZE="$OPTARG";;
                 h ) f_usage
                     exit 1;;
                 * ) f_usage
@@ -1064,15 +1068,25 @@ trap ' : ' SIGTERM
 
 f_setup $*
 
+if [ "$BLOCKSIZE" != "NONE" ];then
+	bslist="$BLOCKSIZE"
+else
+	bslist="512 1024 2048 4096"
+fi
+
+if [ "$CLUSTERSIZE" != "NONE" ];then
+	cslist="$CLUSTERSIZE"
+else
+	cslist="4096 32768 1048576"
+fi
+
 START_TIME=${SECONDS}
 echo "=====================Single node xattr testing starts: `date`=====================" |tee -a ${RUN_LOG_FILE}
 echo "=====================Single node xattr testing starts: `date`=====================" >> ${DETAIL_LOG_FILE}
 
-#for BLOCKSIZE in 512 1024 2048 4096
-for BLOCKSIZE in 512 4096
+for BLOCKSIZE in $(echo "$bslist")
 do
-#        for CLUSTERSIZE in 4096 32768 1048576
-        for CLUSTERSIZE in 4096 1048576
+	for CLUSTERSIZE in $(echo "$cslist")
         do
                 echo "++++++++++xattr tests with \"-b ${BLOCKSIZE} -C ${CLUSTERSIZE}\"++++++++++" |tee -a ${RUN_LOG_FILE}
                 echo "++++++++++xattr tests with \"-b ${BLOCKSIZE} -C ${CLUSTERSIZE}\"++++++++++">>${DETAIL_LOG_FILE}

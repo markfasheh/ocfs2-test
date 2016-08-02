@@ -105,8 +105,10 @@ exit_or_not()
 ################################################################################
 f_usage()
 {
-    echo "usage: `basename ${0}` [-o output] <-d <device>> <mountpoint path>"
+    echo "usage: `basename ${0}` [-o output] <-b blocksize> <-c clustersize> <-d <device>> <mountpoint path>"
     echo "       -o output directory for the logs"
+    echo "       -b blocksize"
+    echo "       -c clustersize"
     echo "       -d device name used for ocfs2 volume"
     echo "       <mountpoint path> path of mountpoint where the ocfs2 volume will be mounted on."
     exit 1;
@@ -120,10 +122,12 @@ f_getoptions()
                 exit 1
          fi
 
-         while getopts "o:hd:" options; do
+         while getopts "o:hd:b:c:" options; do
                 case $options in
                 o ) LOG_OUT_DIR="$OPTARG";;
                 d ) OCFS2_DEVICE="$OPTARG";;
+                b ) BLOCKSIZE="$OPTARG";;
+                c ) CLUSTERSIZE="$OPTARG";;
                 h ) f_usage
                     exit 1;;
                 * ) f_usage
@@ -132,7 +136,6 @@ f_getoptions()
         done
         shift $(($OPTIND -1))
         MOUNT_POINT=${1}
-
 }
 
 f_setup()
@@ -373,9 +376,20 @@ trap ' : ' SIGTERM
 
 f_setup $*
 
-for BLOCKSIZE in 512 1024 4096
+if [ "$BLOCKSIZE" != "NONE" ];then
+	bslist="$BLOCKSIZE"
+else
+	bslist="512 1024 4096"
+fi
+if [ "$CLUSTERSIZE" != "NONE" ];then
+	cslist="$CLUSTERSIZE"
+else
+	cslist="4096 32768 1048576"
+fi
+
+for BLOCKSIZE in $(echo "$bslist")
 do
-	for CLUSTERSIZE in 4096 32768 1048576
+	for CLUSTERSIZE in $(echo "$cslist")
 	do
 		echo "++++++++++Single node inline-data test with \"-b ${BLOCKSIZE} -C ${CLUSTERSIZE}\"++++++++++" |tee -a ${RUN_LOG_FILE}
 		echo "++++++++++Single node inline-data test with \"-b ${BLOCKSIZE} -C ${CLUSTERSIZE}\"++++++++++">>${DATA_LOG_FILE}

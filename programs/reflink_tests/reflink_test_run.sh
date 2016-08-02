@@ -98,13 +98,15 @@ set -o pipefail
 function f_usage()
 {
         echo "usage: `basename ${0}` [-D <-a remote_listener_addr_in_IPV4> <-p port>] \
-[-v verify_log] [-W] [-A] [-o logdir] <-d device> <mountpoint path>"
+[-v verify_log] [-W] [-A] [-o logdir] <-d device> <-b blocksize> <-c clustersize> <mountpoint path>"
         echo "       -o output directory for the logs"
         echo "       -d block device name used for ocfs2 volume"
         echo "       -W enable data=writeback mode"
 	echo "       -A enable asynchronous io testing mode"
 	echo "       -D enable destructive test,it will crash the testing node,\
 be cautious, you need to specify listener addr and port then"
+	echo "	     -b block size"
+	echo "	     -c cluster size"
         echo "       <mountpoint path> specify the testing mounting point."
         exit 1;
 
@@ -117,7 +119,7 @@ function f_getoptions()
                 exit 1
          fi
 
-         while getopts "o:WDAhd:a:p:v:" options; do
+         while getopts "o:WDAhd:a:p:v:b:c:" options; do
                 case $options in
                 o ) LOG_DIR="$OPTARG";;
                 d ) DEVICE="$OPTARG";;
@@ -127,6 +129,8 @@ function f_getoptions()
 		a ) LISTENER_ADDR="$OPTARG";;
 		p ) LISTENER_PORT="$OPTARG";;
 		v ) VERI_LOG="$OPTARG";;
+		b ) BLOCKSIZE="$OPTARG";;
+		c ) CLUSTERSIZE="$OPTARG";;
                 h ) f_usage;;
                 * ) f_usage;;
                 esac
@@ -729,16 +733,26 @@ trap 'echo -ne "\n\n">>${RUN_LOG_FILE};echo  "Interrupted by Ctrl+C,Cleanuping\
 
 f_check $*
 
+if [ "$BLOCKSIZE" != "NONE" ];then
+	bslist="$BLOCKSIZE"
+else
+	bslist="512 1024 4096"
+fi
+
+if [ "$CLUSTERSIZE" != "NONE" ];then
+	cslist="$CLUSTERSIZE"
+else
+	cslist="4096 32768 1048576"
+fi
+
 START_TIME=${SECONDS}
 f_LogRunMsg ${RUN_LOG_FILE} "=====================Reflink tests start:  `date`\
 =====================\n"
 f_LogMsg ${LOG_FILE} "=====================Reflink tests start:  `date`\
 ====================="
 
-#for BLOCKSIZE in 512 1024 4096;do
-#	for CLUSTERSIZE in 4096 32768 1048576;do
-for BLOCKSIZE in 4096;do
-	for CLUSTERSIZE in 1048576;do
+for BLOCKSIZE in $(echo "$bslist");do
+	for CLUSTERSIZE in $(echo "$cslist");do
 		f_LogRunMsg ${RUN_LOG_FILE} "<- Running test with ${BLOCKSIZE} \
 bs and ${CLUSTERSIZE} cs ->\n"
 		f_LogMsg ${LOG_FILE} "<- Running test with ${BLOCKSIZE} bs \

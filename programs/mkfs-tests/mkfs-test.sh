@@ -1,12 +1,14 @@
 #!/bin/sh
 #
-# mkfs_test -o <outdir> -d <device>
+# mkfs_test -o <outdir> -d <device> -b <blocksize> -c <clustersize>
 #
 usage() {
-    echo "usage: ${MKFS_TEST} -o <outdir> -d <device> -m <mountpoint>"
+    echo "usage: ${MKFS_TEST} -o <outdir> -d <device> -m <mountpoint> -b <blocksize> -c <clustersize>"
     echo "       -o output directory for the logs"
     echo "       -d device"
     echo "       -m mountpoint"
+    echo "       -b blocksize"
+    echo "       -c clustersize"
     exit 1
 }
 
@@ -255,13 +257,17 @@ bindir=`basename ${0}`
 outdir=`basename ${bindir}`
 device=
 mntdir=
+blocksize=
+clustersize=
 OPTIND=1
-while getopts "d:i:o:m:c" args
+while getopts "d:i:o:m:c:b:" args
 do
   case "$args" in
     o) outdir="$OPTARG";;
     d) device="$OPTARG";;
     m) mntdir="$OPTARG";;
+    b) blocksize="$OPTARG";;
+    c) clustersize="$OPTARG";;
   esac
 done
 LOGFILE=${outdir}/mkfs-test.log
@@ -296,11 +302,22 @@ numblks=1048576
 
 testnum=1
 
+if [ "$blocksize" != "NONE" ];then
+    bslist="$blocksize"
+else
+    bslist="512 1024 2048 4096"
+fi
+
+if [ "$clustersize" != "NONE" ];then
+    cslist="$clustersize"
+else
+    cslist="4096 8192 16384 32768 65536 131072 262144 524288 1048576"
+fi
 
 ### Test all combinations of blocksizes and clustersizes
-for blks in 512 1024 2048 4096
+for blks in $(echo "$bslist")
 do
-    for clusts in 4096 8192 16384 32768 65536 131072 262144 524288 1048576
+    for clusts in $(echo "$cslist")
     do
         TAG=mkfs_test_${testnum}
         OUT=${outdir}/${TAG}.log
