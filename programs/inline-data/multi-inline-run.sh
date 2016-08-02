@@ -126,12 +126,14 @@ exit_or_not()
 ################################################################################
 f_usage()
 {
-    echo "usage: `basename ${0}` [-r MPI_ranks] <-f MPI_hosts> [-a access_method] [-o output] <-d <device>> <mountpoint path>"
+    echo "usage: `basename ${0}` [-r MPI_ranks] <-f MPI_hosts> [-a access_method] [-o output] <-d <device>> <-b blocksize> -c <clustersize> <mountpoint path>"
     echo "       -r size of MPI rank"
     echo "       -a access method for process propagation,should be ssh or rsh,set ssh as a default method when omited."
     echo "       -f MPI hosts list,separated by comma,e.g -f node1.us.oracle.com,node2.us.oracle.com."
     echo "       -o output directory for the logs"
     echo "       -d device name used for ocfs2 volume"
+    echo "	 -b block size"
+    echo "	 -c cluster size"
     echo "       <mountpoint path> path of mountpoint where the ocfs2 volume will be mounted on."
     exit 1;
 
@@ -144,13 +146,15 @@ f_getoptions()
                 exit 1
          fi
 
-         while getopts "o:hd:r:a:f:" options; do
+         while getopts "o:hd:r:a:f:b:c:" options; do
                 case $options in
 		a ) MPI_ACCESS_METHOD="$OPTARG";;
 		r ) MPI_RANKS="$OPTARG";;
 		f ) MPI_HOSTS="$OPTARG";;
                 o ) LOG_OUT_DIR="$OPTARG";;
                 d ) OCFS2_DEVICE="$OPTARG";;
+		b ) BLOCKSIZE="$OPTARG";;
+		c ) CLUSTERSIZE="$OPTARG";;
                 h ) f_usage
                     exit 1;;
                 * ) f_usage
@@ -327,9 +331,21 @@ trap ' : ' SIGTERM
 
 f_setup $*
 
-for BLOCKSIZE in 512 1024 4096
+if [ "$BLOCKSIZE" != "NONE" ];then
+	bslist="$BLOCKSIZE"
+else
+	bslist="512 1024 4096"
+fi
+
+if [ "CLUSTERSIZE" != "NONE" ];then
+	cslist="$CLUSTERSIZE"
+else
+	cslist="4096 32768 1048576"
+fi
+
+for BLOCKSIZE in $(echo "$bslist")
 do
-	for CLUSTERSIZE in  4096 32768 1048576
+	for CLUSTERSIZE in $(echo "$cslist")
 	do
 		echo "++++++++++Multiple node inline-data test with \"-b ${BLOCKSIZE} -C ${CLUSTERSIZE}\"++++++++++" |tee -a ${RUN_LOG_FILE}
 		echo "++++++++++Multiple node inline-data test with \"-b ${BLOCKSIZE} -C ${CLUSTERSIZE}\"++++++++++">>${DATA_LOG_FILE}

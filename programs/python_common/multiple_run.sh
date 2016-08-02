@@ -72,10 +72,12 @@ set -o pipefail
 ################################################################################
 f_usage()
 {
-    echo "usage: `basename ${0}` <-k kerneltarball> <-n nodes> [-i nic] \
+    echo "usage: `basename ${0}` <-k kerneltarball> [-b blocksize] [-c clustersize] <-n nodes> [-i nic] \
 [-a access_method] [-o logdir] <-d device> [-t testcases] <mountpoint path>"
     echo "       -k kerneltarball should be path of tarball for kernel src."
     echo "       -n nodelist,should be comma separated."
+    echo "       -b blocksize."
+    echo "       -c clustersize."
     echo "       -o output directory for the logs"
     echo "       -i network interface name to be used for MPI messaging."
     echo "       -a access method for mpi execution,should be ssh or rsh"
@@ -97,13 +99,15 @@ f_getoptions()
 		exit 1
 	fi
 
-	while getopts "n:d:i:a:o:k:t:h:" options; do
+	while getopts "n:d:i:a:o:b:c:k:t:h:" options; do
 		case $options in
 		n ) NODE_LIST="$OPTARG";;
 		d ) DEVICE="$OPTARG";;
 		i ) INTERFACE="$OPTARG";;
 		a ) ACCESS_METHOD="$OPTARG";;
 		o ) LOG_DIR="$OPTARG";;
+		b ) BLOCKSIZE="$OPTARG";;
+		c ) CLUSTERSIZE="$OPTARG";;
 		k ) KERNELSRC="$OPTARG";;
 		t ) TESTCASES="$OPTARG";;
 		h ) f_usage
@@ -359,7 +363,7 @@ run_xattr_test()
 
 	LogRunMsg "xattr-test"
 	${BINDIR}/xattr-multi-run.sh -r 4 -f ${NODE_LIST} -a ssh -o ${logdir} \
--d ${DEVICE} ${MOUNT_POINT} >> ${LOGFILE} 2>&1
+-d ${DEVICE} -b "$BLOCKSIZE" -c "$CLUSTERSIZE" ${MOUNT_POINT} >> ${LOGFILE} 2>&1
 	LogRC $?
 }
 
@@ -369,7 +373,7 @@ run_inline_test()
 
 	LogRunMsg "inline-test"
 	${BINDIR}/multi-inline-run.sh -r 2 -f ${NODE_LIST} -a ssh -o ${logdir} \
--d ${DEVICE} ${MOUNT_POINT} >> ${LOGFILE} 2>&1
+-d ${DEVICE} -b "$BLOCKSIZE}" -c "$CLUSTERSIZE" ${MOUNT_POINT} >> ${LOGFILE} 2>&1
 	LogRC $?
 }
 
@@ -380,14 +384,14 @@ run_reflink_test()
 	LogRunMsg "reflink-test"
 	LogMsg "reflink 'data=ordered' mode test"
 	${BINDIR}/multi_reflink_test_run.sh -r 4 -f ${NODE_LIST} -a ssh -o \
-${logdir} -d ${DEVICE} ${MOUNT_POINT} >> ${LOGFILE} 2>&1 || {
+${logdir} -d ${DEVICE} -b "$BLOCKSIZE" -c "$CLUSTERSIZE" ${MOUNT_POINT} >> ${LOGFILE} 2>&1 || {
 	RET=$?
 	LogRC $RET
 	return $RET
 }
 #	LogMsg "reflink 'data=writeback' mode test"
 #	${BINDIR}/multi_reflink_test_run.sh -r 4 -f ${NODE_LIST} -a ssh -o \
-#${logdir} -W -d ${DEVICE} ${MOUNT_POINT} >> ${LOGFILE} 2>&1
+#${logdir} -W -d ${DEVICE} -b "$BLOCKSIZE" -c "$CLUSTERSIZE" ${MOUNT_POINT} >> ${LOGFILE} 2>&1
 	LogRC $?
 }
 
@@ -479,6 +483,20 @@ trap ' : ' SIGTERM
 
 f_setup $*
 
+if [ ! -z "$BLOCKSIZE" ]; then
+	bslist="$BLOCKSIZE"
+else
+	BLOCKSIZE="NONE"
+	bslist="512 1024 4096"
+fi
+
+if [ ! -z "$CLUSTERSIZE" ]; then
+	cslist="$CLUSTERSIZE"
+else
+	CLUSTERSIZE="NONE"
+	cslist="4096 32768 1048576"
+fi
+
 STARTRUN=$(date +%s)
 ${ECHO} "`date` - Starting Multiple Nodes Regress test" > ${LOGFILE}
 
@@ -498,8 +516,8 @@ for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 		run_reflink_test
 	fi
 
-	for BLOCKSIZE in 512 1024 4096;do
-		for CLUSTERSIZE in 4096 32768 1048576;do
+	for BLOCKSIZE in $(echo "$bslist");do
+		for CLUSTERSIZE in $(echo "$cslist");do
 			${ECHO} "Tests with \"-b ${BLOCKSIZE} -C ${CLUSTERSIZE}\"" | \
 				${TEE_BIN} -a ${LOGFILE}
 			if [ "$tc"X = "write_append_truncate"X -o "$tc"X = "all"X ]; then

@@ -145,13 +145,15 @@ exit_or_not()
 ################################################################################
 f_usage()
 {
-    echo "usage: `basename ${0}` [-r MPI_Ranks] <-f MPI_Hosts> [-a access method] [-o output] [-i interface] <-d <device>> <mountpoint path>"
+    echo "usage: `basename ${0}` [-r MPI_Ranks] <-f MPI_Hosts> [-a access method] [-o output] [-i interface] <-d <device>> <-b blocksize> <-c clustersize> <mountpoint path>"
     echo "       -r size of MPI rank"
     echo "       -a access method for process propagation,should be ssh or rsh,set ssh as a default method when omited."
     echo "       -f MPI hosts list,separated by comma,e.g -f node1.us.oracle.com,node2.us.oracle.com."
     echo "       -o output directory for the logs"
     echo "       -i Network Interface name to be used for MPI messaging."
     echo "       -d specify the device which has been formated as an ocfs2 volume."
+    echo "	 -b block size."
+    echo "	 -c cluster size."
     echo "       <mountpoint path> path of mountpoint where the ocfs2 volume will be mounted on."
     exit 1;
 
@@ -163,7 +165,7 @@ f_getoptions()
                 exit 1
          fi
 
-	 while getopts "o:d:r:f:a:h:i:" options; do
+	 while getopts "o:d:r:f:a:h:i:b:c:" options; do
                 case $options in
 		r ) MPI_RANKS="$OPTARG";;
                 f ) MPI_HOSTS="$OPTARG";;
@@ -171,6 +173,8 @@ f_getoptions()
                 d ) OCFS2_DEVICE="$OPTARG";;
 		a ) MPI_ACCESS_METHOD="$OPTARG";;
 		i ) INTERFACE="$OPTARG";;
+		b ) BLOCKSIZE="$OPTARG";;
+		c ) CLUSTERSIZE="$OPTARG";;
                 h ) f_usage
                     exit 1;;
                 * ) f_usage
@@ -467,13 +471,25 @@ trap ' : ' SIGTERM
 
 f_setup $*
 
+if [ "$BLOCKSIZE" != "NONE"];then
+	bslist="$BLOCKSIZE"
+else
+	bslist="512 4096"
+fi
+
+if [ "$CLUSTERSIZE" != "NONE" ];then
+	cslist="$CLUSTERSIZE"
+else
+	cslist="4096 1048576"
+fi
+
 START_TIME=${SECONDS}
 echo "=====================Multiple nodes xattr testing starts: `date`=====================" |tee -a ${RUN_LOG_FILE}
 echo "=====================Multiple nodes xattr testing starts: `date`=====================" >> ${LOG_FILE}
 
-for BLOCKSIZE in 512 4096
+for BLOCKSIZE in $(echo "$bslist")
 do
-        for CLUSTERSIZE in  4096 1048576
+	for CLUSTERSIZE in $(echo "$cslist")
         do
                 echo "++++++++++xattr tests with \"-b ${BLOCKSIZE} -C ${CLUSTERSIZE}\"++++++++++" |tee -a ${RUN_LOG_FILE}
                 echo "++++++++++xattr tests with \"-b ${BLOCKSIZE} -C ${CLUSTERSIZE}\"++++++++++">>${LOG_FILE}

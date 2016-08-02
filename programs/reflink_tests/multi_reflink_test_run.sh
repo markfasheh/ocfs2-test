@@ -90,12 +90,14 @@ set -o pipefail
 function f_usage()
 {
     echo "usage: `basename ${0}` [-r MPI_Ranks] <-f MPI_Hosts> \
-[-a access method] [-o logdir] <-d <device>> [-W] [-A] <mountpoint path>"
+[-a access method] [-o logdir] <-d <device>> <-b block size> <-c cluster size> [-W] [-A] <mountpoint path>"
     echo "       -r size of MPI rank"
     echo "       -a access method for mpi execution,should be ssh or rsh"
     echo "       -f MPI hosts list,separated by comma"
     echo "       -o output directory for the logs"
     echo "       -d specify the device"
+    echo "	 -b block size"
+    echo "	 -c cluster size"
     echo "       -i Network Interface name to be used for MPI messaging."
     echo "       -W enable data=writeback mode"
     echo "       -A enable asynchronous io testing mode"
@@ -110,7 +112,7 @@ function f_getoptions()
                 exit 1
          fi
 
-	 while getopts "o:d:i:r:f:WAha:" options; do
+	 while getopts "o:d:i:r:f:WAha:b:c:" options; do
                 case $options in
 		r ) MPI_RANKS="$OPTARG";;
                 f ) MPI_HOSTS="$OPTARG";;
@@ -118,6 +120,8 @@ function f_getoptions()
                 d ) DEVICE="$OPTARG";;
 		a ) MPI_ACCESS_METHOD="$OPTARG";;
 		i ) INTERFACE="$OPTARG";;
+		b ) BLOCKSIZE="$OPTARG";;
+		c ) CLUSTERSIZE="$OPTARG";;
 		W ) MOUNT_OPTS="data=writeback";;
 		A ) AIO_OPT=" -A ";;
                 h ) f_usage
@@ -174,7 +178,7 @@ ${MOUNT_POINT}`"
 			f_usage;
 		} 
 		MPI_BTL_IF_ARG="-mca btl_tcp_if_include ${INTERFACE}"   
-	fi;
+	fi
 	MPI_RANKS=${MPI_RANKS:-$DEFAULT_RANKS}
 
 	LOG_DIR=${LOG_DIR:-$DEFAULT_LOG_DIR}
@@ -372,16 +376,26 @@ trap 'echo -ne "\n\n">>${RUN_LOG_FILE};echo  "Interrupted by Ctrl+C,Cleanuping\
 
 f_setup $*
 
+if [ "$BLOCKSIZE" != "NONE" ];then
+	bslist="$BLOCKSIZE"
+else
+	bslist="512 1024 2048 4096"
+fi
+
+if [ "$CLUSTERSIZE" != "NONE" ];then
+	cslist="$CLUSTERSIZE"
+else
+	cslist="4096 32768 1048576"
+fi
+
 START_TIME=${SECONDS}
 f_LogRunMsg ${RUN_LOG_FILE} "=====================Multi-nodes refcount tests \
 start:  `date`=====================\n"
 f_LogMsg ${LOG_FILE} "=====================Multi-nodes refcount tests \
 start:  `date`====================="
 
-#for BLOCKSIZE in 512 1024 2048 4096;do
-#	for CLUSTERSIZE in  4096 32768 1048576;do
-for BLOCKSIZE in 4096;do
-	for CLUSTERSIZE in 1048576;do
+for BLOCKSIZE in $(echo "$bslist");do
+	for CLUSTERSIZE in $(echo "$cslist");do
 		f_LogRunMsg ${RUN_LOG_FILE} "<- Running test with ${BLOCKSIZE} \
 bs and ${CLUSTERSIZE} cs ->\n"
                 f_LogMsg ${LOG_FILE} "<- Running test with ${BLOCKSIZE} \
