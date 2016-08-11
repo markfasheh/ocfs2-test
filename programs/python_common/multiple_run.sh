@@ -368,8 +368,8 @@ run_xattr_test()
 	local logdir=${LOG_DIR}/multi-xattr-test
 
 	LogRunMsg "xattr-test"
-	${BINDIR}/xattr-multi-run.sh -r 4 -f ${NODE_LIST} -a ssh -o ${logdir} \
--d ${DEVICE} -b "$BLOCKSIZE" -c "$CLUSTERSIZE" -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >> ${LOGFILE} 2>&1
+	${BINDIR}/xattr-multi-run.sh -r ${SLOTS} -f ${NODE_LIST} -a ssh -o ${logdir} \
+-d ${DEVICE} -b "${BLOCKSIZE}" -c "${CLUSTERSIZE}" -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >> ${LOGFILE} 2>&1
 	LogRC $?
 }
 
@@ -378,8 +378,8 @@ run_inline_test()
 	local logdir=${LOG_DIR}/multi-inline-test
 
 	LogRunMsg "inline-test"
-	${BINDIR}/multi-inline-run.sh -r 2 -f ${NODE_LIST} -a ssh -o ${logdir} \
--d ${DEVICE} -b "$BLOCKSIZE" -c "$CLUSTERSIZE" -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >> ${LOGFILE} 2>&1
+	${BINDIR}/multi-inline-run.sh -r ${SLOTS} -f ${NODE_LIST} -a ssh -o ${logdir} \
+-d ${DEVICE} -b "${BLOCKSIZE}" -c "${CLUSTERSIZE}" -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >> ${LOGFILE} 2>&1
 	LogRC $?
 }
 
@@ -389,15 +389,15 @@ run_reflink_test()
 
 	LogRunMsg "reflink-test"
 	LogMsg "reflink 'data=ordered' mode test"
-	${BINDIR}/multi_reflink_test_run.sh -r 4 -f ${NODE_LIST} -a ssh -o \
-${logdir} -d ${DEVICE} -b "$BLOCKSIZE" -c "$CLUSTERSIZE" -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >> ${LOGFILE} 2>&1 || {
+	${BINDIR}/multi_reflink_test_run.sh -r ${SLOTS} -f ${NODE_LIST} -a ssh -o \
+${logdir} -d ${DEVICE} -b "${BLOCKSIZE}" -c "${CLUSTERSIZE}" -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >> ${LOGFILE} 2>&1 || {
 	RET=$?
 	LogRC $RET
 	return $RET
 }
 #	LogMsg "reflink 'data=writeback' mode test"
 #	${BINDIR}/multi_reflink_test_run.sh -r 4 -f ${NODE_LIST} -a ssh -o \
-#${logdir} -W -d ${DEVICE} -b "$BLOCKSIZE" -c "$CLUSTERSIZE" -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >> ${LOGFILE} 2>&1
+#${logdir} -W -d ${DEVICE} -b "${BLOCKSIZE}" -c "${CLUSTERSIZE}" -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >> ${LOGFILE} 2>&1
 	LogRC $?
 }
 
