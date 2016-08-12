@@ -135,6 +135,19 @@ f_setup()
 
 	f_getoptions $*
 
+	if [ -z ${DEVICE} ] ; then
+		${ECHO} "ERROR: No device"
+		f_usage
+	elif [ ! -b ${DEVICE} ] ; then
+		${ECHO} "ERROR: Invalid device ${DEVICE}"
+		exit 1
+	fi
+
+	# if a symbollink is given, work out the typical device name, like /dev/sda
+	if [ -L ${DEVICE} ];then
+		 DEVICE=`readlink -f ${DEVICE}`
+	fi
+
 	if [ -z "${MOUNT_POINT}" ];then
                 f_usage
         fi

@@ -126,6 +126,11 @@ function f_setup()
 	if [ -z "${DEVICE}" ];then
 		f_usage
 	fi	
+
+	# if a symbollink is given, work out the typical device name, like /dev/sda
+	if [ -L ${DEVICE} ];then
+		DEVICE=`readlink -f ${DEVICE}`
+	fi
 	
 	if [ -z "${MOUNT_POINT}" ];then
 		f_usage

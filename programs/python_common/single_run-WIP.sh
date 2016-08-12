@@ -1095,12 +1095,18 @@ do
     		?) usage;;
   	esac
 done
+
 if [ -z ${DEVICE} ] ; then
 	${ECHO} "ERROR: No device"
 	usage
 elif [ ! -b ${DEVICE} ] ; then
 	${ECHO} "ERROR: Invalid device ${DEVICE}"
 	exit 1
+fi
+
+# if a symbollink is given, work out the typical device name, like /dev/sda
+if [ -L ${DEVICE} ];then
+	DEVICE=`readlink -f ${DEVICE}`
 fi
 
 if [ -z ${MOUNTPOINT} ] ; then
