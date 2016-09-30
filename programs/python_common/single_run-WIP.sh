@@ -886,7 +886,7 @@ run_reserve_space()
 run_inline_data()
 {
 	log_message "run_inline_data" $@
-        if [ "$#" -lt "5" ]; then
+        if [ "$#" -lt "7" ]; then
                 echo "Error in run_inline_data()"
                 exit 1
         fi
@@ -896,9 +896,11 @@ run_inline_data()
 	mountpoint=$3
 	blocksize=$4
 	clustersize=$5
+	cluster_stack=$6
+	cluster_name=$7
 
 	log_start "inline_data_test" 
-	single-inline-run.sh  -o ${logdir} -d ${device} -b ${blocksize} -c ${clustersize} ${mountpoint}
+	single-inline-run.sh  -o ${logdir} -d ${device} -b ${blocksize} -c ${clustersize} -s ${cluster_stack} -n ${cluster_name} ${mountpoint}
 	RC=$?
 	log_end ${RC}
 }
@@ -927,7 +929,7 @@ run_dx_dir()
 run_xattr_test()
 {
 	log_message "run_xattr_test" $@
-        if [ "$#" -lt "5" ]; then
+        if [ "$#" -lt "7" ]; then
                 echo "Error in run_xattr_test()"
                 exit 1
         fi
@@ -937,9 +939,11 @@ run_xattr_test()
 	mountpoint=$3
 	blocksize=$4
 	clustersize=$5
+	cluster_stack=$6
+	cluster_name=$7
 
 	log_start "xattr_test" 
-	xattr-single-run.sh -c -o ${logdir} -d ${device} -b ${blocksize} -C ${clustersize} ${mountpoint}
+	xattr-single-run.sh -c -o ${logdir} -d ${device} -b ${blocksize} -C ${clustersize} -s ${cluster_stack} -n ${cluster_name} ${mountpoint}
 	RC=$?
 
 	log_end ${RC}
@@ -948,7 +952,7 @@ run_xattr_test()
 run_reflink_test()
 {
 	log_message "run_reflink_test" $@
-        if [ "$#" -lt "5" ]; then
+        if [ "$#" -lt "7" ]; then
                 echo "Error in run_reflink()"
                 exit 1
         fi
@@ -958,17 +962,19 @@ run_reflink_test()
 	mountpoint=$3
 	blocksize=$4
 	clustersize=$5
+	cluster_stack=$6
+	cluster_name=$7
 
 	#ordered mount option
 	log_start "reflink_test" "ordered"
-	reflink_test_run.sh -o ${logdir} -d ${device} -b ${blocksize} -c ${clustersize} ${mountpoint} || {
+	reflink_test_run.sh -o ${logdir} -d ${device}  -b ${blocksize} -c ${clustersize} -s ${cluster_stack} -n ${cluster_name} ${mountpoint} || {
 		RC=$?
 		log_end ${RC}
 	}
 
 	#writeback mount option
 	#log_start "reflink_test" "writeback"
-	#reflink_test_run.sh -W -o ${logdir} -d ${device} -b ${blocksize} -c ${clustersize} ${mountpoint}
+	#reflink_test_run.sh -W -o ${logdir} -d ${device} -b ${blocksize} -c ${clustersize} -s ${cluster_stack} -n ${cluster_name} ${mountpoint}
 	RC=$?
 	log_end ${RC}
 }
@@ -997,7 +1003,7 @@ run_filecheck_test()
 run_mkfs()
 {
 	log_message "run_mkfs" $@
-        if [ "$#" -lt "5" ]; then
+        if [ "$#" -lt "7" ]; then
                 echo "Error in run_mkfs()"
                 exit 1
         fi
@@ -1007,9 +1013,11 @@ run_mkfs()
 	mountpoint=$3
 	blocksize=$4
 	clustersize=$5
+	cluster_stack=$6
+	cluster_name=$7
 
 	log_start "mkfs_test"
-	mkfs-test.sh -o ${logdir} -d ${device} -m ${mountpoint} -b ${blocksize} -c ${clustersize}
+	mkfs-test.sh -o ${logdir} -d ${device} -m ${mountpoint} -b ${blocksize} -c ${clustersize} -s ${cluster_stack} -n ${cluster_name}
 	RC=$?
 	log_end ${RC}
 }
@@ -1017,7 +1025,7 @@ run_mkfs()
 run_tunefs()
 {
 	log_message "run_tunefs" $@
-        if [ "$#" -lt "5" ]; then
+        if [ "$#" -lt "7" ]; then
                 echo "Error in run_tunefs()"
                 exit 1
         fi
@@ -1027,9 +1035,11 @@ run_tunefs()
 	mountpoint=$3
 	blocksize=$4
 	clustersize=$5
+	cluster_stack=$6
+	cluster_name=$7
 
 	log_start "tunefs_test"
-	tunefs-test.sh -o ${logdir} -d ${device} -m ${mountpoint} -b ${blocksize} -c ${clustersize}
+	tunefs-test.sh -o ${logdir} -d ${device} -m ${mountpoint} -b ${blocksize} -c ${clustersize} -s ${cluster_stack} -n ${cluster_name}
 	RC=$?
 	log_end ${RC}
 }
@@ -1037,7 +1047,7 @@ run_tunefs()
 run_backup_super()
 {
 	log_message "run_backup_super" $@
-        if [ "$#" -lt "4" ]; then
+        if [ "$#" -lt "6" ]; then
                 echo "Error in run_backup_super()"
                 exit 1
         fi
@@ -1046,9 +1056,11 @@ run_backup_super()
 	device=$2
 	blocksize=$3
 	clustersize=$4
+	cluster_stack=$5
+	cluster_name=$6
 
 	log_start "backup_super_test"
-	test_backup_super.sh --log-dir=${logdir} --block-size=${blocksize} --cluster-size=${clustersize} ${device}
+	test_backup_super.sh --log-dir=${logdir} --block-size=${blocksize} --cluster-size=${clustersize} --cluster-stack=${cluster_stack} --cluster-name=${cluster_name} ${device}
 	RC=$?
 	log_end ${RC}
 }
@@ -1061,11 +1073,13 @@ run_backup_super()
 
 usage()
 {
-	${ECHO} "usage: ${APP} [-k kerneltarball] -m mountpoint -l logdir -d device [-t testcases] [-b blocksize] [-c clustersize]"
+	${ECHO} "usage: ${APP} [-k kerneltarball] -m mountpoint -l logdir -d device [-t testcases] [-b blocksize] \
+[-c clustersize] [-s cluster-stack] [-n cluster-name]"
 	exit 1
 }
 
-while getopts "d:m:k:l:t:b:c:h:?" args
+
+while getopts "d:m:k:l:t:b:c:s:n:h?" args
 do
 	case "$args" in
 		d) DEVICE="$OPTARG";;
@@ -1075,11 +1089,12 @@ do
 		t) TESTCASES="$OPTARG";;
 		b) BLOCKSIZE="$OPTARG";;
 		c) CLUSTERSIZE="$OPTARG";;
-    		h) usage;;
+		s) CLUSTER_STACK="$OPTARG";;
+		n) CLUSTER_NAME="$OPTARG";;
+		h) usage;;
     		?) usage;;
   	esac
 done
-
 if [ -z ${DEVICE} ] ; then
 	${ECHO} "ERROR: No device"
 	usage
@@ -1094,6 +1109,16 @@ if [ -z ${MOUNTPOINT} ] ; then
 elif [ ! -d ${MOUNTPOINT} ] ; then
 	${ECHO} "ERROR: Invalid mountpoint ${MOUNTPOINT}"
 	exit 1
+fi
+
+if [ -z ${CLUSTER_STACK} ] ; then
+	${ECHO} "ERROR: No cluster stack"
+	usage
+fi
+
+if [ -z ${CLUSTER_NAME} ] ; then
+	${ECHO} "ERROR: No cluster name"
+	usage
 fi
 
 if [ -z ${OUTDIR} ]; then
@@ -1140,7 +1165,7 @@ ${ECHO} "Output log is ${LOGFILE}"
 for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 
 	if [ "$tc"X = "create_and_open"X -o "$tc"X = "all"X ];then
-		run_create_and_open ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
+		run_create_and_open ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME}
 	fi
 
 	if [ "$tc"X = "directaio"X -o "$tc"X = "all"X ];then
@@ -1190,7 +1215,7 @@ for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 	fi
 
 	if [ "$tc"X = "mmap"X -o "$tc"X = "all"X ];then
-		run_mmap ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
+		run_mmap ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME}
 	fi
 
 	if [ "$tc"X = "reserve_space"X -o "$tc"X = "all"X ];then
@@ -1198,15 +1223,15 @@ for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 	fi
 
 	if [ "$tc"X = "inline"X -o "$tc"X = "all"X ];then
-		run_inline_data ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
+		run_inline_data ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME}
 	fi
 
 	if [ "$tc"X = "xattr"X -o "$tc"X = "all"X ];then
-		run_xattr_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
+		run_xattr_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME}
 	fi
 
 	if [ "$tc"X = "reflink"X -o "$tc"X = "all"X ];then
-		run_reflink_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
+		run_reflink_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME}
 	fi
 
 	if [ "$tc"X = "filecheck"X ];then
@@ -1216,15 +1241,15 @@ for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 # For tools test.
 
 	if [ "$tc"X = "mkfs"X -o "$tc"X = "all"X ];then
-		run_mkfs ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
+		run_mkfs ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME}
 	fi
 
 	if [ "$tc"X = "tunefs"X -o "$tc"X = "all"X ];then
-		run_tunefs ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
+		run_tunefs ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME}
 	fi
 
 	if [ "$tc"X = "backup_super"X -o "$tc"X = "all"X ];then
-		run_backup_super ${LOGDIR} ${DEVICE} ${BLOCKSIZE} ${CLUSTERSIZE}
+		run_backup_super ${LOGDIR} ${DEVICE} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME}
 	fi
 
 done

@@ -70,6 +70,8 @@ LOG_FILE=
 
 MOUNT_OPTS=
 AIO_OPT=
+CLUSTER_STACK=
+CLUSTER_NAME=
 
 DEFAULT_RANKS=4
 MPI_RANKS=
@@ -90,7 +92,7 @@ set -o pipefail
 function f_usage()
 {
     echo "usage: `basename ${0}` [-r MPI_Ranks] <-f MPI_Hosts> \
-[-a access method] [-o logdir] <-d <device>> <-b block size> <-c cluster size> [-W] [-A] <mountpoint path>"
+[-a access method] [-o logdir] <-d <device>> <-b block size> <-c cluster size> <-s <cluster stack>> <-n <cluster name>> [-W] [-A] <mountpoint path>"
     echo "       -r size of MPI rank"
     echo "       -a access method for mpi execution,should be ssh or rsh"
     echo "       -f MPI hosts list,separated by comma"
@@ -101,6 +103,8 @@ function f_usage()
     echo "       -i Network Interface name to be used for MPI messaging."
     echo "       -W enable data=writeback mode"
     echo "       -A enable asynchronous io testing mode"
+    echo "       -s cluster stack"
+    echo "       -n cluster name"
     echo "       <mountpoint path> specify the mounting point."
     exit 1;
 
@@ -112,7 +116,7 @@ function f_getoptions()
                 exit 1
          fi
 
-	 while getopts "o:d:i:r:f:WAha:b:c:" options; do
+	 while getopts "o:d:i:r:f:WAha:b:c:s:n:" options; do
                 case $options in
 		r ) MPI_RANKS="$OPTARG";;
                 f ) MPI_HOSTS="$OPTARG";;
@@ -124,6 +128,8 @@ function f_getoptions()
 		c ) CLUSTERSIZE="$OPTARG";;
 		W ) MOUNT_OPTS="data=writeback";;
 		A ) AIO_OPT=" -A ";;
+		s ) CLUSTER_STACK="$OPTARG";;
+		n ) CLUSTER_NAME="$OPTARG";;
                 h ) f_usage
                     exit 1;;
                 * ) f_usage
@@ -195,7 +201,7 @@ function f_runtest()
 {
 	f_LogRunMsg ${RUN_LOG_FILE} "[*] Mkfs device ${DEVICE}:"
 	f_mkfs ${LOG_FILE} ${BLOCKSIZE} ${CLUSTERSIZE} ${LABELNAME} ${SLOTS} \
-${DEVICE} "refcount,xattr" ${JOURNALSIZE} ${BLOCKS}
+${DEVICE} "refcount,xattr" ${JOURNALSIZE} ${BLOCKS} ${CLUSTER_STACK} ${CLUSTER_NAME}
 	RET=$?
 	f_echo_status ${RET}| tee -a ${RUN_LOG_FILE}
 	f_exit_or_not ${RET}

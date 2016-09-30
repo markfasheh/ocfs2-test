@@ -50,6 +50,8 @@ DATA_LOG_FILE=
 DIRS_LOG_FILE=
 RUN_LOG_FILE=
 MOUNT_POINT=
+CLUSTER_STACK=
+CLUSTER_NAME=
 OCFS2_DEVICE=
 OCFS2_UUID=
 
@@ -126,7 +128,7 @@ exit_or_not()
 ################################################################################
 f_usage()
 {
-    echo "usage: `basename ${0}` [-r MPI_ranks] <-f MPI_hosts> [-a access_method] [-o output] <-d <device>> <-b blocksize> -c <clustersize> <mountpoint path>"
+    echo "usage: `basename ${0}` [-r MPI_ranks] <-f MPI_hosts> [-a access_method] [-o output] <-d <device>> <-b blocksize> -c <clustersize> <-s <cluster-stack>> <-n <cluster-name>> <mountpoint path>"
     echo "       -r size of MPI rank"
     echo "       -a access method for process propagation,should be ssh or rsh,set ssh as a default method when omited."
     echo "       -f MPI hosts list,separated by comma,e.g -f node1.us.oracle.com,node2.us.oracle.com."
@@ -134,9 +136,10 @@ f_usage()
     echo "       -d device name used for ocfs2 volume"
     echo "	 -b block size"
     echo "	 -c cluster size"
+    echo "       -s cluster stack"
+    echo "       -n cluster name"
     echo "       <mountpoint path> path of mountpoint where the ocfs2 volume will be mounted on."
     exit 1;
-
 }
 
 f_getoptions()
@@ -146,7 +149,7 @@ f_getoptions()
                 exit 1
          fi
 
-         while getopts "o:hd:r:a:f:b:c:" options; do
+         while getopts "o:hd:r:a:f:b:c:s:n:" options; do
                 case $options in
 		a ) MPI_ACCESS_METHOD="$OPTARG";;
 		r ) MPI_RANKS="$OPTARG";;
@@ -155,6 +158,8 @@ f_getoptions()
                 d ) OCFS2_DEVICE="$OPTARG";;
 		b ) BLOCKSIZE="$OPTARG";;
 		c ) CLUSTERSIZE="$OPTARG";;
+		s ) CLUSTER_STACK="$OPTARG";;
+		n ) CLUSTER_NAME="$OPTARG";;
                 h ) f_usage
                     exit 1;;
                 * ) f_usage
@@ -212,7 +217,7 @@ f_do_mkfs_and_mount()
 {
 	echo -n "Mkfsing device(-b ${BLOCKSIZE} -C ${CLUSTERSIZE}): "|tee -a ${RUN_LOG_FILE}
 
-	echo y|${MKFS_BIN} --fs-features=inline-data -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -N 4 -L ocfs2-inline-test ${OCFS2_DEVICE} ${BLOCKNUMS}>>${RUN_LOG_FILE} 2>&1
+	echo y|${MKFS_BIN} --fs-features=inline-data -b ${BLOCKSIZE} -C ${CLUSTERSIZE} --cluster-stack=${CLUSTER_STACK} --cluster-name=${CLUSTER_NAME} -N 4 -L ocfs2-inline-test ${OCFS2_DEVICE} ${BLOCKNUMS}>>${RUN_LOG_FILE} 2>&1
 
 	RET=$?
 	echo_status ${RET} |tee -a ${RUN_LOG_FILE}

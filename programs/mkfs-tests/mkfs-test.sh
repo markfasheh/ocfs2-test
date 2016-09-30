@@ -3,12 +3,14 @@
 # mkfs_test -o <outdir> -d <device> -b <blocksize> -c <clustersize>
 #
 usage() {
-    echo "usage: ${MKFS_TEST} -o <outdir> -d <device> -m <mountpoint> -b <blocksize> -c <clustersize>"
+    echo "usage: ${MKFS_TEST} -o <outdir> -d <device> -m <mountpoint> -b <blocksize> -c <clustersize> -s <cluster-stack> -n <cluster-name>"
     echo "       -o output directory for the logs"
     echo "       -d device"
     echo "       -m mountpoint"
     echo "       -b blocksize"
     echo "       -c clustersize"
+    echo "       -s cluster stack"
+    echo "       -n cluster name"
     exit 1
 }
 
@@ -107,8 +109,8 @@ do_fsck() {
 }
 
 do_mkfs() {
-    if [ "$#" -lt "5" ] ; then
-        echo "do_mkfs(): blocksize clustersize device volsize out"  |tee -a ${LOGFILE}
+    if [ "$#" -lt "7" ] ; then
+        echo "do_mkfs(): blocksize clustersize device volsize out cluster-stack cluster-name"  |tee -a ${LOGFILE}
         exit 1
     fi
 
@@ -117,11 +119,13 @@ do_mkfs() {
     D=$3
     V=$4
     O=$5
+    S=$6
+    N=$7
 
-    echo ${MKFS} -b ${B} -C ${C} ${D} ${V} >> ${LOGFILE}
+    echo ${MKFS} -b ${B} -C ${C} ${D} ${V} --cluster-stack=${S} --cluster-name=${N} >> ${LOGFILE}
     echo -n "mkfs ..... " |tee -a ${LOGFILE}
-    echo ${MKFS} -b ${B} -C ${C} ${D} ${V} >> ${O}
-    ${MKFS} -x -F -b ${B} -C ${C} -N 1 -J size=4M ${D} ${V} >> ${O} 2>&1
+    echo ${MKFS} -b ${B} -C ${C} ${D} ${V} --cluster-stack=${S} --cluster-name=${N} >> ${O}
+    ${MKFS} -x -F -b ${B} -C ${C} -N 1 -J size=4M ${D} ${V} --cluster-stack=${S} --cluster-name=${N} >> ${O} 2>&1
     echo "OK" |tee -a ${LOGFILE}
     echo "" >> ${O}
 }
@@ -260,7 +264,7 @@ mntdir=
 blocksize=
 clustersize=
 OPTIND=1
-while getopts "d:i:o:m:c:b:" args
+while getopts "d:i:o:m:c:b:s:n:" args
 do
   case "$args" in
     o) outdir="$OPTARG";;
@@ -268,6 +272,8 @@ do
     m) mntdir="$OPTARG";;
     b) blocksize="$OPTARG";;
     c) clustersize="$OPTARG";;
+    s) cluster_stack="$OPTARG";;
+    n) cluster_name="$OPTARG";;
   esac
 done
 LOGFILE=${outdir}/mkfs-test.log
@@ -287,6 +293,16 @@ fi
 
 if [ -z "${mntdir}" ]; then
     echo "invalid mount point: ${mntdir}" |tee -a ${LOGFILE}
+    usage ;
+fi
+
+if [ -z "${cluster_stack}" ]; then
+    echo "invalid cluster stack: ${cluster_stack}" |tee -a ${LOGFILE}
+    usage ;
+fi
+
+if [ -z "${cluster_name}" ]; then
+    echo "invalid cluster name: ${cluster_name}" |tee -a ${LOGFILE}
     usage ;
 fi
 
@@ -326,7 +342,7 @@ do
 	fi;
 
         echo "Test ${testnum}: -b ${blks} -C ${clusts}" |tee -a ${LOGFILE}
-        do_mkfs ${blks} ${clusts} ${device} ${numblks} ${OUT}
+        do_mkfs ${blks} ${clusts} ${device} ${numblks} ${OUT} ${cluster_stack} ${cluster_name}
         verify_sizes ${blks} ${clusts} ${numblks} ${OUT}
         do_fsck ${OUT}
         testnum=$[$testnum+1]
@@ -366,7 +382,7 @@ if [ -f ${OUT} ]; then
 fi;
 echo "Test ${testnum}: -T datafiles" |tee -a ${LOGFILE}
 echo -n "mkfs ..... " |tee -a ${LOGFILE}
-${MKFS} -x -F -b 4K -C 4K -N 2 -T datafiles ${device} 262144 >${OUT} 2>&1
+${MKFS} -x -F -b 4K -C 4K -N 2 -T datafiles ${device} --cluster-stack=${S} --cluster-name=${N} 262144 >${OUT} 2>&1
 echo "OK" |tee -a ${LOGFILE}
 echo -n "verify ..... " |tee -a ${LOGFILE}
 ${DEBUGFS} -R "ls -l //" ${device} >>${OUT} 2>&1
@@ -393,7 +409,7 @@ do
     fi;
     echo "Test ${testnum}: -J size=${jrnlsz}M" |tee -a ${LOGFILE}
     echo -n "mkfs ..... " |tee -a ${LOGFILE}
-    ${MKFS} -x -F -b 4K -C 4K -N 2 -J size=${jrnlsz}M ${device} 262144 >${OUT} 2>&1
+    ${MKFS} -x -F -b 4K -C 4K -N 2 -J size=${jrnlsz}M ${device} --cluster-stack=${S} --cluster-name=${N} 262144 >${OUT} 2>&1
     echo "OK" |tee -a ${LOGFILE}
     echo -n "verify ..... " |tee -a ${LOGFILE}
     ${DEBUGFS} -R "ls -l //" ${device} >>${OUT} 2>&1
@@ -422,7 +438,7 @@ do
     fi;
     echo "Test ${testnum}: -N ${slots}" |tee -a ${LOGFILE}
     echo -n "mkfs ..... " |tee -a ${LOGFILE}
-    ${MKFS} -x -F -b 4K -C 4K -N ${slots} -J size=4M ${device} 262144 >${OUT} 2>&1
+    ${MKFS} -x -F -b 4K -C 4K -N ${slots} -J size=4M ${device} --cluster-stack=${S} --cluster-name=${N} 262144 >${OUT} 2>&1
     echo "OK" |tee -a ${LOGFILE}
     echo -n "verify ..... " |tee -a ${LOGFILE}
     ${DEBUGFS} -R "stats" ${device} >>${OUT} 2>&1
@@ -448,7 +464,7 @@ fi;
 echo "Test ${testnum}: -L mylabel" |tee -a ${LOGFILE}
 label="my_label_is_very_very_very_long_to_the_point_of_being_useless"
 echo -n "mkfs ..... " |tee -a ${LOGFILE}
-${MKFS} -x -F -b 4K -C 4K -N 1 -L ${label} ${device} 262144 >${OUT} 2>&1
+${MKFS} -x -F -b 4K -C 4K -N 1 -L ${label} ${device} --cluster-stack=${S} --cluster-name=${N} 262144 >${OUT} 2>&1
 echo "OK" |tee -a ${LOGFILE}
 echo -n "verify ..... " |tee -a ${LOGFILE}
 ${DEBUGFS} -R "stats" ${device} >${OUT} 2>&1
@@ -473,7 +489,7 @@ fi;
 echo "Test ${testnum}: --fs-features=inline-data" |tee -a ${LOGFILE}
 label="Oracle_Home"
 echo -n "mkfs ..... " |tee -a ${LOGFILE}
-${MKFS} --fs-features=inline-data -x -F -b 4K -C 4K -N 2 -L ${label} ${device} 262144 >>${OUT} 2>&1
+${MKFS} --fs-features=inline-data -x -F -b 4K -C 4K -N 2 -L ${label} ${device} --cluster-stack=${S} --cluster-name=${N} 262144 >>${OUT} 2>&1
 echo "OK" |tee -a ${LOGFILE}
 echo -n "verify ..... " |tee -a ${LOGFILE}
 ${DEBUGFS} -R "stats" ${device} >>${OUT} 2>&1
@@ -499,7 +515,7 @@ fi;
 echo "Test ${testnum}: Default option for sparse file support" |tee -a ${LOGFILE}
 label="Oracle_Home"
 echo -n "mkfs ..... " |tee -a ${LOGFILE}
-${MKFS} -x -F -b 4K -C 4K -N 2 -L ${label} ${device} 262144 >>${OUT} 2>&1
+${MKFS} -x -F -b 4K -C 4K -N 2 -L ${label} ${device} --cluster-stack=${S} --cluster-name=${N} 262144 >>${OUT} 2>&1
 echo "OK" |tee -a ${LOGFILE}
 echo -n "verify ..... " |tee -a ${LOGFILE}
 ${DEBUGFS} -R "stats" ${device} >>${OUT} 2>&1
@@ -533,7 +549,7 @@ then
 fi
 echo "Test ${testnum}: bitmap_cpg change" |tee -a ${LOGFILE}
 echo -n "mkfs ..... " |tee -a ${LOGFILE}
-${MKFS} -x -F -b ${blocksz} -C ${clustsz} -N 2 ${device} ${blkcount} >${OUT} 2>&1
+${MKFS} -x -F -b ${blocksz} -C ${clustsz} -N 2 ${device} --cluster-stack=${S} --cluster-name=${N} ${blkcount} >${OUT} 2>&1
 echo "OK" |tee -a ${LOGFILE}
 
 #consume the whole volume and then delete all the files.

@@ -101,6 +101,8 @@ function f_usage()
 [-v verify_log] [-W] [-A] [-o logdir] <-d device> <-b blocksize> <-c clustersize> <mountpoint path>"
         echo "       -o output directory for the logs"
         echo "       -d block device name used for ocfs2 volume"
+	echo "	     -s cluster stack"
+	echo "	     -n cluster name"
         echo "       -W enable data=writeback mode"
 	echo "       -A enable asynchronous io testing mode"
 	echo "       -D enable destructive test,it will crash the testing node,\
@@ -119,7 +121,7 @@ function f_getoptions()
                 exit 1
          fi
 
-         while getopts "o:WDAhd:a:p:v:b:c:" options; do
+         while getopts "o:WDAhd:a:p:v:b:c:s:n:" options; do
                 case $options in
                 o ) LOG_DIR="$OPTARG";;
                 d ) DEVICE="$OPTARG";;
@@ -131,6 +133,8 @@ function f_getoptions()
 		v ) VERI_LOG="$OPTARG";;
 		b ) BLOCKSIZE="$OPTARG";;
 		c ) CLUSTERSIZE="$OPTARG";;
+		s ) CLUSTER_STACK="$OPTARG";;
+		n ) CLUSTER_NAME="$OPTARG";;
                 h ) f_usage;;
                 * ) f_usage;;
                 esac
@@ -422,7 +426,7 @@ ${WORK_PLACE} -v ${VERI_LOG} >>${LOG_FILE} 2>&1
 
 	f_LogRunMsg ${RUN_LOG_FILE} "[*] Mkfs device ${DEVICE}:"
 	f_mkfs ${LOG_FILE} ${BLOCKSIZE} ${CLUSTERSIZE} ${LABELNAME} ${SLOTS} \
-${DEVICE} "refcount,xattr" ${JOURNALSIZE} ${BLOCKS}
+${DEVICE} "refcount,xattr" ${JOURNALSIZE} ${BLOCKS} ${CLUSTER_STACK} ${CLUSTER_NAME}
 	RET=$?
 	f_echo_status ${RET}| tee -a ${RUN_LOG_FILE}
 	f_exit_or_not ${RET}

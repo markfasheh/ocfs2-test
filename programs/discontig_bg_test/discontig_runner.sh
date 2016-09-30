@@ -19,6 +19,8 @@ fi
 
 DEVICE=
 MOUNT_POINT=
+CLUSTER_STACK=
+CLUSTER_NAME=
 WORK_PLACE=
 WORK_PLACE_DIRENT=ocfs2-discontig-bg-test
 DISCONTIG_ACTIVATE_BIN="${BINDIR}/activate_discontig_bg.sh"
@@ -65,7 +67,7 @@ MPI_BTL_IF_ARG=
 function f_usage()
 {
     echo "usage: `basename ${0}` <-d device> [-o logdir] [-m multi_hosts] [-a access_method] \
-[-b block_size] [-c cluster_size] <mount point>"
+[-b block_size] [-c cluster_size] <-s cluster stack> <-n cluster name> <mount point>"
     exit 1;
 
 }
@@ -77,7 +79,7 @@ function f_getoptions()
 		exit 1
 	fi
 	
-	while getopts "hd:o:m:a:b:c:" options; do
+	while getopts "hd:o:m:a:b:c:s:n:" options; do
 		case $options in
 		d ) DEVICE="$OPTARG";;
 		o ) LOG_DIR="$OPTARG";;
@@ -86,6 +88,8 @@ function f_getoptions()
 		    MPI_HOSTS="$OPTARG";;
                 b ) BLOCKSIZE="$OPTARG";;
                 c ) CLUSTERSIZE="$OPTARG";;
+                s ) CLUSTER_STACK="$OPTARG";;
+                n ) CLUSTER_NAME="$OPTARG";;
 		h ) f_usage
 			exit 1;;
 		* ) f_usage
@@ -212,7 +216,7 @@ function f_inodes_test()
 	local filename=
 
 	f_LogMsg ${LOG_FILE} "Activate inode discontig-bg on ${DEVICE}"
-	${DISCONTIG_ACTIVATE_BIN} -t inode -r 200 -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
+	${DISCONTIG_ACTIVATE_BIN} -t inode -r 200 -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
 
@@ -295,7 +299,7 @@ function f_inodes_test()
 	f_exit_or_not ${RET}
 
 	f_LogMsg ${LOG_FILE} "[*] Activate inode discontig-bg on ${DEVICE}"
-	${DISCONTIG_ACTIVATE_BIN} -t inode -r 4096 -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
+	${DISCONTIG_ACTIVATE_BIN} -t inode -r 4096 -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
 
@@ -423,7 +427,7 @@ function f_extents_test()
 	local inc=
 
 	f_LogMsg ${LOG_FILE} "[*] Activate extent discontig-bg on ${DEVICE}"
-	${DISCONTIG_ACTIVATE_BIN} -t extent -r 2048 -b ${BLOCKSIZE}-c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
+	${DISCONTIG_ACTIVATE_BIN} -t extent -r 2048 -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
 
@@ -555,7 +559,7 @@ function f_extents_test()
 function f_inline_test()
 {
 	f_LogMsg ${LOG_FILE} "[*] Activate inode discontig-bg on ${DEVICE}"
-	${DISCONTIG_ACTIVATE_BIN} -t inode -r 1024 -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
+	${DISCONTIG_ACTIVATE_BIN} -t inode -r 1024 -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
 
@@ -625,7 +629,7 @@ function f_inline_test()
 function f_xattr_test()
 {
 	f_LogMsg ${LOG_FILE} "[*] Activate extent discontig-bg on ${DEVICE}"
-	${DISCONTIG_ACTIVATE_BIN} -t extent -r 10240 -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
+	${DISCONTIG_ACTIVATE_BIN} -t extent -r 10240 -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
 
@@ -708,7 +712,7 @@ function f_refcount_test()
 	local inc=
 
 	f_LogMsg ${LOG_FILE} "[*] Activate extent discontig-bg on ${DEVICE}"
-	${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
+	${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
 
@@ -886,7 +890,7 @@ function f_refcount_test()
 function f_dxdir_test()
 {
 	f_LogMsg ${LOG_FILE} "[*] Activate inode discontig-bg on ${DEVICE}"
-	${DISCONTIG_ACTIVATE_BIN} -t extents -r 2048 -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
+	${DISCONTIG_ACTIVATE_BIN} -t extents -r 2048 -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
 
@@ -968,7 +972,7 @@ function f_multi_inodes_test()
 {
 
 	f_LogMsg ${LOG_FILE} "Activate inode discontig-bg on ${DEVICE}"
-	${DISCONTIG_ACTIVATE_BIN} -t inode -r 800 -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
+	${DISCONTIG_ACTIVATE_BIN} -t inode -r 800 -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
 
@@ -1017,8 +1021,8 @@ function f_multi_extents_test()
 	local filename=
 
 	f_LogMsg ${LOG_FILE} "Activate extents discontig-bg on ${DEVICE}"
-	f_LogMsg ${LOG_FILE} "CMD: ${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} ${MOUNT_POINT}"
-	${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
+	f_LogMsg ${LOG_FILE} "CMD: ${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT}"
+	${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
 
@@ -1073,8 +1077,8 @@ function f_multi_xattr_test()
 	local remain_space=1024
 
 	f_LogMsg ${LOG_FILE} "Activate extents discontig-bg on ${DEVICE}"
-	f_LogMsg ${LOG_FILE} "CMD: ${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} ${MOUNT_POINT}"
-	${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
+	f_LogMsg ${LOG_FILE} "CMD: ${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT}"
+	${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
 
@@ -1139,8 +1143,8 @@ function f_multi_refcount_test()
 	local remain_space=1024
 
 	f_LogMsg ${LOG_FILE} "Activate extents discontig-bg on ${DEVICE}"
-	f_LogMsg ${LOG_FILE} "CMD: ${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} ${MOUNT_POINT}"
-	${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
+	f_LogMsg ${LOG_FILE} "CMD: ${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT}"
+	${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -a ${MPI_ACCESS_METHOD} -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
 

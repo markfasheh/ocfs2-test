@@ -167,8 +167,8 @@ function test_summary()
 Set_Volume_For_Test()
 {
 	LogMsg "tunefs_test : Initializing volume for test"
-        echo "y"| ${MKFS_BIN} ${FS_FEATURES} -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -L ${LABEL1} -N ${NNODES1} \
-	        -J size=${JOURNAL1} ${2} ${DEVICE} ${1} 2>&1 >> ${MKFSLOG}
+        echo "y"| ${MKFS_BIN} ${FS_FEATURES} --cluster-stack=${CLUSTER_STACK} --cluster-name=${CLUSTER_NAME} \
+-b ${BLOCKSIZE} -C ${CLUSTERSIZE} -L ${LABEL1} -N ${NNODES1} -J size=${JOURNAL1} ${2} ${DEVICE} ${1} 2>&1 >> ${MKFSLOG}
 	Check_Volume;
 }
 #
@@ -237,7 +237,8 @@ Test_Query()
 	(( ++NUM_OF_TESTS ))
 #	Set_Volume_For_Test ${BLKCNT1} --fs-feature-level=default
 	echo "y"| ${MKFS_BIN} -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -L ${LABEL1} -N ${NNODES1} \
-		-J size=${JOURNAL1} --fs-feature-level=default ${DEVICE} ${BLKCNT1} 2>&1 >> ${MKFSLOG}
+-J size=${JOURNAL1} --fs-feature-level=default --cluster-stack=${CLUSTER_STACK} \
+--cluster-name=${CLUSTER_NAME} ${DEVICE} ${BLKCNT1} 2>&1 >> ${MKFSLOG}
 	CURRENT_TEST="Test Query";
 	QRY1="Blks=%B\nClus=%T\nSlot=%N\nRoot=%R\nSysd=%Y\nFclg=%P\n";
 	QRY2="Labl=%V\nUuid=%U\n";
@@ -661,7 +662,7 @@ TUNEFS_TEST=`basename $0`
 bindir=`basename ${0}`
 LOG_DIR=`basename ${bindir}`
 
-while getopts "d:o:m:b:c:" args
+while getopts "d:o:m:b:c:s:n:" args
 do
   case "$args" in
     o) LOG_DIR="$OPTARG";;
@@ -669,6 +670,8 @@ do
     m) MOUNT_POINT="$OPTARG";;
     b) BLOCKSIZE="$OPTARG";;
     c) CLUSTERSIZE="$OPTARG";;
+    s) CLUSTER_STACK="$OPTARG";;
+    n) CLUSTER_NAME="$OPTARG";;
   esac
 done
 

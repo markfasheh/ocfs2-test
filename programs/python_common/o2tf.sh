@@ -145,12 +145,18 @@ function f_mkfs()
 	#${7} specify fs features
 	#${8} specify journal size
 	#${9} specify volume size
+	#${10} specify cluster stack
+	#${11} specify cluster name
 
 	local slot_opts=""
+        local cluster_stack=""
+        local cluster_name=""
 	if [ "${5}" == "0" ];then
 		slot_opts="-M local"
 	else
 		slot_opts="-N ${5}"
+                cluster_stack="--cluster-stack=${10}" #cluster stack
+                cluster_name="--cluster-name=${11}" #cluster name
 	fi
 	
 	local journal_opts=""
@@ -170,12 +176,16 @@ function f_mkfs()
 	local L=${4} #volume name
 	local D=${6} #device name
 	local O=${7} #fs featuers
+	local S=${10} #cluster stack
+	local N=${11} #cluster name
 	
-	shift 9
+	shift 11
 	R=${1} #Reserved options
 	
-        f_LogMsg ${logfile} "${MKFS_BIN} --fs-features=${O} -b ${B} -C ${C} -L ${L} ${slot_opts} ${journal_opts} ${R} ${D} ${blocks}"
-        echo "y"|${MKFS_BIN} --fs-features=${O} -b ${B} -C ${C} -L ${L} ${slot_opts} ${journal_opts} ${R} ${D} ${blocks}>>${logfile} 2>&1
+        f_LogMsg ${logfile} "${MKFS_BIN} --fs-features=${O} ${cluster_stack} ${cluster_name} \
+-b ${B} -C ${C} -L ${L} ${slot_opts} ${journal_opts} ${R} ${D} ${blocks}"
+        echo "y"|${MKFS_BIN} --fs-features=${O} ${cluster_stack} ${cluster_name} \
+-b ${B} -C ${C} -L ${L} ${slot_opts} ${journal_opts} ${R} ${D} ${blocks}>>${logfile} 2>&1
         RET=$?
 
         if [ "${RET}" != "0" ];then

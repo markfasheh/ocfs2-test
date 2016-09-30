@@ -21,6 +21,8 @@ fi
 
 DEVICE=
 MOUNT_POINT=
+CLUSTER_STACK=
+CLUSTER_NAME=
 WORK_PLACE=
 WORK_PLACE_DIRENT=ocfs2-activate-discontig-bg-dir
 TUNEFS_BIN="`which sudo` -u root `which tunefs.ocfs2`"
@@ -69,7 +71,7 @@ function f_usage()
 {
     echo "usage: `basename ${0}` [-t type] [-r resv_size] [-b blocksize] \
 [-c clustersize] [-l label] [-m mpi_hosts] [-a access_method] <-d device> \
-[-o logdir] <mount point> "
+[-o logdir] <-s cluster stack> <-n cluster name> <mount point>"
     exit 1;
 
 }
@@ -80,8 +82,8 @@ function f_getoptions()
 		f_usage;
 		exit 1
 	fi
-	
-	while getopts "hd:o:b:c:t:r:l:m:a:" options; do
+
+        while getopts "hd:o:b:c:t:r:l:m:a:s:n:" options; do
 		case $options in
 		d ) DEVICE="$OPTARG";;
 		o ) LOG_DIR="$OPTARG";;
@@ -93,6 +95,8 @@ function f_getoptions()
 		a ) MPI_ACCESS_METHOD="$OPTARG";;
 		m ) MULTI_TEST=1
 		    MPI_HOSTS="$OPTARG";;
+                s ) CLUSTER_STACK="$OPTARG";;
+                n ) CLUSTER_NAME="$OPTARG";;
 		h ) f_usage
 			exit 1;;
 		* ) f_usage
@@ -325,7 +329,7 @@ function f_activate_discontig()
 	
 	f_LogRunMsg ${RUN_LOG_FILE} "[*] Mkfs device ${DEVICE}:"
         f_mkfs ${LOG_FILE} ${BLOCKSIZE} ${CLUSTERSIZE} ${LABELNAME} ${SLOTS} \
-${DEVICE} "refcount,xattr,metaecc,discontig-bg" ${JOURNALSIZE} ${ORIG_VOLUME_SIZE_BK}
+${DEVICE} "refcount,xattr,metaecc,discontig-bg" ${JOURNALSIZE} ${ORIG_VOLUME_SIZE_BK} ${CLUSTER_STACK} ${CLUSTER_NAME}
         RET=$?
         f_echo_status ${RET}| tee -a ${RUN_LOG_FILE}
         f_exit_or_not ${RET}

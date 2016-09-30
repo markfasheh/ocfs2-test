@@ -105,11 +105,13 @@ exit_or_not()
 ################################################################################
 f_usage()
 {
-    echo "usage: `basename ${0}` [-o output] <-b blocksize> <-c clustersize> <-d <device>> <mountpoint path>"
+    echo "usage: `basename ${0}` [-o output] <-b blocksize> <-c clustersize> <-d <device>> <-s <cluster stack>> <-n <cluster name>> <mountpoint path>"
     echo "       -o output directory for the logs"
     echo "       -b blocksize"
     echo "       -c clustersize"
     echo "       -d device name used for ocfs2 volume"
+    echo "       -s cluster stack"
+    echo "       -n cluster name"
     echo "       <mountpoint path> path of mountpoint where the ocfs2 volume will be mounted on."
     exit 1;
 
@@ -122,12 +124,14 @@ f_getoptions()
                 exit 1
          fi
 
-         while getopts "o:hd:b:c:" options; do
+         while getopts "o:hd:b:c:s:n:" options; do
                 case $options in
                 o ) LOG_OUT_DIR="$OPTARG";;
                 d ) OCFS2_DEVICE="$OPTARG";;
                 b ) BLOCKSIZE="$OPTARG";;
                 c ) CLUSTERSIZE="$OPTARG";;
+		s ) CLUSTER_STACK="$OPTARG";;
+                n ) CLUSTER_NAME="$OPTARG";;
                 h ) f_usage
                     exit 1;;
                 * ) f_usage
@@ -174,7 +178,7 @@ f_do_mkfs_and_mount()
 {
 	echo -n "Mkfsing device:"|tee -a ${RUN_LOG_FILE}
 
-	echo y|${MKFS_BIN} --fs-features=inline-data -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -N 4 ${OCFS2_DEVICE} ${BLOCKNUMS} >>${RUN_LOG_FILE} 2>&1
+	echo y|${MKFS_BIN} --fs-features=inline-data --cluster-stack=${CLUSTER_STACK} --cluster-name=${CLUSTER_NAME} -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -N 4 ${OCFS2_DEVICE} ${BLOCKNUMS} >>${RUN_LOG_FILE} 2>&1
 	RET=$?
 	echo_status ${RET} |tee -a ${RUN_LOG_FILE}
 	exit_or_not ${RET}

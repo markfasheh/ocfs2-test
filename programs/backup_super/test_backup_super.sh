@@ -169,7 +169,8 @@ function test_mkfs()
 	msg1="debugfs should be sucess"
 
 	blkcount=`expr $vol_byte_size / $blocksize`
-	echo "y" |${MKFS_BIN} -b $blocksize -C $clustersize -N 4  -J size=64M ${DEVICE} $blkcount
+	echo "y" |${MKFS_BIN} -b $blocksize -C $clustersize -N 4  -J size=64M \
+ --cluster-stack=${CLUSTER_STACK} --cluster-name=${CLUSTER_NAME} ${DEVICE} $blkcount
 	#first check whether mkfs is success
 	echo "ls //"|${DEBUGFS_BIN} ${DEVICE}|grep global_bitmap
 	exit_if_bad $? 0 $msg $LINENO
@@ -186,7 +187,8 @@ function test_mkfs()
 
 	${DD_BIN} if=/dev/zero of=$DEVICE bs=4096 count=3
 	clear_backup_blocks
-	echo "y" |${MKFS_BIN} -b $blocksize -C $clustersize -N 4  -J size=64M ${DEVICE} $blkcount
+	echo "y" |${MKFS_BIN} -b $blocksize -C $clustersize -N 4  -J size=64M \
+		--cluster-stack=${CLUSTER_STACK} --cluster-name=${CLUSTER_NAME} ${DEVICE} $blkcount
 	#first check whether mkfs is success
 	echo "ls //"|${DEBUGFS_BIN} ${DEVICE}|grep global_bitmap
 	exit_if_bad $? 0 $msg1 $LINENO
@@ -217,7 +219,8 @@ function test_fsck()
 	${DD_BIN} if=/dev/zero of=$DEVICE bs=4096 count=3
 	clear_backup_blocks
 
-	echo "y" |${MKFS_BIN} -b $blocksize -C $clustersize -N 4  -J size=64M ${DEVICE} $blkcount
+	echo "y" |${MKFS_BIN} -b $blocksize -C $clustersize -N 4  -J size=64M \
+ --cluster-stack=${CLUSTER_STACK} --cluster-name=${CLUSTER_NAME} ${DEVICE} $blkcount
 	#corrupt the superblock
 	${DD_BIN} if=/dev/zero of=${DEVICE} bs=$blocksize count=3
 	${FSCK_BIN} -fy ${DEVICE}	#This should failed.
@@ -247,7 +250,8 @@ function test_tunefs_resize()
 	clear_backup_blocks
 
 	#mkfs a volume with no backup superblock
-	echo "y" |${MKFS_BIN} -b $blocksize -C $clustersize -N 4  -J size=64M ${DEVICE} $blkcount
+	echo "y" |${MKFS_BIN} -b $blocksize -C $clustersize -N 4  -J size=64M \
+		    --cluster-stack=${CLUSTER_STACK} --cluster-name=${CLUSTER_NAME} ${DEVICE} $blkcount
 
 	local bpc=`expr $clustersize / $blocksize`
 	local blkcount=`expr $blkcount + $bpc`
@@ -283,7 +287,8 @@ function test_tunefs_add_backup()
 	clear_backup_blocks
 
 	#mkfs a volume with no backup superblock supported
-	echo "y" |${MKFS_BIN} -b $blocksize -C $clustersize -N 4  -J size=64M --no-backup-super ${DEVICE} $blkcount
+	echo "y" |${MKFS_BIN} -b $blocksize -C $clustersize -N 4  -J size=64M --no-backup-super \
+ --cluster-stack=${CLUSTER_STACK} --cluster-name=${CLUSTER_NAME} ${DEVICE} $blkcount
 
 	#We can't open the volume by backup superblock now
 	echo "ls //"|${DEBUGFS_BIN} ${DEVICE} -s 1|grep global_bitmap
@@ -327,7 +332,8 @@ function test_tunefs_refresh()
 
 	local old_vol_name="old_ocfs2"
 	local new_vol_name="new_ocfs2"
-	echo "y" |${MKFS_BIN} -b $blocksize -C $clustersize -N 4  -J size=64M -L $old_vol_name ${DEVICE} $blkcount
+	echo "y" |${MKFS_BIN} -b $blocksize -C $clustersize -N 4  -J size=64M -L $old_vol_name \
+		--cluster-stack=${CLUSTER_STACK} --cluster-name=${CLUSTER_NAME} ${DEVICE} $blkcount
 	check_vol $old_vol_name
 
 	#change the volume name
@@ -365,7 +371,8 @@ function volume_small_test()
 
 	# Since tunefs will return 0, we need to grep
 	# the output of stderr and find what we want.
-	echo "y" |${MKFS_BIN} -b 1K -C 4K ${DEVICE} -N 4 --no-backup-super $tmp_block_count
+	echo "y" |${MKFS_BIN} -b 1K -C 4K ${DEVICE} -N 4 --no-backup-super $tmp_block_count \
+ --cluster-stack=${CLUSTER_STACK} --cluster-name=${CLUSTER_NAME}
 	err=`${TUNEFS_BIN} --backup-super ${DEVICE} 2>&1`
 	echo $err|grep "too small to contain backup superblocks"
 	exit_if_bad $? 0 "tunefs.ocfs2" $LINENO
@@ -464,6 +471,12 @@ do
 		;;
 	"--log-dir="*)
 		LOG_DIR="${1#--log-dir=}"
+		;;
+	"--cluster-stack="*)
+		CLUSTER_STACK="${1#--cluster-stack=}"
+		;;
+	"--cluster-name="*)
+		CLUSTER_NAME="${1#--cluster-name=}"
 		;;
 	"--with-fsck="*)
 		FSCK_BIN="${1#--with-fsck=}"

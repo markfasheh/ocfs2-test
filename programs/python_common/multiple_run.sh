@@ -43,6 +43,8 @@ REMOTE_UMOUNT_BIN="${BINDIR}/remote_umount.py"
 NODE_LIST=
 DEVICE=
 MOUNT_POINT=
+CLUSTER_STACK=
+CLUSTER_NAME=
 KERNELSRC=
 
 ACCESS_METHOD="ssh"
@@ -73,7 +75,7 @@ set -o pipefail
 f_usage()
 {
     echo "usage: `basename ${0}` <-k kerneltarball> [-b blocksize] [-c clustersize] <-n nodes> [-i nic] \
-[-a access_method] [-o logdir] <-d device> [-t testcases] <mountpoint path>"
+[-a access_method] [-o logdir] <-d device> [-t testcases] [-s stack name] [-C cluster name] <mountpoint path>"
     echo "       -k kerneltarball should be path of tarball for kernel src."
     echo "       -n nodelist,should be comma separated."
     echo "       -b blocksize."
@@ -83,6 +85,8 @@ f_usage()
     echo "       -a access method for mpi execution,should be ssh or rsh"
     echo "       -d device name used for ocfs2 volume."
     echo "       -t sepcify testcases to run."
+    echo "       -s cluster stack."
+    echo "       -C cluster name."
     echo "       <mountpoint path> path of mountpoint where test will be performed."
     echo 
     echo "Eaxamples:"
@@ -99,7 +103,7 @@ f_getoptions()
 		exit 1
 	fi
 
-	while getopts "n:d:i:a:o:b:c:k:t:h:" options; do
+	while getopts "n:d:i:a:o:k:b:c:t:s:C:h:" options; do
 		case $options in
 		n ) NODE_LIST="$OPTARG";;
 		d ) DEVICE="$OPTARG";;
@@ -110,6 +114,8 @@ f_getoptions()
 		c ) CLUSTERSIZE="$OPTARG";;
 		k ) KERNELSRC="$OPTARG";;
 		t ) TESTCASES="$OPTARG";;
+		s ) CLUSTER_STACK="$OPTARG";;
+		C ) CLUSTER_NAME="$OPTARG";;
 		h ) f_usage
 		    exit 1;;
                 * ) f_usage
@@ -280,7 +286,7 @@ run_common_testcase()
 
 	LogMsg "Mkfs device ${DEVICE}:"
 	f_mkfs ${LOGFILE} ${BLOCKSIZE} ${CLUSTERSIZE} ${LABELNAME} ${SLOTS} \
-${DEVICE} ${FEATURES} ${JOURNALSIZE} ${BLOCKS}
+${DEVICE} ${FEATURES} ${JOURNALSIZE} ${BLOCKS} ${CLUSTER_STACK} ${CLUSTER_NAME}
         RET=$?
         f_exit_or_not ${RET}
 
@@ -363,7 +369,7 @@ run_xattr_test()
 
 	LogRunMsg "xattr-test"
 	${BINDIR}/xattr-multi-run.sh -r 4 -f ${NODE_LIST} -a ssh -o ${logdir} \
--d ${DEVICE} -b "$BLOCKSIZE" -c "$CLUSTERSIZE" ${MOUNT_POINT} >> ${LOGFILE} 2>&1
+-d ${DEVICE} -b "$BLOCKSIZE" -c "$CLUSTERSIZE" -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >> ${LOGFILE} 2>&1
 	LogRC $?
 }
 
@@ -373,7 +379,7 @@ run_inline_test()
 
 	LogRunMsg "inline-test"
 	${BINDIR}/multi-inline-run.sh -r 2 -f ${NODE_LIST} -a ssh -o ${logdir} \
--d ${DEVICE} -b "$BLOCKSIZE}" -c "$CLUSTERSIZE" ${MOUNT_POINT} >> ${LOGFILE} 2>&1
+-d ${DEVICE} -b "$BLOCKSIZE" -c "$CLUSTERSIZE" -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >> ${LOGFILE} 2>&1
 	LogRC $?
 }
 
@@ -384,14 +390,14 @@ run_reflink_test()
 	LogRunMsg "reflink-test"
 	LogMsg "reflink 'data=ordered' mode test"
 	${BINDIR}/multi_reflink_test_run.sh -r 4 -f ${NODE_LIST} -a ssh -o \
-${logdir} -d ${DEVICE} -b "$BLOCKSIZE" -c "$CLUSTERSIZE" ${MOUNT_POINT} >> ${LOGFILE} 2>&1 || {
+${logdir} -d ${DEVICE} -b "$BLOCKSIZE" -c "$CLUSTERSIZE" -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >> ${LOGFILE} 2>&1 || {
 	RET=$?
 	LogRC $RET
 	return $RET
 }
 #	LogMsg "reflink 'data=writeback' mode test"
 #	${BINDIR}/multi_reflink_test_run.sh -r 4 -f ${NODE_LIST} -a ssh -o \
-#${logdir} -W -d ${DEVICE} -b "$BLOCKSIZE" -c "$CLUSTERSIZE" ${MOUNT_POINT} >> ${LOGFILE} 2>&1
+#${logdir} -W -d ${DEVICE} -b "$BLOCKSIZE" -c "$CLUSTERSIZE" -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >> ${LOGFILE} 2>&1
 	LogRC $?
 }
 
@@ -415,7 +421,7 @@ run_lvb_torture_test()
 
 	LogMsg "Mkfs device ${DEVICE}:"
 	f_mkfs ${LOGFILE} ${BLOCKSIZE} ${CLUSTERSIZE} ${LABELNAME} ${SLOTS} \
-${DEVICE} ${FEATURES} ${JOURNALSIZE} ${BLOCKS}
+${DEVICE} ${FEATURES} ${JOURNALSIZE} ${BLOCKS} ${CLUSTER_STACK} ${CLUSTER_NAME}
         RET=$?
         f_exit_or_not ${RET}
 

@@ -144,12 +144,15 @@ exit_or_not()
 ################################################################################
 f_usage()
 {
-    echo "usage: `basename ${0}` [-c] [-o output_log_dir] <-d <device>> <-b <block size>> <-C <cluster size>> <mountpoint path>"
+    echo "usage: `basename ${0}` [-c] [-o output_log_dir] <-d <device>> <-b <block size>> \
+<-s <stack name>> <-c <cluster name>> <-C <cluster size>> <mountpoint path>"
     echo "	 -c enable the combination test for inline-data and inline-xattr."
     echo "       -o output directory for the logs"
     echo "       -d specify the device which has been formated as an ocfs2 volume."
     echo "	 -b block size."
     echo "	 -C cluster size."
+    echo "       -s cluster stack."
+    echo "       -n cluster name."
     echo "       <mountpoint path> path of mountpoint where the ocfs2 volume will be mounted on."
     exit 1;
 
@@ -162,13 +165,15 @@ f_getoptions()
                 exit 1
          fi
 
-	 while getopts "cho:d:b:C:" options; do
+	 while getopts "cho:d:b:C:s:n:" options; do
                 case $options in
 		c ) COMBIN_TEST="1";;
                 o ) LOG_OUT_DIR="$OPTARG";;
                 d ) OCFS2_DEVICE="$OPTARG";;
 		b ) BLOCKSIZE="$OPTARG";;
 		C ) CLUSTERSIZE="$OPTARG";;
+                s ) CLUSTER_STACK="$OPTARG";;
+                n ) CLUSTER_NAME="$OPTARG";;
                 h ) f_usage
                     exit 1;;
                 * ) f_usage
@@ -226,9 +231,9 @@ f_do_mkfs_and_mount()
 	echo -n "Mkfsing device:"|tee -a ${RUN_LOG_FILE}
 
 	if [ -z "${COMBIN_TEST}" ];then
-		echo y|${MKFS_BIN} --fs-features=xattr -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -N 1 ${OCFS2_DEVICE} ${BLOCKNUMS}>>${RUN_LOG_FILE} 2>&1
+		echo y|${MKFS_BIN} --fs-features=xattr --cluster-stack=${CLUSTER_STACK} --cluster-name=${CLUSTER_NAME} -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -N 1 ${OCFS2_DEVICE} ${BLOCKNUMS}>>${RUN_LOG_FILE} 2>&1
 	else
-		echo y|${MKFS_BIN} --fs-features=xattr,inline-data -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -N 1 ${OCFS2_DEVICE} ${BLOCKNUMS}>>${RUN_LOG_FILE} 2>&1
+		echo y|${MKFS_BIN} --fs-features=xattr,inline-data --cluster-stack=${CLUSTER_STACK} --cluster-name=${CLUSTER_NAME} -b ${BLOCKSIZE} -C ${CLUSTERSIZE} -N 1 ${OCFS2_DEVICE} ${BLOCKNUMS}>>${RUN_LOG_FILE} 2>&1
 	fi
         RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
