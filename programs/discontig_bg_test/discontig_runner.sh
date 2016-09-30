@@ -41,6 +41,7 @@ DEFAULT_LOG_DIR=${O2TDIR}/log
 LOG_DIR=
 RUN_LOG_FILE=
 LOG_FILE=
+PUNCH_LOG_FILE=
 
 BLOCKSIZE=
 CLUSTERSIZE=
@@ -162,6 +163,8 @@ function f_setup()
 %M-%S`-discontig-bg-run.log"
 	LOG_FILE="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/`date +%F-%H-\
 %M-%S`-discontig-bg.log"
+        PUNCH_LOG_FILE="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/`date +%F-%H-\
+%M-%S`-punch-hole.log"
 
 }
 
@@ -529,7 +532,7 @@ function f_extents_test()
 	recs_in_blk=$(((${BLOCKSIZE}-64)/16))
 	while :;do
 		if [ "$((${RANDOM}%2))" -eq "0" ];then
-			${PUNCH_HOLE_BIN} -f ${filename} -s ${offset} -l $((${CLUSTERSIZE}*${recs_in_blk})) >>/dev/null 2>&1 || {
+			${PUNCH_HOLE_BIN} -f ${filename} -s ${offset} -l $((${CLUSTERSIZE}*${recs_in_blk})) >>${PUNCH_LOG_FILE} 2>&1 || {
 				f_LogMsg ${LOG_FILE} "Punch hole at offset:${offset} failed."
 				return 1
 			}
@@ -798,13 +801,13 @@ function f_refcount_test()
 	fi
 	while :;do
 		if [ "$((${RANDOM}%2))" -eq "0" ];then
-			${PUNCH_HOLE_BIN} -f ${orig_filename} -s ${offset} -l ${CLUSTERSIZE} >>/dev/null 2>&1 || {
+			${PUNCH_HOLE_BIN} -f ${orig_filename} -s ${offset} -l ${CLUSTERSIZE} >>${PUNCH_LOG_FILE} 2>&1 || {
 				f_LogMsg ${LOG_FILE} "Punch hole at offset:${offset} failed on ${orig_filename}."
 				return 1
 			}
 		fi
 		if [ "$((${RANDOM}%2))" -eq "1" ];then
-			${PUNCH_HOLE_BIN} -f ${ref_filename} -s ${offset} -l ${CLUSTERSIZE} >>/dev/null 2>&1 || {
+			${PUNCH_HOLE_BIN} -f ${ref_filename} -s ${offset} -l ${CLUSTERSIZE} >>${PUNCH_LOG_FILE} 2>&1 || {
 				f_LogMsg ${LOG_FILE} "Punch hole at offset:${offset} failed on ${ref_filename}."
 				return 1
 			}
@@ -822,14 +825,14 @@ function f_refcount_test()
 	recs_in_blk=$(((${BLOCKSIZE}-64)/16))
 	while :;do
 		if [ "$((${RANDOM}%2))" -eq "0" ];then
-			${PUNCH_HOLE_BIN} -f ${orig_filename} -s ${offset} -l $((${CLUSTERSIZE}*${recs_in_blk})) >>/dev/null 2>&1 || {
+			${PUNCH_HOLE_BIN} -f ${orig_filename} -s ${offset} -l $((${CLUSTERSIZE}*${recs_in_blk})) >>${PUNCH_LOG_FILE} 2>&1 || {
 				f_LogMsg ${LOG_FILE} "Punch hole at offset:${offset} failed on ${orig_filename}."
 				return 1
 			}
 		fi
 
 		if [ "$((${RANDOM}%2))" -eq "1" ];then
-			${PUNCH_HOLE_BIN} -f ${ref_filename} -s ${offset} -l $((${CLUSTERSIZE}*${recs_in_blk})) >>/dev/null 2>&1 || {
+			${PUNCH_HOLE_BIN} -f ${ref_filename} -s ${offset} -l $((${CLUSTERSIZE}*${recs_in_blk})) >>${PUNCH_LOG_FILE} 2>&1 || {
 				f_LogMsg ${LOG_FILE} "Punch hole at offset:${offset} failed on ${ref_filename}."
 				return 1
 			}
