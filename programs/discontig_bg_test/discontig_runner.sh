@@ -164,8 +164,13 @@ function f_setup()
 	LOG_DIR=${LOG_DIR:-$DEFAULT_LOG_DIR}
 	${MKDIR_BIN} -p ${LOG_DIR} || exit 1
 	
-	RUN_LOG_FILE="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/`date +%F-%H-\
-%M-%S`-discontig-bg-run.log"
+	if [ -n "${MULTI_TEST}" ];then
+		RUN_LOG_FILE="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/`date +%F-%H-\
+%M-%S`-discontig-bg-multiple-run.log"
+	else
+		RUN_LOG_FILE="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/`date +%F-%H-\
+%M-%S`-discontig-bg-single-run.log"
+	fi
 	LOG_FILE="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/`date +%F-%H-\
 %M-%S`-discontig-bg.log"
         PUNCH_LOG_FILE="`dirname ${LOG_DIR}`/`basename ${LOG_DIR}`/`date +%F-%H-\
