@@ -383,8 +383,12 @@ static void random_unlink(int iters)
 {
 	int i, ret;
 	struct my_dirent *dirent;
+	int count = 0, max_iters = 3 * iters;
 
 	while (iters > 0) {
+		if (count++ > max_iters)
+			break;
+
 		i = get_rand(0, *num_dirents - 1);
 		dirent = &dirents[i];
 
@@ -410,8 +414,12 @@ static void random_fill_empty_entries(int iters)
 {
 	int i, ret, fd;
 	struct my_dirent *dirent;
+	int count = 0, max_iters = 3 * iters;
 
 	while (iters > 0) {
+		if (count++ > max_iters)
+			break;
+
 		i = get_rand(0, *num_dirents - 1);
 		dirent = &dirents[i];
 
@@ -443,6 +451,7 @@ static void random_rename_same_reclen(int iters)
 {
 	int i, ret;
 	struct my_dirent *dirent;
+	int skip = 0;
 
 	while (iters > 0) {
 		i = get_rand(0, *num_dirents - 1);
@@ -467,10 +476,14 @@ static void random_rename_same_reclen(int iters)
 			i = get_rand(0, *num_dirents - 1);
 			dirent = &dirents[i];
 
-			if (is_dot_entry(dirent))
+			if (is_dot_entry(dirent)) {
+				skip = 1;
 				break;
-			if (dirent->name_len == 0)
+			}
+			if (dirent->name_len == 0) {
+				skip = 1;
 				break;
+			}
 
 			strcpy(path, dirent->name);
 			path[0] = 'R';
@@ -478,8 +491,12 @@ static void random_rename_same_reclen(int iters)
 			sprintf(path, "%s/%s", dir_name, dirent->name);
 		}
 
-		dirent->name[0] = 'R';
-		iters--;
+		/* skip to mark this dirent as deleted if we come from while-break above */
+		if (!skip) {
+			dirent->name[0] = 'R';
+			iters--;
+		}
+		skip = 0;
 	}
 }
 
@@ -487,6 +504,7 @@ static void random_deleting_rename(int iters)
 {
 	int i, j, ret;
 	struct my_dirent *dirent1, *dirent2;
+	int skip = 0;
 
 	while (iters--) {
 		i = get_rand(0, *num_dirents - 1);
@@ -515,19 +533,31 @@ static void random_deleting_rename(int iters)
 			dirent1 = &dirents[i];
 			dirent2 = &dirents[j];
 
-			if (dirent1 == dirent2)
+			if (dirent1 == dirent2) {
+				skip = 1;
 				break;
-			if (is_dot_entry(dirent1) || is_dot_entry(dirent2))
+			}
+			if (is_dot_entry(dirent1) || is_dot_entry(dirent2)) {
+				skip = 1;
 				break;
-			if (dirent1->name_len == 0 || dirent2->name_len == 0)
+			}
+			if (dirent1->name_len == 0 || dirent2->name_len == 0) {
+				skip = 1;
 				break;
+			}
 
 			sprintf(path, "%s/%s", dir_name, dirent1->name);
 			sprintf(path1, "%s/%s", dir_name, dirent2->name);
 		}
 
-		dirent2->type = dirent1->type;
-		dirent1->name_len = 0;
+		/* skip to mark this dirent as deleted if we come from while-break above */
+		if (!skip) {
+			dirent2->type = dirent1->type;
+			dirent2->name_len = strlen(dirent2->name);
+
+			dirent1->name_len = 0;
+		}
+		skip = 0;
 	}
 }
 
@@ -825,12 +855,26 @@ static void run_basic_tests(void)
 	if (ret != MPI_SUCCESS)
 		abort_printf("MPI_Barrier failed: %d\n", ret);
 
-	if (rank != 0) {
-		random_deleting_rename(operated_entries);
-		msync(mmap_shared_dirents_region, mmap_dirents_size,
-		      MS_SYNC | MS_INVALIDATE);
-		msync(mmap_shared_num_region, mmap_num_size,
-		      MS_SYNC | MS_INVALIDATE);
+	/* mmap_shared_dirents_region is mmapped to shared file,
+	 * acting like a critical section. So we have to keep nodes
+	 * in line, otherwise we're likely to get false result, eg:
+	 * Node2: rename file1 -> file2
+	 * Node3: rename file3 -> file1
+	 * the record of Node2 may overwrite that of Node3, making
+	 * Node1 wrongly feel that file1 is deleted.
+	 */
+	for (i = 1; i < size; i++) {
+		if (rank == i) {
+			random_deleting_rename(operated_entries);
+			msync(mmap_shared_dirents_region, mmap_dirents_size,
+				MS_SYNC | MS_INVALIDATE);
+			msync(mmap_shared_num_region, mmap_num_size,
+				MS_SYNC | MS_INVALIDATE);
+		}
+
+		ret = MPI_Barrier(MPI_COMM_WORLD);
+		if (ret != MPI_SUCCESS)
+			abort_printf("MPI_Barrier failed: %d\n", ret);
 	}
 
 	ret = MPI_Barrier(MPI_COMM_WORLD);
