@@ -1172,30 +1172,37 @@ for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 
 	if [ "$tc"X = "create_and_open"X -o "$tc"X = "all"X ];then
 		run_create_and_open ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME}
+		continue
 	fi
 
 	if [ "$tc"X = "directaio"X -o "$tc"X = "all"X ];then
 		run_directaio ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
+		continue
 	fi
 
 	if [ "$tc"X = "fillverifyholes"X -o "$tc"X = "all"X ];then
 		run_fillverifyholes ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+		continue
 	fi
 
 	if [ "$tc"X = "renamewriterace"X -o "$tc"X = "all"X ];then
 		run_renamewriterace ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
+		continue
 	fi
 
 	if [ "$tc"X = "aiostress"X -o "$tc"X = "all"X ];then
 		run_aiostress ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
+		continue
 	fi
 
 	if [ "$tc"X = "filesizelimits"X -o "$tc"X = "all"X ];then
 		run_filesizelimits ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
+		continue
 	fi
 
 	if [ "$tc"X = "mmaptruncate"X -o "$tc"X = "all"X ];then
 		run_mmaptruncate ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+		continue
 	fi
 
 	if [ "$tc"X = "buildkernel"X -o "$tc"X = "all"X ];then
@@ -1210,52 +1217,64 @@ for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 		fi
 
 		run_buildkernel ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${KERNELSRC} ${BLOCKSIZE} ${CLUSTERSIZE}
+		continue
 	fi
 
 	if [ "$tc"X = "splice"X -o "$tc"X = "all"X ];then
 		run_splice ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
+		continue
 	fi
 
 	if [ "$tc"X = "sendfile"X -o "$tc"X = "all"X ];then
 		run_sendfile ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
+		continue
 	fi
 
 	if [ "$tc"X = "mmap"X -o "$tc"X = "all"X ];then
 		run_mmap ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME}
+		continue
 	fi
 
 	if [ "$tc"X = "reserve_space"X -o "$tc"X = "all"X ];then
 		run_reserve_space ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE}
+		continue
 	fi
 
 	if [ "$tc"X = "inline"X -o "$tc"X = "all"X ];then
 		run_inline_data ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME}
+		continue
 	fi
 
 	if [ "$tc"X = "xattr"X -o "$tc"X = "all"X ];then
 		run_xattr_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME}
+		continue
 	fi
 
 	if [ "$tc"X = "reflink"X -o "$tc"X = "all"X ];then
 		run_reflink_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME}
+		continue
 	fi
 
 	if [ "$tc"X = "filecheck"X ];then
 		run_filecheck_test ${LOGDIR} ${DEVICE} ${MOUNTPOINT}
+		continue
 	fi
 
 # For tools test.
 
 	if [ "$tc"X = "mkfs"X -o "$tc"X = "all"X ];then
 		run_mkfs ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME}
+		continue
 	fi
 
 	if [ "$tc"X = "tunefs"X -o "$tc"X = "all"X ];then
 		run_tunefs ${LOGDIR} ${DEVICE} ${MOUNTPOINT} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME}
+		continue
 	fi
 
 	if [ "$tc"X = "backup_super"X -o "$tc"X = "all"X ];then
 		run_backup_super ${LOGDIR} ${DEVICE} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME}
+		continue
 	fi
 
 done

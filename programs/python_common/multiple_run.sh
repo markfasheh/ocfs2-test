@@ -523,16 +523,19 @@ for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 	if [ "$tc"X = "xattr"X -o "$tc"X = "all"X ]; then
 		START=$(date +%s)
 		run_xattr_test
+		continue
 	fi
 
 	if [ "$tc"X = "inline"X -o "$tc"X = "all"X ]; then
 		START=$(date +%s)
 		run_inline_test
+		continue
 	fi
 
 	if [ "$tc"X = "reflink"X -o "$tc"X = "all"X ]; then
 		START=$(date +%s)
 		run_reflink_test
+		continue
 	fi
 
 	for BLOCKSIZE in $(echo "$bslist");do
@@ -542,36 +545,43 @@ for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 			if [ "$tc"X = "write_append_truncate"X -o "$tc"X = "all"X ]; then
 				START=$(date +%s)
 				run_write_append_truncate_test
+				continue
 			fi
 
 			if [ "$tc"X = "multi_mmap"X -o "$tc"X = "all"X ]; then
 				START=$(date +%s)
 				run_multi_mmap_test
+				continue
 			fi
 
 			if [ "$tc"X = "create_racer"X -o "$tc"X = "all"X ]; then
 				START=$(date +%s)
 				run_create_racer_test
+				continue
 			fi
 
 			if [ "$tc"X = "flock_unit"X -o "$tc"X = "all"X ]; then
 				START=$(date +%s)
 				run_flock_unit_test
+				continue
 			fi
 
 			if [ "$tc"X = "cross_delete"X -o "$tc"X = "all"X ]; then
 				START=$(date +%s)
 				run_cross_delete_test
+				continue
 			fi
 
 			if [ "$tc"X = "open_delete"X -o "$tc"X = "all"X ]; then
 				START=$(date +%s)
 				run_open_delete_test
+				continue
 			fi
 
 			if [ "$tc"X = "lvb_torture"X -o "$tc"X = "all"X ]; then
 				START=$(date +%s)
 				run_lvb_torture_test
+				continue
 			fi
 		done
 	done
