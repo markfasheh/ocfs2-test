@@ -1189,7 +1189,7 @@ function f_multi_refcount_test()
 
 	f_LogMsg ${LOG_FILE} "Combined multi-refcount&xattr test"
 	f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_REFCOUNT_TEST_BIN} -i 1 -l 10485760 -n 10 -w ${WORK_PLACE} -x 1000"
-	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_REFCOUNT_TEST_BIN} -i 1 -l 10485760 -n 10 -w ${WORK_PLACE} -x 1000>>${LOG_FILE} 2>&1 || {
+	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_REFCOUNT_TEST_BIN} -i 1 -l 10485760 -n 10 -w ${WORK_PLACE} -x 1000 >>${LOG_FILE} 2>&1 || {
 		f_LogMsg ${LOG_FILE} "Combined multi-refcount&xattr test failed."
 	}
 
