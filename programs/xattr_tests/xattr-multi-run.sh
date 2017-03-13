@@ -480,7 +480,7 @@ trap ' : ' SIGTERM
 
 f_setup $*
 
-if [ "$BLOCKSIZE" != "NONE"];then
+if [ "$BLOCKSIZE" != "NONE" ];then
 	bslist="$BLOCKSIZE"
 else
 	bslist="512 4096"
