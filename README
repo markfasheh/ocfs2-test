@@ -20,6 +20,8 @@ ocfs2-tools ocfs2-tools-devel ocfs2-tools-devel-static
 Note:
 For SLE12 later, dev packages(eg. ocfs2-tools-devel) now go into SDK repo. Please add it first, like:
 $sudo zypper ar sdk-repo-url sdk-repo-name
+For SLE12/opensuse, please modify /etc/blkid.conf file as below for multiple nodes test
+EVALUATE=udev ==> EVALUATE=udev,scan
 
 2. Add user "ocfs2test" for all nodes
 
