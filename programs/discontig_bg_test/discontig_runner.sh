@@ -126,11 +126,6 @@ function f_setup()
 	if [ -z "${DEVICE}" ];then
 		f_usage
 	fi	
-
-	# if a symbollink is given, work out the typical device name, like /dev/sda
-	if [ -L ${DEVICE} ];then
-		DEVICE=`readlink -f ${DEVICE}`
-	fi
 	
 	if [ -z "${MOUNT_POINT}" ];then
 		f_usage
@@ -182,13 +177,19 @@ function f_get_disk_usage()
 {
 	local DISK_FREE=
 	local DISK_FREE_M=
+	local DISK_NAME=
+
+	# if a symbollink is given, work out the typical device name, like /dev/sda
+	if [ -L ${DEVICE} ];then
+		DISK_NAME=`readlink -f ${DEVICE}`
+	fi
 
         f_LogMsg ${LOG_FILE} "Calculate the disk total and free size"
 
         DISK_FREE=`df |grep ${MOUNT_POINT}|awk '{print $4}'`
 
         if [ -z "${DISK_FREE}" ]; then
-                DISK_FREE=`df |grep ${DEVICE}|awk '{print $4}'`
+                DISK_FREE=`df |grep ${DISK_NAME}|awk '{print $4}'`
         fi
 
         DISK_FREE_M=`echo ${DISK_FREE}/1024|bc`
