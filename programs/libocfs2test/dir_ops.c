@@ -21,6 +21,7 @@
 #define _XOPEN_SOURCE 600
 #define _LARGEFILE64_SOURCE
 #include "dir_ops.h"
+#include "file_ops.h"
 
 extern unsigned long num_dirents;
 extern struct my_dirent *dirents;
