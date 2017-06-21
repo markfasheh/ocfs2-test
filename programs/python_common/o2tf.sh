@@ -50,6 +50,8 @@ AWK_BIN=`which awk`
 CHOWN_BIN=`which chown`
 CHMOD_BIN=`which chmod`
 
+SUPPORT_SYNC_F=`sync --help | grep -qi "\--file-system" && echo 1 || echo 0`
+
 SUDO="`which sudo` -u root"
 
 USERNAME=`id -un`

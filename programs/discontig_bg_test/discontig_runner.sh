@@ -378,7 +378,7 @@ function f_propagate_xattr_blocks()
 			break
 		}
 
-		sync
+		[ "${SUPPORT_SYNC_F}" -eq "1" ] && sync -f ${WORK_PLACE}/$filename || sync
 
 		for j in $(seq 100);do
 			${SETXATTR} -n user.name${j} -v value${j} ${WORK_PLACE}/${filename} >>${LOG_FILE} 2>&1 || {
@@ -387,7 +387,7 @@ function f_propagate_xattr_blocks()
 				break
 			}
 
-			sync
+			[ "${SUPPORT_SYNC_F}" -eq "1" ] && sync -f ${WORK_PLACE}/$filename || sync
 
 			f_is_xattr_in_block ${WORK_PLACE_DIRENT}/${filename} ${DEVICE} && {
 				break
