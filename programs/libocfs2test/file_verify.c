@@ -32,6 +32,7 @@
 #include <sys/time.h>
 #include <sys/sem.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 
 #include <stdio.h>
 #include <stdlib.h>
