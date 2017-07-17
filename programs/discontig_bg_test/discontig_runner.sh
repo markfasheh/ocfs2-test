@@ -521,7 +521,7 @@ function f_extents_test()
 				if [ $rm_start -ne 10 ]; then
 					f_LogMsg ${LOG_FILE} "Punch hole at offset:${offset} failed, rm addup-${rm_start} and try again."
 					rm -rf ${WORK_PLACE}/extents_testfile_xattr_addup-${rm_start}*
-					sync
+					[ "${SUPPORT_SYNC_F}" -eq "1" ] && sync -f ${filename} || sync
 					rm_start=$(($rm_start+1))
 					continue
 				else

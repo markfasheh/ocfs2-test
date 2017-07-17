@@ -36,6 +36,8 @@ STAT=`which stat`
 USERNAME="`id -un`"
 GROUPNAME="`id -gn`"
 
+SUPPORT_SYNC_F=`sync --help | grep -qi "\--file-system" && echo 1 || echo 0`
+
 BLOCKDEV="`which sudo` -u root `which blockdev`"
 DEVICE=""
 MOUNT_POINT=""
@@ -550,7 +552,7 @@ Enable_Disable_Inline_Data()
                                         #make sure file size less than max_inline_sz
                                         TEST_FILE=${MOUNT_POINT}/TEST_EXTENT_FILE_${FILE_INDEX}
                                         echo "Extent-data-"${FILE_INDEX} >${TEST_FILE}
-                                        sync
+					[ "${SUPPORT_SYNC_F}" -eq "1" ] && sync -f ${TEST_FILE} || sync
                                         ${DEBUGFS_BIN} -n -R "stat /TEST_EXTENT_FILE_${FILE_INDEX}" ${DEVICE}|${GREP} "Dynamic Features"|${GREP} -q "InlineData"
                                         RC=$?
                                         if [ "$RC" -eq "0" ];then
@@ -580,7 +582,7 @@ Enable_Disable_Inline_Data()
                                         #make sure file size less than max_inline_sz
                                         TEST_FILE=${MOUNT_POINT}/TEST_INLINE_FILE_${FILE_INDEX}
                                         echo "Inline-data-"${FILE_INDEX} >${TEST_FILE}
-                                        sync
+					[ "${SUPPORT_SYNC_F}" -eq "1" ] && sync -f ${TEST_FILE} || sync
                                         ${DEBUGFS_BIN} -n -R "stat /TEST_INLINE_FILE_${FILE_INDEX}" ${DEVICE}|${GREP} "Dynamic Features"|${GREP} -q "InlineData"
                                         RC=$?
                                         if [ "$RC" -ne "0" ];then

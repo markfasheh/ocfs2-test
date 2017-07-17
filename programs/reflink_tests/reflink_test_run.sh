@@ -262,7 +262,7 @@ ${orig} ${ref_size}
 		return -1
 	fi
 
-	sync
+	[ "${SUPPORT_SYNC_F}" -eq "1" ] && sync -f ${orig} || sync
 
 	f_LogMsg ${LOG_FILE} "Reflink inode with hole to ${ref_counts} reflinks"
 
@@ -380,7 +380,7 @@ copy to release space"
 		f_LogMsg ${LOG_FILE} "Random Writes(#${i}) in ${offset} Pos"
 		dd if=/dev/random of=${orig_file} seek=${offset} bs=1024 \
 count=$((${RANDOM}/1024)) conv=notrunc>/dev/null 2>&1
-		sync
+		[ "${SUPPORT_SYNC_F}" -eq "1" ] && sync -f ${orig_file} || sync
 
 		f_LogMsg ${LOG_FILE} "Do #${i} reflink and copy"
 		reflink ${orig_file} ${orig_file}.${snap_postfix}${i}

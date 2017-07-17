@@ -54,6 +54,8 @@ MKFS_BIN="`which sudo` -u root `which mkfs.ocfs2`"
 DEBUGFS_BIN="`which sudo` -u root `which debugfs.ocfs2`"
 XATTR_TEST_BIN="`which sudo` -u root ${BINDIR}/xattr-test"
 
+SUPPORT_SYNC_F=`sync --help | grep -qi "\--file-system" && echo 1 || echo 0`
+
 DEFAULT_LOG="xattr-test-logs"
 LOG_OUT_DIR=
 DETAIL_LOG_FILE=
@@ -361,7 +363,7 @@ f_extend_xattr()
 		XATTR_VALUE="${XATTR_VALUE_PREFIX}${i}"
 		${SETXATTR} -n ${XATTR_NAME} -v ${XATTR_VALUE} ${FILENAME} >>${DETAIL_LOG_FILE} 2>&1
 		exit_or_not $?
-		sync
+		[ "${SUPPORT_SYNC_F}" -eq "1" ] && sync -f ${FILENAME} || sync
 
 		if [ "x${EXTEND_TYPE}" = "xblock" ];then
 			f_is_xattr_inlined ${DEBUG_TEST_FILE} ${OCFS2_DEVICE} || {
@@ -389,12 +391,12 @@ f_get_max_inline_size()
 	${TOUCH_BIN} ${TMP_FILE}
 
 	${DD_BIN} if=/dev/zero of=${TMP_FILE} bs=1 count=1 &>/dev/null
-	sync
+	[ "${SUPPORT_SYNC_F}" -eq "1" ] && sync -f ${TMP_FILE} || sync
 
 	MAX_INLINE_DATA=`${DEBUGFS_BIN} -R "stat ${DEBUG_TMP_FILE}" ${OCFS2_DEVICE} | grep -i inline | grep -i data | grep -i max | awk '{print $4}'`
 
 	${SETXATTR} -n "user.test" -v "test" ${TMP_FILE}
-	sync
+	[ "${SUPPORT_SYNC_F}" -eq "1" ] && sync -f ${TMP_FILE} || sync
 
 	MAX_INLINE_XATTR=`${DEBUGFS_BIN} -R "stat ${DEBUG_TMP_FILE}" ${OCFS2_DEVICE} | grep 'Extended Attributes Inline Size' | awk '{print $9}'`
 
@@ -447,7 +449,7 @@ f_combin_test()
 	${SETXATTR} -n "user.small" -v "SMALL" ${TEST_FILE}
 	exit_or_not $?
 
-	sync
+	[ "${SUPPORT_SYNC_F}" -eq "1" ] && sync -f ${TEST_FILE} || sync
 	${DEBUGFS_BIN} -R "xattr ${DEBUG_TEST_FILE}" ${OCFS2_DEVICE}|grep -qi block || {
 		echo "Xattr entry inserted here should be extended into outside block.">>${DETAIL_LOG_FILE}
 		return 1
@@ -457,7 +459,7 @@ f_combin_test()
 	${SETXATTR} -n "user.small" -v "SMALL" ${TEST_FILE}
 	exit_or_not $?
 
-	sync
+	[ "${SUPPORT_SYNC_F}" -eq "1" ] && sync -f ${TEST_FILE} || sync
 	${DEBUGFS_BIN} -R "stat ${DEBUG_TEST_FILE}" ${OCFS2_DEVICE}|grep -qi InlineXattr || {
 		echo "Xattr entry inserted here should be inlined.">>${DETAIL_LOG_FILE}
 		return 1
@@ -475,7 +477,7 @@ f_combin_test()
 	${DD_BIN} if=/dev/zero of=${TEST_FILE} bs=1 count=$((${MAX_INLINE_DATA}-${MAX_INLINE_XATTR})) 2>>${DETAIL_LOG_FILE} >/dev/null
 	echo "a" >> ${TEST_FILE}
 
-	sync
+	[ "${SUPPORT_SYNC_F}" -eq "1" ] && sync -f ${TEST_FILE} || sync
 	${DEBUGFS_BIN} -R "stat ${DEBUG_TEST_FILE}" ${OCFS2_DEVICE}|grep -qi InlineData && {
 		echo "Inline data should not invade reserved inline-xattr space.xxxxx">>${DETAIL_LOG_FILE}
 		return 1
@@ -489,7 +491,7 @@ f_combin_test()
 
 	${DD_BIN} if=/dev/zero of=${TEST_FILE} bs=$((${MAX_INLINE_DATA}-${MAX_INLINE_XATTR}+1))  count=1 2>>${DETAIL_LOG_FILE} >/dev/null
 
-	sync
+	[ "${SUPPORT_SYNC_F}" -eq "1" ] && sync -f ${TEST_FILE} || sync
 	${DEBUGFS_BIN} -R "stat ${DEBUG_TEST_FILE}" ${OCFS2_DEVICE}|grep -qi InlineData && {
 		echo "Inline data should not invade a reserved inline-xattr space.">>${DETAIL_LOG_FILE}
 		return 1
@@ -507,7 +509,7 @@ f_combin_test()
 	${DD_BIN} if=/dev/zero of=${TEST_FILE} bs=1 count=$((${MAX_INLINE_DATA}-${MAX_INLINE_XATTR}+1)) 2>>${DETAIL_LOG_FILE} >/dev/null
 	exit_or_not $?
 
-	sync
+	[ "${SUPPORT_SYNC_F}" -eq "1" ] && sync -f ${TEST_FILE} || sync
 	${DEBUGFS_BIN} -R "stat ${DEBUG_TEST_FILE}" ${OCFS2_DEVICE}|grep -i InlineData && {
 		echo "Inline data should not invade reserved inline-xattr space.yyyy">>${DETAIL_LOG_FILE}
 		retun 1
