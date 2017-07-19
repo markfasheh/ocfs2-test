@@ -231,6 +231,41 @@ Change_Volume_Label()
 	fi;
 }
 #
+# Change_Append-dio_Feature - Test append-dio feature Change
+#
+Change_Append-dio_Feature()
+{
+        LogMsg "tunefs_test : Testing Append-dio Feature change"
+	(( ++NUM_OF_TESTS ))
+	Set_Volume_For_Test ${BLKCNT1};
+	CURRENT_TEST="Disable Append-dio Feature";
+	echo "y"|${TUNEFS_BIN} --fs-features=noappend-dio ${DEVICE} 2>&1 >> ${TUNEFSLOG};
+	Check_Volume;
+	${DEBUGFS_BIN} -n -R "stats" ${DEVICE} >>${TUNEFSLOG} 2>&1
+	${DEBUGFS_BIN} -n -R "stats" ${DEVICE}|${GREP} -i "Feature Incompat"|${GREP} -q "append-dio"
+	RC=$?
+	if [ "${RC}" != "0" ]; then
+	   test_pass;
+	else
+	   test_fail;
+	   LogMsg "tunefs_test : Disable Append-dio Feature failed."
+	fi;
+#
+	CURRENT_TEST="Enable Append-dio Feature";
+	(( ++NUM_OF_TESTS ))
+	echo "y"|${TUNEFS_BIN} --fs-features=append-dio ${DEVICE} 2>&1 >> ${TUNEFSLOG};
+	Check_Volume;
+	${DEBUGFS_BIN} -n -R "stats" ${DEVICE} >>${TUNEFSLOG} 2>&1
+	${DEBUGFS_BIN} -n -R "stats" ${DEVICE}|${GREP} -i "Feature Incompat"|${GREP} -q "append-dio"
+	RC=$?
+	if [ "${RC}" != "0" ]; then
+	   test_fail;
+	   LogMsg "tunefs_test : Enable Append-dio Feature failed."
+	else
+	   test_pass;
+	fi;
+}
+#
 # Test_Query - Test query option
 #
 Test_Query()
@@ -718,6 +753,8 @@ LogMsg "\ntunefs_test: Starting test \c"
 LogMsg "(`date +%F-%H-%M-%S`)\n\n"
 
 Test_Query
+
+Change_Append-dio_Feature
 
 Change_Volume_Label
 
