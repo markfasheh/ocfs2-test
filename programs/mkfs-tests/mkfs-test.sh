@@ -506,6 +506,32 @@ do_fsck ${OUT}
 testnum=$[$testnum+1]
 
 
+### Test option '--fs-features=append-dio'
+TAG=mkfs_test_${testnum}
+OUT=${outdir}/${TAG}.log
+if [ -f ${OUT} ]; then
+        rm -f ${OUT};
+fi;
+echo "Test ${testnum}: --fs-features=append-dio" |tee -a ${LOGFILE}
+label="Oracle_Home"
+echo -n "mkfs ..... " |tee -a ${LOGFILE}
+${MKFS} --fs-features=append-dio -x -F -b 4K -C 4K -N 2 -L ${label} ${device} --cluster-stack=${S} --cluster-name=${N} 262144 >>${OUT} 2>&1
+echo "OK" |tee -a ${LOGFILE}
+echo -n "verify ..... " |tee -a ${LOGFILE}
+${DEBUGFS} -R "stats" ${device} >>${OUT} 2>&1
+${DEBUGFS} -R "stats" ${device}|${GREP} -i "Feature Incompat"|${GREP} -q "append-dio"
+RC=$?
+if [ "${RC}" != "0" ]; then
+    echo "ERROR: Did not find append-dio Flag on superblock " >> ${OUT}
+    echo "" >> ${OUT}
+    echo "FAILED. Errors in ${OUT}" |tee -a ${LOGFILE}
+else
+    echo "OK" |tee -a ${LOGFILE}
+fi
+do_fsck ${OUT}
+testnum=$[$testnum+1]
+
+
 ### Test default support for sparse file'
 TAG=mkfs_test_${testnum}
 OUT=${outdir}/${TAG}.log
