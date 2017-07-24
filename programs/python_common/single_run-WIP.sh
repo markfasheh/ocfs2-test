@@ -998,6 +998,35 @@ run_filecheck_test()
 	log_end ${RC}
 }
 
+run_fsck()
+{
+	#${LOGDIR} ${DEVICE} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME} ${MOUNTPOINT}
+	log_start "run_fsck" $@
+	echo $#
+	if [ "$#" -lt "7" ]; then
+		echo "Error in run_fsck()"
+		exit 1
+	fi
+
+	logdir=$1
+	device=$2
+	block_size=$3
+	cluster_size=$4
+	mount_point=$7
+
+	mount_opts="defaults"
+	features="sparse,metaecc,inline-data"
+
+	do_format ${block_size} ${cluster_size} ${features} ${device}
+	
+	do_mount ${device} ${mount_point} ${mount_opts}
+
+	echo debugfs_test.py --log-dir=${logdir} --block-size=${block_size} --cluster-size=${cluster_size} --cluster-stack=${cluster_stack} \
+			--cluster-name=${cluster_name} --mount-point=${mount_point} ${device}
+	do_umount ${mount_point}
+	RC=$?
+	log_end ${RC}
+}
 
 # Following cases aim to test tools
 run_mkfs()
@@ -1064,6 +1093,39 @@ run_backup_super()
 	RC=$?
 	log_end ${RC}
 }
+
+run_debugfs()
+{
+	#${LOGDIR} ${DEVICE} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME} ${MOUNTPOINT}
+	log_start "run_debugfs" $@
+	echo $#
+	if [ "$#" -lt "7" ]; then
+		echo "Error in run_debugfs()"
+		exit 1
+	fi
+
+	logdir=$1
+	device=$2
+	block_size=$3
+	cluster_size=$4
+	cluster_stack=$5
+	cluster_name=$6
+	mount_point=$7
+
+	mount_opts="defaults"
+	features="sparse,metaecc,inline-data"
+
+	do_format ${block_size} ${cluster_size} ${features} ${device}
+	
+	do_mount ${device} ${mount_point} ${mount_opts}
+
+	debugfs_test.py --log-dir=${logdir} --block-size=${block_size} --cluster-size=${cluster_size} --cluster-stack=${cluster_stack} \
+			--cluster-name=${cluster_name} --mount-point=${mount_point} ${device}
+	do_umount ${mount_point}
+	RC=$?
+	log_end ${RC}
+}
+
 
 #
 #
@@ -1147,7 +1209,7 @@ fi
 
 SUPPORTED_TESTCASES="all create_and_open directaio fillverifyholes renamewriterace aiostress\
   filesizelimits mmaptruncate buildkernel splice sendfile mmap reserve_space inline xattr\
-  reflink mkfs tunefs backup_super filecheck"
+  reflink mkfs tunefs backup_super filecheck debugfs fsck"
 for cas in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 	echo ${SUPPORTED_TESTCASES} | grep -sqw $cas
 	if [ $? -ne 0 ]; then
@@ -1274,6 +1336,16 @@ for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 
 	if [ "$tc"X = "backup_super"X -o "$tc"X = "all"X ];then
 		run_backup_super ${LOGDIR} ${DEVICE} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME}
+		continue
+	fi
+
+	if [ "$tc"X = "debugfs"X -o "$tc"X = "all"X ];then
+		run_debugfs ${LOGDIR} ${DEVICE} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME} ${MOUNTPOINT}
+		continue
+	fi
+
+	if [ "$tc"X = "fsck"X -o "$tc"X = "all"X ];then
+		run_fsck ${LOGDIR} ${DEVICE} ${BLOCKSIZE} ${CLUSTERSIZE} ${CLUSTER_STACK} ${CLUSTER_NAME} ${MOUNTPOINT}
 		continue
 	fi
 
