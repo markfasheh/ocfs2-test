@@ -154,7 +154,7 @@ def CreateDir(DEBUGON, dirl, logfile):
 				printlog('o2tf.CreateDir: Directory '+
 					'%s does not exist. Creating it.' % \
 					dirlist[i], logfile, 0, '')
-			os.makedirs(dirlist[i],0755)
+			os.makedirs(dirlist[i],0o755)
 		if DEBUGON:
 			printlog('o2tf.CreateDir: Ended.',
 				logfile, 0, '')
