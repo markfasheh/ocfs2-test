@@ -4,6 +4,7 @@
 APP=`basename ${0}`
 PATH=$PATH:`dirname ${0}`:/sbin
 RUNTIME=300			# seconds
+OCFS2TEST_FASTMODE=0 # if fastmode is enabled, to reduce the test running time
 
 AWK=`which awk`
 CAT=`which cat`
@@ -570,7 +571,7 @@ run_mmaptruncate()
 	device=$2
 	mountpoint=$3
 
-	runtime=300
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && runtime=30 || runtime=300
 	workfile=${mountpoint}/mmaptruncate.txt
 	varfile=${logdir}/mmaptruncate.conf
 
@@ -1136,12 +1137,12 @@ run_debugfs()
 usage()
 {
 	${ECHO} "usage: ${APP} [-k kerneltarball] -m mountpoint -l logdir -d device [-t testcases] [-b blocksize] \
-[-c clustersize] [-s cluster-stack] [-n cluster-name]"
+[-c clustersize] [-s cluster-stack] [-n cluster-name] [-f 1/0]"
 	exit 1
 }
 
 
-while getopts "d:m:k:l:t:b:c:s:n:h?" args
+while getopts "d:m:k:l:t:b:c:s:n:f:h?" args
 do
 	case "$args" in
 		d) DEVICE="$OPTARG";;
@@ -1153,10 +1154,13 @@ do
 		c) CLUSTERSIZE="$OPTARG";;
 		s) CLUSTER_STACK="$OPTARG";;
 		n) CLUSTER_NAME="$OPTARG";;
+		f) OCFS2TEST_FASTMODE="$OPTARG";;
 		h) usage;;
     		?) usage;;
   	esac
 done
+
+export OCFS2TEST_FASTMODE
 
 if [ -z ${DEVICE} ] ; then
 	${ECHO} "ERROR: No device"
@@ -1226,7 +1230,7 @@ LOGFILE=${LOGDIR}/single_run.log
 do_mkdir ${LOGDIR}
 
 STARTRUN=$(date +%s)
-log_message "*** Start Single Node test ***"
+log_message "*** Start Single Node test (fastmode=${OCFS2TEST_FASTMODE}) ***"
 
 ${ECHO} "Output log is ${LOGFILE}"
 
