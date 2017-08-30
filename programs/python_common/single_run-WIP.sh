@@ -367,7 +367,11 @@ run_aiostress()
 
 		outlog=${logdir}/aiostress_${mopt}.log
 
-		aio-stress -a 4k -b 32 -i 16 -O -l -L -t 8 -v ${F1} ${F2} ${F3} ${F4} >${outlog} 2>&1
+		if [ ${OCFS2TEST_FASTMODE} -eq 1 ] ; then
+			aio-stress -s 128 -a 4k -b 8 -i 4 -O -l -L -t 4 -v ${F1} ${F2} ${F3} ${F4} >${outlog} 2>&1
+		else
+			aio-stress -a 4k -b 32 -i 16 -O -l -L -t 8 -v ${F1} ${F2} ${F3} ${F4} >${outlog} 2>&1
+		fi
 		RC=$?
 
 		do_umount ${mountpoint}
