@@ -998,7 +998,7 @@ f_runtest()
         ${RM} -rf ${WORKPLACE}/* || exit 1
 	((TEST_PASS++))
 	
-	
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && filenums=5 || filenums=100
 	((TEST_NO++))
 	echo >>${DETAIL_LOG_FILE}
         echo "==========================================================">>${DETAIL_LOG_FILE}
@@ -1006,14 +1006,15 @@ f_runtest()
         echo -ne "[${TEST_NO}] Launch Multiple Files SingleNode Xattr Test on Ocfs2:">>${DETAIL_LOG_FILE}
         echo >>${DETAIL_LOG_FILE}
         echo "==========================================================">>${DETAIL_LOG_FILE}
-        echo -e "Testing Binary:\t\t${XATTR_TEST_BIN} -i 1 -x 500 -n user -t normal -l 20 -s 800 -f 100 -r ${WORKPLACE}">>${DETAIL_LOG_FILE}
-	${XATTR_TEST_BIN}  -i 1 -x 500 -n user -t normal -l 20 -s 800 -f 100 -r  ${WORKPLACE} >>${DETAIL_LOG_FILE} 2>&1
+        echo -e "Testing Binary:\t\t${XATTR_TEST_BIN} -i 1 -x 500 -n user -t normal -l 20 -s 800 -f ${filenums} -r ${WORKPLACE}">>${DETAIL_LOG_FILE}
+	${XATTR_TEST_BIN}  -i 1 -x 500 -n user -t normal -l 20 -s 800 -f ${filenums} -r  ${WORKPLACE} >>${DETAIL_LOG_FILE} 2>&1
         RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
         ${RM} -rf ${WORKPLACE}/* || exit 1
 	((TEST_PASS++))
 
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && return # do not run stress test in fastmode
 
 	((TEST_NO++))
 	echo >>${DETAIL_LOG_FILE}
