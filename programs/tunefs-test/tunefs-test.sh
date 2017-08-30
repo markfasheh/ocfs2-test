@@ -549,6 +549,8 @@ Enable_Disable_Inline_Data()
         local FILE_NUM=1000
         local TEST_FILE
 
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && FILE_NUM=10 # reduce running time in fastmode
+
         O_BLOCKSIZE=${BLOCKSIZE}
         O_CLUSTERSIZE=${CLUSTERSIZE}
 
