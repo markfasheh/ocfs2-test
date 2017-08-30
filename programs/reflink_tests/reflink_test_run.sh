@@ -409,6 +409,14 @@ for #${j} reflink and copy"
 
 function f_runtest()
 {
+	local refiters=1
+	local refcouts=10
+	local reftrees=10
+	local refholes=500
+	local reffszie=1638400
+
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && { refcouts=2; reftrees=2; }
+
 	if [ -n "${VERI_TEST}" ];then
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Verify Test After Desctruction :"
@@ -416,8 +424,8 @@ function f_runtest()
 	RET=$?
 	f_exit_or_not ${RET}
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Verify Test After Desctruction, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 10 -p 10 -l 1638400 -d ${DEVICE} -w ${WORK_PLACE} -v ${VERI_LOG} "
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -p 10 -l 1638400 -d ${DEVICE} -w \
+${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -p ${reftrees} -l ${reffszie} -d ${DEVICE} -w ${WORK_PLACE} -v ${VERI_LOG} "
+	${SUDO} ${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -p ${reftrees} -l ${reffszie} -d ${DEVICE} -w \
 ${WORK_PLACE} -v ${VERI_LOG} >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -444,20 +452,22 @@ ${DEVICE} "refcount,xattr" ${JOURNALSIZE} ${BLOCKS} ${CLUSTER_STACK} ${CLUSTER_N
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Destructive Test For DirectIO:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Destructive Test For DirectIO, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 10 -p 10 -l 1638400 -d ${DEVICE} -w ${WORK_PLACE} \
+${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -p ${reftrees} -l ${reffszie} -d ${DEVICE} -w ${WORK_PLACE} \
 -D 10 -a ${LISTENER_ADDR} -P ${LISTENER_PORT} "
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -p 10 -l 1638400 -d ${DEVICE} -w \
+	${SUDO} ${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -p ${reftrees} -l ${reffszie} -d ${DEVICE} -w \
 ${WORK_PLACE} -D 10 -a ${LISTENER_ADDR} -P ${LISTENER_PORT} >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
 	exit ${RET}
 	fi
 
+	reffszie=104857600
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && { reffszie=1638400; }
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Basic Fucntional Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Basic Fucntional Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -f ${AIO_OPT}"
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} -w \
+${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -d ${DEVICE} -w ${WORK_PLACE} -f ${AIO_OPT}"
+	${SUDO} ${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -d ${DEVICE} -w \
 ${WORK_PLACE} -f ${AIO_OPT} >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -472,8 +482,8 @@ ${WORK_PLACE} -f ${AIO_OPT} >>${LOG_FILE} 2>&1
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Random Refcount Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Random Refcount Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -f -r ${AIO_OPT}"
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} -w \
+${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -d ${DEVICE} -w ${WORK_PLACE} -f -r ${AIO_OPT}"
+	${SUDO} ${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -d ${DEVICE} -w \
 ${WORK_PLACE} -r ${AIO_OPT} >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -488,8 +498,8 @@ ${WORK_PLACE} -r ${AIO_OPT} >>${LOG_FILE} 2>&1
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Mmap Refcount Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Mmap Refcount Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -m"
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} -w \
+${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -d ${DEVICE} -w ${WORK_PLACE} -m"
+	${SUDO} ${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -d ${DEVICE} -w \
 ${WORK_PLACE} -m >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -505,7 +515,7 @@ ${WORK_PLACE} -m >>${LOG_FILE} 2>&1
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Boundary Refcount Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Boundary Refcount Test, CMD:${SUDO} \
 ${REFLINK_TEST_BIN} -i 1 -d ${DEVICE} -w ${WORK_PLACE} -b"
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -d ${DEVICE} -w \
+	${SUDO} ${REFLINK_TEST_BIN} -i ${refiters} -d ${DEVICE} -w \
 ${WORK_PLACE} -b >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -520,9 +530,9 @@ ${WORK_PLACE} -b >>${LOG_FILE} 2>&1
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Concurrent Refcount Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Concurrent Refcount Test, \
-CMD:${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} \
+CMD:${SUDO} ${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -d ${DEVICE} \
 -w ${WORK_PLACE} -c 100 "
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} -w \
+	${SUDO} ${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -d ${DEVICE} -w \
 ${WORK_PLACE} -c 100 >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -537,8 +547,8 @@ ${WORK_PLACE} -c 100 >>${LOG_FILE} 2>&1
 	((TEST_NO++))
         f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] O_DIRECT Refcount Test:"
         f_LogMsg ${LOG_FILE} "[${TEST_NO}] O_DIRECT Refcount Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} -w ${WORK_PLACE} -O ${AIO_OPT}"
-        ${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 104857600 -d ${DEVICE} -w \
+${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -d ${DEVICE} -w ${WORK_PLACE} -O ${AIO_OPT}"
+        ${SUDO} ${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -d ${DEVICE} -w \
 ${WORK_PLACE} -O ${AIO_OPT} >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -550,13 +560,15 @@ ${WORK_PLACE} -O ${AIO_OPT} >>${LOG_FILE} 2>&1
         RET=$?
         f_exit_or_not ${RET}
 
+
+	reffszie=3276800
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Verificationl CoW Test On \
 Punching Holes:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Verification CoW Test On Punching \
-Holes, CMD:${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 3276800 -d ${DEVICE} \
+Holes, CMD:${SUDO} ${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -d ${DEVICE} \
 -w ${WORK_PLACE} -H "
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 3276800 -d ${DEVICE} -w \
+	${SUDO} ${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -d ${DEVICE} -w \
 ${WORK_PLACE} -H >>${LOG_FILE} 2>&1
 	RET=$?
 	f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -572,9 +584,9 @@ ${WORK_PLACE} -H >>${LOG_FILE} 2>&1
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Verificationl CoW Test On \
 Truncating:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Verification CoW Test On Truncating\
-, CMD:${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 3276800 -d ${DEVICE} \
+, CMD:${SUDO} ${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -d ${DEVICE} \
 -w ${WORK_PLACE} -T "
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l 3276800 -d ${DEVICE} -w \
+	${SUDO} ${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -d ${DEVICE} -w \
 ${WORK_PLACE} -T >>${LOG_FILE} 2>&1
 	RET=$?
 	f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -586,6 +598,9 @@ ${WORK_PLACE} -T >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
 
+	refcouts=20
+	reffszie=10485760
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && { refcouts=2; }
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Bash & Tools Utility Test:"
 	f_reflink_bash_utils_test 100 104857600 >>${LOG_FILE} 2>&1
@@ -602,27 +617,33 @@ ${WORK_PLACE} -T >>${LOG_FILE} 2>&1
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Filling&Verify holes Refcount Test:"
 	f_LogMsg ${LOG_FILE} "Fill&Verify holes on original file:"
-	f_fill_and_verify_holes  10 10485760 1000 >>${LOG_FILE} 2>&1
+	if [ ${OCFS2TEST_FASTMODE} -eq 1 ] ; then
+		f_fill_and_verify_holes  2 10485760 10 >>${LOG_FILE} 2>&1
+	else
+		f_fill_and_verify_holes  10 10485760 1000 >>${LOG_FILE} 2>&1
+	fi
         RET=$?
         f_exit_or_not ${RET}
         ${RM_BIN} -rf ${WORK_PLACE}/* >>${LOG_FILE} 2>&1
 	${RM_BIN} -rf ${VERIFY_HOLES_LOG_FILE}*
+
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && { refholes=10; }
 	f_LogMsg ${LOG_FILE} "Fill&Verify holes on reflinks:"
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 20 -l 10485760 -d ${DEVICE} -w \
-${WORK_PLACE} -h 500 -o ${VERIFY_HOLES_LOG_FILE} >>${LOG_FILE} 2>&1
+	${SUDO} ${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -d ${DEVICE} -w \
+${WORK_PLACE} -h ${refholes} -o ${VERIFY_HOLES_LOG_FILE} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
-	f_verify_reflinks_holes 20 >>${LOG_FILE} 2>&1
+	f_verify_reflinks_holes ${refcouts} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
 	${RM_BIN} -rf ${WORK_PLACE}/* >>${LOG_FILE} 2>&1
 	${RM_BIN} -rf ${VERIFY_HOLES_LOG_FILE}*
 	f_LogMsg ${LOG_FILE} "Fill&Verify holes(mmap) on reflinks:"
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 20 -l 10485760 -d ${DEVICE} -w \
-${WORK_PLACE} -h 500 -m -o ${VERIFY_HOLES_LOG_FILE} >>${LOG_FILE} 2>&1
+	${SUDO} ${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -d ${DEVICE} -w \
+${WORK_PLACE} -h ${refholes} -m -o ${VERIFY_HOLES_LOG_FILE} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_exit_or_not ${RET}
-	f_verify_reflinks_holes 20 >>${LOG_FILE} 2>&1
+	f_verify_reflinks_holes ${refcouts} >>${LOG_FILE} 2>&1
 	RET=$?
 	f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
 	f_exit_or_not ${RET}
@@ -636,7 +657,11 @@ ${WORK_PLACE} -h 500 -m -o ${VERIFY_HOLES_LOG_FILE} >>${LOG_FILE} 2>&1
 
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] OracleVM Data Integrity Test:"
-	f_ovmtest 1000 3 >>${LOG_FILE} 2>&1
+	if [ ${OCFS2TEST_FASTMODE} -eq 1 ] ; then
+		f_ovmtest 1000 1 >>${LOG_FILE} 2>&1
+	else
+		f_ovmtest 1000 3 >>${LOG_FILE} 2>&1
+	fi
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
         f_exit_or_not ${RET}
@@ -647,12 +672,14 @@ ${WORK_PLACE} -h 500 -m -o ${VERIFY_HOLES_LOG_FILE} >>${LOG_FILE} 2>&1
         RET=$?
         f_exit_or_not ${RET}
 
+	refcouts=10
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && { refcouts=2; }
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Inline-data Refcount Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Inline-data Refcount Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 10 -l $((${BLOCKSIZE}-200)) -d ${DEVICE} -w ${WORK_PLACE} \
+${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l $((${BLOCKSIZE}-200)) -d ${DEVICE} -w ${WORK_PLACE} \
 -I "
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 10 -l $((${BLOCKSIZE}-200)) -d ${DEVICE} -w \
+	${SUDO} ${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l $((${BLOCKSIZE}-200)) -d ${DEVICE} -w \
 ${WORK_PLACE} -I >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -664,12 +691,15 @@ ${WORK_PLACE} -I >>${LOG_FILE} 2>&1
         RET=$?
         f_exit_or_not ${RET}
 
+	refcouts=50
+	reffszie=10485760
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && { refcouts=5; }
 	((TEST_NO++))
 	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Xattr Refcount Test:"
 	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Xattr Refcount Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 50 -l 10485760 -d ${DEVICE} -w ${WORK_PLACE} \
+${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -d ${DEVICE} -w ${WORK_PLACE} \
 -x 5000 "
-	${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 50 -l 10485760 -d ${DEVICE} -w \
+	${SUDO} ${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -d ${DEVICE} -w \
 ${WORK_PLACE} -x 5000 >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
@@ -681,12 +711,17 @@ ${WORK_PLACE} -x 5000 >>${LOG_FILE} 2>&1
         RET=$?
         f_exit_or_not ${RET}
 
+	refcouts=100
+	reffszie=2048576000
+	reftrees=20000
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && { refcouts=10; reffszie=20485760; reftrees=20; }
+
 	((TEST_NO++))
         f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Stress Refcount Test:"
         f_LogMsg ${LOG_FILE} "[${TEST_NO}] Stress Refcount Test, CMD:${SUDO} \
-${REFLINK_TEST_BIN} -i 1 -n 100 -l 2048576000 -p 20000 -d ${DEVICE} -w \
+${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -p ${reftrees} -d ${DEVICE} -w \
 ${WORK_PLACE} -s "
-        ${SUDO} ${REFLINK_TEST_BIN} -i 1 -n 100 -l 2048576000 -p 20000 -d \
+        ${SUDO} ${REFLINK_TEST_BIN} -i ${refiters} -n ${refcouts} -l ${reffszie} -p ${reftrees} -d \
 ${DEVICE} -w ${WORK_PLACE} -s >>${LOG_FILE} 2>&1
         RET=$?
         f_echo_status ${RET} | tee -a ${RUN_LOG_FILE}
