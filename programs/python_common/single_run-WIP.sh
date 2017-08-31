@@ -559,6 +559,8 @@ EOF
 		log_end ${RC}
 
 		i=$[$i+1]
+
+		[ ${OCFS2TEST_FASTMODE} -eq 1 ] && break # only run one time in fastmode
 	done
 }
 
@@ -614,6 +616,8 @@ EOF
 		do_umount ${mountpoint}
 
 		log_end ${RC}
+
+		[ ${OCFS2TEST_FASTMODE} -eq 1 ] && break # only run one time in fastmode
 	done
 }
 
