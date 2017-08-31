@@ -182,6 +182,8 @@ function f_get_disk_usage()
 	# if a symbollink is given, work out the typical device name, like /dev/sda
 	if [ -L ${DEVICE} ];then
 		DISK_NAME=`readlink -f ${DEVICE}`
+	else
+		DISK_NAME=${DEVICE}
 	fi
 
         f_LogMsg ${LOG_FILE} "Calculate the disk total and free size"
