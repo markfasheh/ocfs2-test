@@ -37,6 +37,7 @@ INLINE_DIRS_TEST_BIN="`which sudo` -u root ${BINDIR}/inline-dirs"
 REFLINK_BIN="`which reflink`"
 SETXATTR="`which sudo` -u root `which setfattr`"
 
+OCFS2TEST_FASTMODE=0 # if fastmode is enabled, to reduce the test running time
 DEFAULT_LOG_DIR=${O2TDIR}/log
 LOG_DIR=
 RUN_LOG_FILE=
@@ -68,7 +69,7 @@ MPI_BTL_IF_ARG=
 function f_usage()
 {
     echo "usage: `basename ${0}` <-d device> [-o logdir] [-m multi_hosts] [-a access_method] \
-[-b block_size] [-c cluster_size] <-s cluster stack> <-n cluster name> <mount point>"
+[-b block_size] [-c cluster_size] [-f 1/0] <-s cluster stack> <-n cluster name> <mount point>"
     exit 1;
 
 }
@@ -80,7 +81,7 @@ function f_getoptions()
 		exit 1
 	fi
 	
-	while getopts "hd:o:m:a:b:c:s:n:" options; do
+	while getopts "hd:o:m:a:b:c:s:n:f:" options; do
 		case $options in
 		d ) DEVICE="$OPTARG";;
 		o ) LOG_DIR="$OPTARG";;
@@ -91,6 +92,7 @@ function f_getoptions()
                 c ) CLUSTERSIZE="$OPTARG";;
                 s ) CLUSTER_STACK="$OPTARG";;
                 n ) CLUSTER_NAME="$OPTARG";;
+		f ) OCFS2TEST_FASTMODE="$OPTARG";;
 		h ) f_usage
 			exit 1;;
 		* ) f_usage
@@ -122,7 +124,9 @@ function f_verify_hosts()
 function f_setup()
 {
 	f_getoptions $*
-	
+
+	export OCFS2TEST_FASTMODE
+
 	if [ -z "${DEVICE}" ];then
 		f_usage
 	fi	
@@ -313,6 +317,8 @@ function f_inodes_test()
 	f_umount ${LOG_FILE} ${MOUNT_POINT}
 	RET=$?
 	f_exit_or_not ${RET}
+
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && return # do not run stress test in fastmode
 
 	f_LogMsg ${LOG_FILE} "[*] Activate inode discontig-bg on ${DEVICE}"
 	${DISCONTIG_ACTIVATE_BIN} -t inode -r 4096 -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
@@ -1290,9 +1296,9 @@ else
        cslist=${CLUSTERSIZE}
 fi
 
-f_LogRunMsg ${RUN_LOG_FILE} "=====================Discontiguous block group test starts:  `date`\
+f_LogRunMsg ${RUN_LOG_FILE} "=====================Discontiguous block group test starts(fastmode=${OCFS2TEST_FASTMODE}):  `date`\
 =====================\n"
-f_LogMsg ${LOG_FILE} "=====================Discontiguous block groups tests start:  `date`\
+f_LogMsg ${LOG_FILE} "=====================Discontiguous block group test starts(fastmode=${OCFS2TEST_FASTMODE}):  `date`\
 ====================="
 
 for BLOCKSIZE in $(echo "$bslist");do
