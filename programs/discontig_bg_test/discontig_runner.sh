@@ -407,6 +407,8 @@ function f_propagate_xattr_blocks()
 		fi
 
 		((i++))
+
+		[ ${OCFS2TEST_FASTMODE} -eq 1 ] && { RET=1; break; }
 	done
 
 	return $RET
@@ -430,6 +432,8 @@ function f_update_xattr_blocks()
 		}
 
 		((i++))
+
+		[ ${OCFS2TEST_FASTMODE} -eq 1 ] && { RET=1; break; }
 	done
 
 	return $RET
@@ -469,7 +473,11 @@ function f_extents_test()
 	f_LogMsg ${LOG_FILE} "Fill up volumes by spreading extents from discontig-bg."
 	disk_free_m=`f_get_disk_usage`
 
-	filesize=$(((${disk_free_m}-40)*1024*1024/2))
+	if [ ${OCFS2TEST_FASTMODE} -eq 1 ] ; then
+		filesize=$(((${disk_free_m}-40)*1024*1024/200))
+	else
+		filesize=$(((${disk_free_m}-40)*1024*1024/2))
+	fi
 
 	f_LogMsg ${LOG_FILE} "Fill up volumes by extents(filesize = $filesize), free space is ${disk_free_m}."
 	f_LogMsg ${LOG_FILE} "CMD: ${GEN_EXTENTS_BIN} -f ${filename} -l ${filesize} -c ${CLUSTERSIZE} -k 1"
@@ -614,12 +622,14 @@ function f_inline_test()
 
 	${SUDO} ${RM_BIN} -rf ${MOUNT_POINT}/inline-data-test
 
+	if [ ${OCFS2TEST_FASTMODE} -eq 0 ] ; then # do not run stress test in fastmode
 	f_LogMsg ${LOG_FILE} "Stress inline-file test."
 	${INLINE_DATA_TEST_BIN} -i 10 -c 50 -m 100 -d ${DEVICE} ${MOUNT_POINT}>>${LOG_FILE} 2>&1 || {
 		return 1
 	}
 	
 	${SUDO} ${RM_BIN} -rf ${MOUNT_POINT}/inline-data-test
+	fi
 
 	f_LogMsg ${LOG_FILE} "Regular inline-dir test."
 	${INLINE_DIRS_TEST_BIN} -i 1 -s 20 -d ${DEVICE} ${MOUNT_POINT}>>${LOG_FILE} 2>&1 || {
@@ -650,6 +660,7 @@ function f_inline_test()
 
 function f_xattr_test()
 {
+	local filenums=
 	f_LogMsg ${LOG_FILE} "[*] Activate extent discontig-bg on ${DEVICE}"
 	${DISCONTIG_ACTIVATE_BIN} -t extent -r 10240 -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
 	RET=$?
@@ -663,35 +674,39 @@ function f_xattr_test()
 	WORK_PLACE=${MOUNT_POINT}/${WORK_PLACE_DIRENT}
 	${MKDIR_BIN} -p ${WORK_PLACE}
 
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && filenums=5 || filenums=500
 	f_LogMsg ${LOG_FILE} "Stress xattr filling-up test with multiple processes."
-	f_LogMsg ${LOG_FILE} "CMD: ${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 50 -s 150 -f 500 -r -k ${WORK_PLACE}"
-	${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 50 -s 150 -f 500 -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
+	f_LogMsg ${LOG_FILE} "CMD: ${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 50 -s 150 -f ${filenums} -k ${WORK_PLACE}"
+	${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 50 -s 150 -f ${filenums} -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
 		f_LogMsg "Volume get filled up with xattr blocks."
 	}
 	
 	f_LogMsg ${LOG_FILE} "Remove all xattr blocks"
 	${RM_BIN} -rf ${WORK_PLACE}/*
 
-	f_LogMsg ${LOG_FILE} "CMD: ${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 30 -s 80 -f 800 -r -k ${WORK_PLACE}"
-	${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 30 -s 80 -f 800 -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && filenums=8 || filenums=800
+	f_LogMsg ${LOG_FILE} "CMD: ${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 30 -s 80 -f ${filenums} -k ${WORK_PLACE}"
+	${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 30 -s 80 -f ${filenums} -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
 		f_LogMsg "Volume get filled up with xattr blocks."
 	}
 	
 	f_LogMsg ${LOG_FILE} "Remove all xattr blocks"
 	${RM_BIN} -rf ${WORK_PLACE}/*
 
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && filenums=5 || filenums=500
 	f_LogMsg ${LOG_FILE} "Stress&Random xattr filling-up test with multiple processes."
-	f_LogMsg ${LOG_FILE} "CMD: ${XATTR_TEST_BIN} -i 1 -x 200 -n user -t normal -l 50 -s 150 -f 500 -r -k ${WORK_PLACE}"
-	${XATTR_TEST_BIN} -i 1 -x 200 -n user -t normal -l 50 -s 150 -f 500 -r -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
+	f_LogMsg ${LOG_FILE} "CMD: ${XATTR_TEST_BIN} -i 1 -x 200 -n user -t normal -l 50 -s 150 -f ${filenums} -r -k ${WORK_PLACE}"
+	${XATTR_TEST_BIN} -i 1 -x 200 -n user -t normal -l 50 -s 150 -f ${filenums} -r -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
 		f_LogMsg "Volume get filled up with xattr blocks."
 	}
 
 	f_LogMsg ${LOG_FILE} "Remove all xattr blocks"
 	${RM_BIN} -rf ${WORK_PLACE}/*
 
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && filenums=10 || filenums=1000
 	f_LogMsg ${LOG_FILE} "Stress&Random xattr filling-up test with multiple processes in bucket."
-	f_LogMsg ${LOG_FILE} "CMD: ${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 50 -s 1000 -f 1000 -r -k ${WORK_PLACE}"
-	${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 50 -s 1000 -f 1000 -r -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
+	f_LogMsg ${LOG_FILE} "CMD: ${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 50 -s 1000 -f ${filenums} -r -k ${WORK_PLACE}"
+	${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 50 -s 1000 -f ${filenums} -r -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
 		f_LogMsg "Volume get filled up with xattr blocks."
 	}
 
@@ -732,6 +747,7 @@ function f_refcount_test()
 	local iter=1000
 	local count=
 	local inc=
+	local reftrees=
 
 	f_LogMsg ${LOG_FILE} "[*] Activate extent discontig-bg on ${DEVICE}"
 	${DISCONTIG_ACTIVATE_BIN} -t extent -r ${remain_space} -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
@@ -746,9 +762,10 @@ function f_refcount_test()
 	WORK_PLACE=${MOUNT_POINT}/${WORK_PLACE_DIRENT}
 	${MKDIR_BIN} -p ${WORK_PLACE}
 	
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && reftrees=10 || reftrees=2000
 	f_LogMsg ${LOG_FILE} "Tremendous refcount block testing."
-	f_LogMsg ${LOG_FILE} "CMD: ${REFCOUNT_TEST_BIN} -i 1 -n 10 -p 2000 -l 1048576 -d ${DEVICE} -w ${WORK_PLACE} -s"
-	${REFCOUNT_TEST_BIN} -i 1 -n 10 -p 2000 -l 1048576 -d ${DEVICE} -w ${WORK_PLACE} -s >>${LOG_FILE} 2>&1 || {
+	f_LogMsg ${LOG_FILE} "CMD: ${REFCOUNT_TEST_BIN} -i 1 -n 10 -p ${reftrees} -l 1048576 -d ${DEVICE} -w ${WORK_PLACE} -s"
+	${REFCOUNT_TEST_BIN} -i 1 -n 10 -p ${reftrees} -l 1048576 -d ${DEVICE} -w ${WORK_PLACE} -s >>${LOG_FILE} 2>&1 || {
 		f_LogMsg ${LOG_FILE} "Tremendous refcount block testing failed."
 		return 1
 	}
@@ -760,7 +777,11 @@ function f_refcount_test()
 	disk_free_m=`f_get_disk_usage`
 
 	f_LogMsg ${LOG_FILE} "Prepare original file with extents for reflink"
-	filesize=$(((${disk_free_m}-200)*1024*1024/2))
+	if [ ${OCFS2TEST_FASTMODE} -eq 1 ] ; then
+		filesize=$(((${disk_free_m}-200)*1024*1024/200))
+	else
+		filesize=$(((${disk_free_m}-200)*1024*1024/2))
+	fi
 	orig_filename=${WORK_PLACE}/extents_for_reflink
 	ref_filename=${WORK_PLACE}/extents_reflink
 	f_LogMsg ${LOG_FILE} "CMD: ${GEN_EXTENTS_BIN} -f ${orig_filename} -l ${filesize} -c ${CLUSTERSIZE} -k 0"
