@@ -58,6 +58,7 @@ LOG_DIR=
 LOGFILE=
 RUN_LOGFILE=
 
+OCFS2TEST_FASTMODE=0 # if fastmode is enabled, to reduce the test running time
 CLUSTERSIZE=
 BLOCKSIZE=
 LABELNAME=
@@ -75,7 +76,7 @@ set -o pipefail
 f_usage()
 {
     echo "usage: `basename ${0}` <-k kerneltarball> [-b blocksize] [-c clustersize] <-n nodes> [-i nic] \
-[-a access_method] [-o logdir] <-d device> [-t testcases] [-s stack name] [-C cluster name] <mountpoint path>"
+[-a access_method] [-o logdir] <-d device> [-t testcases] [-s stack name] [-C cluster name] [-f 1/0] <mountpoint path>"
     echo "       -k kerneltarball should be path of tarball for kernel src."
     echo "       -n nodelist,should be comma separated."
     echo "       -b blocksize."
@@ -87,6 +88,7 @@ f_usage()
     echo "       -t sepcify testcases to run."
     echo "       -s cluster stack."
     echo "       -C cluster name."
+    echo "       -f enable/disable fast mode."
     echo "       <mountpoint path> path of mountpoint where test will be performed."
     echo 
     echo "Eaxamples:"
@@ -103,7 +105,7 @@ f_getoptions()
 		exit 1
 	fi
 
-	while getopts "n:d:i:a:o:k:b:c:t:s:C:h:" options; do
+	while getopts "n:d:i:a:o:k:b:c:t:s:C:f:h:" options; do
 		case $options in
 		n ) NODE_LIST="$OPTARG";;
 		d ) DEVICE="$OPTARG";;
@@ -116,6 +118,7 @@ f_getoptions()
 		t ) TESTCASES="$OPTARG";;
 		s ) CLUSTER_STACK="$OPTARG";;
 		C ) CLUSTER_NAME="$OPTARG";;
+		f ) OCFS2TEST_FASTMODE="$OPTARG";;
 		h ) f_usage
 		    exit 1;;
                 * ) f_usage
@@ -134,6 +137,8 @@ f_setup()
 	fi
 
 	f_getoptions $*
+
+	export OCFS2TEST_FASTMODE
 
 	if [ -z ${DEVICE} ] ; then
 		${ECHO} "ERROR: No device"
@@ -517,7 +522,7 @@ else
 fi
 
 STARTRUN=$(date +%s)
-${ECHO} "`date` - Starting Multiple Nodes Regress test" > ${LOGFILE}
+${ECHO} "`date` - Starting Multiple Nodes Regress test(fastmode=${OCFS2TEST_FASTMODE})" > ${LOGFILE}
 
 for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 	if [ "$tc"X = "xattr"X -o "$tc"X = "all"X ]; then
