@@ -238,7 +238,7 @@ so just do a sanity check here to test if all nodes are available.
 		os.system('%s  %s --hostfile %s %s' % (config.MPIRUN, shopt,
 			  config.MPIHOSTS, 'echo -n'))
 
-	except os.error,inst:
+	except os.error as inst:
 		printlog(str(inst), logfile, 0, '')
 		pass
 #
