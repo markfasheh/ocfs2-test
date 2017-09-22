@@ -333,8 +333,8 @@ def GetOcfs2NIC(DEBUGON, Cluster):
 			fd = open('ipv4_address','r')
 			IPAddress=fd.read().strip('\n')
 			if DEBUGON:
-				print 'GetOcfs2NIC: IPAddress = %s' % \
-					IPAddress
+				print('GetOcfs2NIC: IPAddress = %s' % \
+					IPAddress)
 			fd.close()
 			out = os.popen('/sbin/ifconfig | awk \' \
 				/^eth/{eth=$1}/inet addr:'+ 
@@ -349,7 +349,7 @@ def GetOcfs2NIC(DEBUGON, Cluster):
 				out.close()
 
 			if DEBUGON:
-				print 'GetOcfs2NIC: NIC = %s' % NIC
+				print('GetOcfs2NIC: NIC = %s' % NIC)
 			return(NIC)
 #
 # CheckMounted is used by:
