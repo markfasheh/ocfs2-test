@@ -250,7 +250,7 @@ def openmpi_run(DEBUGON, nproc, cmd, nodes, remote_sh, interface, logfile, w_fla
 	"""
 	from os import access,F_OK
 	pid = 0
-        status = 0
+	status = 0
 	found = 0
 	uname = os.uname()
 	nodelen = len(string.split(nodes,','))
