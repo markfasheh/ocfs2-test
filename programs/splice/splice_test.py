@@ -53,7 +53,7 @@ def Cleanup():
 	if access(os.path.join('/tmp', filename), F_OK) ==1:
 		os.system('rm -fr ' + os.path.join('/tmp', filename))
 def CreateBaseFile():
-	from commands import getoutput
+	from subprocess import getoutput
 	global BASEMD5SUM 
 	os.system('ps -efl > %s' % os.path.join('/tmp', filename))
 	BASEMD5SUM=getoutput('%s %s|cut -f1 -d" "' % \
@@ -65,7 +65,7 @@ def CreateBaseFile():
 			logfile, 0, '')
 def SpliceWrite():
 	global SCRIPT_STATUS
-	from commands import getoutput
+	from subprocess import getoutput
 	print('Testing splice_write ........')
 	from os import access, F_OK
 	if access(os.path.join(directory, filename), F_OK) ==1:
@@ -86,7 +86,7 @@ def SpliceWrite():
 			logfile, 0, '')
 def SpliceRead():
 	global SCRIPT_STATUS
-	from commands import getoutput
+	from subprocess import getoutput
 	from os import access, F_OK
 	print('Testing splice_read ........')
 	if access(os.path.join(directory, filename), F_OK) ==1:

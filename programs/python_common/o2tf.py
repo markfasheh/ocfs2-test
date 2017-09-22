@@ -370,7 +370,7 @@ def CheckMounted(DEBUGON, logfile, keyword):
 #
 def FindMountPoint(DEBUGON, logfile, filedir):
 	'''Find and return mountpoint/device based on file/directory'''
-	from commands import getoutput 
+	from subprocess import getoutput 
 	line = getoutput('df -k %s|grep -v Filesystem' % filedir)
 	linelist = line.split(" ")
 	for i in range(linelist.count('')):
@@ -386,7 +386,7 @@ def FindMountPoint(DEBUGON, logfile, filedir):
 #
 def GetLabel(DEBUGON, logfile, devname):
 	'''Find and return device Label based on devicename'''
-	from commands import getoutput 
+	from subprocess import getoutput 
 	line = getoutput('sudo /sbin/mounted.ocfs2 -d %s|grep -v UUID' % \
 		devname)
 	linelist = line.split(" ")
@@ -404,7 +404,7 @@ def GetLabel(DEBUGON, logfile, devname):
 #
 def SudoUmount(DEBUGON, logfile, mountpoint):
 	'''Find and return device Label based on devicename'''
-	from commands import getstatusoutput
+	from subprocess import getstatusoutput
 	status = getstatusoutput('sudo umount %s' % mountpoint)
 	if status[0] == 0:
 		return
@@ -418,7 +418,7 @@ def SudoUmount(DEBUGON, logfile, mountpoint):
 #
 def SudoMount(DEBUGON, logfile, mountpoint, label, options):
 	'''Find and return device Label based on devicename'''
-	from commands import getstatusoutput
+	from subprocess import getstatusoutput
 	status = getstatusoutput('sudo mount LABEL=%s %s %s' % (label, options,
 		mountpoint))
 	if status[0] == 0:
