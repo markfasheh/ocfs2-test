@@ -356,7 +356,7 @@ def GetOcfs2NIC(DEBUGON, Cluster):
 #
 def CheckMounted(DEBUGON, logfile, keyword):
 	'''Check if a partition is mounted based on device or label'''
-	from commands import getoutput 
+	from surprocess import getoutput 
 	count = getoutput('df -k |grep -v Filesystem| grep %s|wc -l' % keyword)
 	if DEBUGON:
 		printlog('o2tf.CheckMounted:  count %s)' % count,
