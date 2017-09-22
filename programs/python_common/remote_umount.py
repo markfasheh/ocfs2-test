@@ -46,11 +46,11 @@ if userid == 'root':
 if __name__=='__main__':
 	parser = optparse.OptionParser(Usage)
 #
-        parser.add_option('-i',
-                '--if',
-                dest='interface',
-                type='string',
-                help='Network Interface name to be used for MPI messaging.')
+	parser.add_option('-i',
+		'--if',
+		dest='interface',
+		type='string',
+		help='Network Interface name to be used for MPI messaging.')
 #
 	parser.add_option('-m', 
 		'--mountpoint', 
