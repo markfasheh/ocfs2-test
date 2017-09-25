@@ -112,7 +112,7 @@ if __name__=='__main__':
 # containing the directory list.
 #
 if dirlen == 0:
-	fd = open(os.path.join(stagedir, socket.gethostname()+'_C.dat'), 'r', 0)
+	fd = open(os.path.join(stagedir, socket.gethostname()+'_C.dat'), 'r')
 	dirlist = string.split(fd.read(), ',')
 	fd.close()
 	dirlen = len(dirlist)
