@@ -101,7 +101,7 @@ def BuildCrList(nodelist, nodelen, dirlist, dirlen):
 #
 		if access(os.path.join(stagedir, nodelist[n]+'_C.dat'), F_OK) == 1:
 			remove(os.path.join(stagedir, nodelist[n]+'_C.dat'))
-		fd = open(os.path.join(stagedir, nodelist[n]+'_C.dat'), 'w',0)
+		fd = open(os.path.join(stagedir, nodelist[n]+'_C.dat'), 'w')
 		fd.write(string.join(node_dirs[nodelist[n]+'_C'],','))
 		fd.close
 		if DEBUGON:
