@@ -172,8 +172,10 @@ if __name__=='__main__':
 	if options.truncate and options.hole:
 		parser.error('-t and -H flags can not be mixed')
 	
-	if options.error > options.iterations:
-		parser.error('error pos must be < itertions')
+	if options.error not None \
+		and options.iterations not None \
+		and options.error > options.iterations:
+			parser.error('error pos must be < itertions')
 
 	if options.reader:
 		if not options.reader in ('mmap','regular','random'):
