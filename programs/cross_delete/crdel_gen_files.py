@@ -138,7 +138,7 @@ if DEBUGON:
 		0,
 		'')
 #
-o2tf.CreateDir(DEBUGON, string.join(dirlist,','), logfile)
+o2tf.CreateDir(DEBUGON, ','.join(dirlist), logfile)
 #
 for i in range(dirlen):
 	o2tf.untar(DEBUGON, dirlist[i], tarfile, logfile, '1')
