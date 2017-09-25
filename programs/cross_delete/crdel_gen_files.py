@@ -113,7 +113,7 @@ if __name__=='__main__':
 #
 if dirlen == 0:
 	fd = open(os.path.join(stagedir, socket.gethostname()+'_C.dat'), 'r')
-	dirlist = string.split(fd.read(), ',')
+	dirlist = fd.read().split(',')
 	fd.close()
 	dirlen = len(dirlist)
 if DEBUGON:
