@@ -88,11 +88,11 @@ if __name__=='__main__':
 		help='file1 used by the test.')
 
 #
-        parser.add_option('-f',
-                '--file2',
-                dest='file2',
-                type='string',
-                help='file2 used by the test.')
+	parser.add_option('-f',
+		'--file2',
+		dest='file2',
+		type='string',
+		help='file2 used by the test.')
 
 #
 	(options, args) = parser.parse_args()

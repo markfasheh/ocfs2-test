@@ -46,7 +46,7 @@ def printlog(message, logfile, prflag=0, prsep=''):
 	if len(prsep) == 0:
 		prseplen = (80-(len(hostname)+len(datetime)+2))
 	else:
-		prseplen = (80-(len(hostname)+len(datetime)+2))/len(prsep)
+		prseplen = (80-(len(hostname)+len(datetime)+2))//len(prsep)
 	from os import access,F_OK
 	if os.access(logfile,F_OK) == 0:
 		os.system('touch ' + logfile)
