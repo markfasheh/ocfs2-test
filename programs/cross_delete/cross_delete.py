@@ -123,7 +123,7 @@ def BuildDelList(nodelist, dirlist):
 		if divmod(n,2)[1] == 1:
 			if access(os.path.join(stagedir,nodelist[n]+'_D.dat'), F_OK) == 1:
 				remove(os.path.join(stagedir,nodelist[n]+'_D.dat'))
-			fd = open(os.path.join(stagedir,nodelist[n]+'_D.dat'), 'w',0)
+			fd = open(os.path.join(stagedir,nodelist[n]+'_D.dat'), 'w')
 			fd.write(','.join(node_dirs[nodelist[n-1]+'_D']))
 			fd.close
 			if DEBUGON:
@@ -133,7 +133,7 @@ def BuildDelList(nodelist, dirlist):
 				logfile, 
 				0, 
 				'')
-			fd = open(os.path.join(stagedir, nodelist[n-1]+'_D.dat'), 'w',0)
+			fd = open(os.path.join(stagedir, nodelist[n-1]+'_D.dat'), 'w')
 			fd.write(','.join(node_dirs[nodelist[n]+'_D']))
 			fd.close
 			if DEBUGON:
