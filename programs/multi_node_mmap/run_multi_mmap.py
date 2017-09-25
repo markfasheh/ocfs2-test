@@ -172,8 +172,8 @@ if __name__=='__main__':
 	if options.truncate and options.hole:
 		parser.error('-t and -H flags can not be mixed')
 	
-	if options.error not None \
-		and options.iterations not None \
+	if options.error is not None \
+		and options.iterations is not None \
 		and options.error > options.iterations:
 			parser.error('error pos must be < itertions')
 
