@@ -80,7 +80,7 @@ if __name__=='__main__':
 # containing the directory list.
 #
 fd = open(os.path.join(stagedir, socket.gethostname() + '_D.dat'), 'r')
-dirlist = string.split(fd.read(), ',')
+dirlist = fd.read().split(',')
 fd.close()
 dirlen = len(dirlist)
 if DEBUGON:
