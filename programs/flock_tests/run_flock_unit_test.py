@@ -57,11 +57,11 @@ Usage = """
 if __name__=='__main__':
 	parser = optparse.OptionParser(usage=Usage)
 #
-        parser.add_option('-t',
-                '--type',
-                dest='type',
-                type='string',
-                help='Type should be "flock" or "fcntl"')
+	parser.add_option('-t',
+		'--type',
+		dest='type',
+		type='string',
+		help='Type should be "flock" or "fcntl"')
 #
 	parser.add_option('-l', 
 		'--logfile', 

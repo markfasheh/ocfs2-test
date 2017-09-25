@@ -175,11 +175,11 @@ if __name__=='__main__':
 		type='string',
 		help='Directory where the files will be extracted.')
 #
-        parser.add_option('-i',
-                '--if',
-                dest='interface',
-                type='string',
-                help='Network Interface name to be used for MPI messaging.')
+	parser.add_option('-i',
+		'--if',
+		dest='interface',
+		type='string',
+		help='Network Interface name to be used for MPI messaging.')
 #
 	parser.add_option('-l',
 		'--logfile',

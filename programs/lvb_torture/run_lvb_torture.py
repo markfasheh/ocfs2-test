@@ -75,11 +75,11 @@ if __name__=='__main__':
 		type='int',
 		help='Number of count. Defaults to %s' % count)
 #
-        parser.add_option('-i',
-                '--if',
-                dest='interface',
-                type='string',
-                help='Network Interface name to be used for MPI messaging.')
+	parser.add_option('-i',
+		'--if',
+		dest='interface',
+		type='string',
+		help='Network Interface name to be used for MPI messaging.')
 #
 	parser.add_option('-H', 
 		'--hbdev', 
