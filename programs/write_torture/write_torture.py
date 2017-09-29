@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #
 # Copyright (C) 2006 Oracle.	All rights reserved.
@@ -137,7 +137,7 @@ if __name__=='__main__':
 	if options.seconds:
 		seconds = options.seconds
 #
-	print options.uniquefile
+	print(options.uniquefile)
 	if not options.uniquefile:
 		filename = options.filename + '_' + lhostname + '_' + str(os.getpid())
 #

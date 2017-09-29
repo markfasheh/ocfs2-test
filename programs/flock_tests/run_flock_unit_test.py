@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #
 # Copyright (C) 2008 Oracle.	All rights reserved.
@@ -57,11 +57,11 @@ Usage = """
 if __name__=='__main__':
 	parser = optparse.OptionParser(usage=Usage)
 #
-        parser.add_option('-t',
-                '--type',
-                dest='type',
-                type='string',
-                help='Type should be "flock" or "fcntl"')
+	parser.add_option('-t',
+		'--type',
+		dest='type',
+		type='string',
+		help='Type should be "flock" or "fcntl"')
 #
 	parser.add_option('-l', 
 		'--logfile', 
@@ -88,11 +88,11 @@ if __name__=='__main__':
 		help='file1 used by the test.')
 
 #
-        parser.add_option('-f',
-                '--file2',
-                dest='file2',
-                type='string',
-                help='file2 used by the test.')
+	parser.add_option('-f',
+		'--file2',
+		dest='file2',
+		type='string',
+		help='file2 used by the test.')
 
 #
 	(options, args) = parser.parse_args()

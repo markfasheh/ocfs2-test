@@ -46,12 +46,12 @@ def printlog(message, logfile, prflag=0, prsep=''):
 	if len(prsep) == 0:
 		prseplen = (80-(len(hostname)+len(datetime)+2))
 	else:
-		prseplen = (80-(len(hostname)+len(datetime)+2))/len(prsep)
+		prseplen = (80-(len(hostname)+len(datetime)+2))//len(prsep)
 	from os import access,F_OK
 	if os.access(logfile,F_OK) == 0:
 		os.system('touch ' + logfile)
 #
-	fd = open(logfile, 'a+', 0)
+	fd = open(logfile, 'a+')
 #
 	if prflag == 1 or prflag == 3:
 		fd.write(datetime+' '+hostname+' '+(prsep * prseplen)+'\n')
@@ -139,7 +139,7 @@ def CreateDir(DEBUGON, dirl, logfile):
 	'Create directories from a passed dirlist'
 	if DEBUGON:
 		printlog('o2tf.CreateDir: Started.', logfile, 0, '')
-	dirlist = string.split(dirl,',')
+	dirlist = dirl.split(',')
 	ndir = len(dirlist)
 	if DEBUGON:
 		printlog('o2tf.CreateDir: dirlist = (%s)' % dirlist,
@@ -216,7 +216,7 @@ so just do a sanity check here to test if all nodes are available.
 		sys.exit(1)
 	if os.access(config.MPIHOSTS, F_OK) == 1:
 		os.system('rm -f ' + config.MPIHOSTS)
-	nodelist = string.split(nodes,',')
+	nodelist = nodes.split(',')
 	nodelen = len(nodelist)
 
 	if remote_sh == '' or remote_sh == 'ssh':
@@ -224,7 +224,7 @@ so just do a sanity check here to test if all nodes are available.
 	else:
 		shopt = '-mca plm_rsh_agent ssh:rsh'
 
-	fd = open(config.MPIHOSTS,'w',0)
+	fd = open(config.MPIHOSTS,'w')
 	for i in range(nodelen):
 		fd.write(nodelist[i] + '\n')
 	fd.close()
@@ -238,7 +238,7 @@ so just do a sanity check here to test if all nodes are available.
 		os.system('%s  %s --hostfile %s %s' % (config.MPIRUN, shopt,
 			  config.MPIHOSTS, 'echo -n'))
 
-	except os.error,inst:
+	except os.error as inst:
 		printlog(str(inst), logfile, 0, '')
 		pass
 #
@@ -250,10 +250,10 @@ def openmpi_run(DEBUGON, nproc, cmd, nodes, remote_sh, interface, logfile, w_fla
 	"""
 	from os import access,F_OK
 	pid = 0
-        status = 0
+	status = 0
 	found = 0
 	uname = os.uname()
-	nodelen = len(string.split(nodes,','))
+	nodelen = len(nodes.split(','))
 	if nproc == 'C':
 		nprocopt=''
 	else:
@@ -313,7 +313,7 @@ def GetOcfs2Cluster():
 	elif (os.path.isdir('/sys/kernel/config/cluster')):
 		configdir = '/sys/kernel/config/cluster'
 	out = os.popen('ls %s' % configdir)
-	CLUSTER = string.strip(out.read(),'\n')
+	CLUSTER = out.read().strip('\n')
 	return(CLUSTER)
 #
 # GetOcfs2NIC is used by:
@@ -330,33 +330,33 @@ def GetOcfs2NIC(DEBUGON, Cluster):
 		os.chdir(nodedir)
 		from os import access,F_OK
 	if os.access('ipv4_address',F_OK) == 1:
-			fd = open('ipv4_address','r',0)
-			IPAddress=string.strip(fd.read(), '\n')
+			fd = open('ipv4_address','r')
+			IPAddress=fd.read().strip('\n')
 			if DEBUGON:
-				print 'GetOcfs2NIC: IPAddress = %s' % \
-					IPAddress
+				print('GetOcfs2NIC: IPAddress = %s' % \
+					IPAddress)
 			fd.close()
 			out = os.popen('/sbin/ifconfig | awk \' \
 				/^eth/{eth=$1}/inet addr:'+ 
 				IPAddress+'/{print eth;exit}\'')
-			NIC=string.strip(out.read(), '\n')
+			NIC=out.read().strip('\n')
 			out.close()
 			if not NIC:
 				out = os.popen('/sbin/ifconfig | awk \' \
 					/^bond/{eth=$1}/inet addr:'+
 					IPAddress+'/{print eth;exit}\'')
-				NIC=string.strip(out.read(), '\n')
+				NIC=out.read().strip('\n')
 				out.close()
 
 			if DEBUGON:
-				print 'GetOcfs2NIC: NIC = %s' % NIC
+				print('GetOcfs2NIC: NIC = %s' % NIC)
 			return(NIC)
 #
 # CheckMounted is used by:
 #
 def CheckMounted(DEBUGON, logfile, keyword):
 	'''Check if a partition is mounted based on device or label'''
-	from commands import getoutput 
+	from subprocess import getoutput 
 	count = getoutput('df -k |grep -v Filesystem| grep %s|wc -l' % keyword)
 	if DEBUGON:
 		printlog('o2tf.CheckMounted:  count %s)' % count,
@@ -370,7 +370,7 @@ def CheckMounted(DEBUGON, logfile, keyword):
 #
 def FindMountPoint(DEBUGON, logfile, filedir):
 	'''Find and return mountpoint/device based on file/directory'''
-	from commands import getoutput 
+	from subprocess import getoutput 
 	line = getoutput('df -k %s|grep -v Filesystem' % filedir)
 	linelist = line.split(" ")
 	for i in range(linelist.count('')):
@@ -386,7 +386,7 @@ def FindMountPoint(DEBUGON, logfile, filedir):
 #
 def GetLabel(DEBUGON, logfile, devname):
 	'''Find and return device Label based on devicename'''
-	from commands import getoutput 
+	from subprocess import getoutput 
 	line = getoutput('sudo /sbin/mounted.ocfs2 -d %s|grep -v UUID' % \
 		devname)
 	linelist = line.split(" ")
@@ -404,7 +404,7 @@ def GetLabel(DEBUGON, logfile, devname):
 #
 def SudoUmount(DEBUGON, logfile, mountpoint):
 	'''Find and return device Label based on devicename'''
-	from commands import getstatusoutput
+	from subprocess import getstatusoutput
 	status = getstatusoutput('sudo umount %s' % mountpoint)
 	if status[0] == 0:
 		return
@@ -418,7 +418,7 @@ def SudoUmount(DEBUGON, logfile, mountpoint):
 #
 def SudoMount(DEBUGON, logfile, mountpoint, label, options):
 	'''Find and return device Label based on devicename'''
-	from commands import getstatusoutput
+	from subprocess import getstatusoutput
 	status = getstatusoutput('sudo mount LABEL=%s %s %s' % (label, options,
 		mountpoint))
 	if status[0] == 0:
@@ -436,7 +436,7 @@ def Del(DEBUGON, logfile, deldir, dirlist):
 	if not logfile:
 		logfile = config.logfile
 	if dirlist:
-		dirl = string.split(dirlist, ',')
+		dirl = dirlist.split(',')
 	# See if it is deleting everything, including under root.
 	if deldir == '*' or deldir == '/*':
 		printlog('o2tf.del - Cannot perform generic delete (* or /*)',
@@ -493,7 +493,7 @@ def Del(DEBUGON, logfile, deldir, dirlist):
 #
 def BldAllowedMtPts(DEBUGON, logfile, allowlist):
 	from os import access,F_OK
-	WorkingDirs = string.split(allowlist, ',')
+	WorkingDirs = allowlist.split(',')
 	if DEBUGON:
 		printlog('working lenght = %s, (%s)' % (len(WorkingDirs),
 			WorkingDirs), logfile, 0, '')

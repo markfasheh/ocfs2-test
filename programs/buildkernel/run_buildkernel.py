@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # *
 # * run_buildkernel.py
 # *
@@ -49,7 +49,7 @@ def CompSize(tarfile):
 def CheckDirs(nodes, dirs):
 	'Check if the test directories at least exist'
 	global tarfile, DEBUGON
-	from commands import getoutput
+	from subprocess import getoutput
 	nodesl = nodes.split(',')
 	dirl = dirs.split(',')
 	MinSize = CompSize(tarfile)

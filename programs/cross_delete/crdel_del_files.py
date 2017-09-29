@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #
 # Copyright (C) 2006 Oracle.	All rights reserved.
@@ -79,8 +79,8 @@ if __name__=='__main__':
 # First thing. Check if the dirlist is actually a directory or a file 
 # containing the directory list.
 #
-fd = open(os.path.join(stagedir, socket.gethostname() + '_D.dat'), 'r', 0)
-dirlist = string.split(fd.read(), ',')
+fd = open(os.path.join(stagedir, socket.gethostname() + '_D.dat'), 'r')
+dirlist = fd.read().split(',')
 fd.close()
 dirlen = len(dirlist)
 if DEBUGON:

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #
 # Copyright (C) 2006 Oracle.	All rights reserved.
@@ -101,13 +101,13 @@ def BuildCrList(nodelist, nodelen, dirlist, dirlen):
 #
 		if access(os.path.join(stagedir, nodelist[n]+'_C.dat'), F_OK) == 1:
 			remove(os.path.join(stagedir, nodelist[n]+'_C.dat'))
-		fd = open(os.path.join(stagedir, nodelist[n]+'_C.dat'), 'w',0)
-		fd.write(string.join(node_dirs[nodelist[n]+'_C'],','))
+		fd = open(os.path.join(stagedir, nodelist[n]+'_C.dat'), 'w')
+		fd.write(','.join(node_dirs[nodelist[n]+'_C']))
 		fd.close
 		if DEBUGON:
 			o2tf.printlog('cross_delete:BuildDelList: (%s) was written to \
-				the file %s' % (string.join(node_dirs[nodelist[n]+'_C'],','),
-			os.path.join(stagedir, nodelist[n]+'_C.dat')), 
+				the file %s' % (','.join(node_dirs[nodelist[n]+'_C'])),
+			os.path.join(stagedir, nodelist[n]+'_C.dat'), 
 			logfile, 
 			0, 
 			'')
@@ -123,23 +123,23 @@ def BuildDelList(nodelist, dirlist):
 		if divmod(n,2)[1] == 1:
 			if access(os.path.join(stagedir,nodelist[n]+'_D.dat'), F_OK) == 1:
 				remove(os.path.join(stagedir,nodelist[n]+'_D.dat'))
-			fd = open(os.path.join(stagedir,nodelist[n]+'_D.dat'), 'w',0)
-			fd.write(string.join(node_dirs[nodelist[n-1]+'_D'],','))
+			fd = open(os.path.join(stagedir,nodelist[n]+'_D.dat'), 'w')
+			fd.write(','.join(node_dirs[nodelist[n-1]+'_D']))
 			fd.close
 			if DEBUGON:
 				o2tf.printlog('cross_delete:BuildDelList: (%s) was written to \
-					the file %s' % (string.join(node_dirs[nodelist[n-1]+'_D'],','),
-				os.path.join(stagedir, nodelist[n]+'_D.dat')), 
+					the file %s' % (','.join(node_dirs[nodelist[n-1]+'_D'])),
+				os.path.join(stagedir, nodelist[n]+'_D.dat'), 
 				logfile, 
 				0, 
 				'')
-			fd = open(os.path.join(stagedir, nodelist[n-1]+'_D.dat'), 'w',0)
-			fd.write(string.join(node_dirs[nodelist[n]+'_D'],','))
+			fd = open(os.path.join(stagedir, nodelist[n-1]+'_D.dat'), 'w')
+			fd.write(','.join(node_dirs[nodelist[n]+'_D']))
 			fd.close
 			if DEBUGON:
 				o2tf.printlog('cross_delete:BuildDelList: (%s) was written to \
-					the file %s' % (string.join(node_dirs[nodelist[n]+'_D'],','),
-				os.path.join(stagedir, nodelist[n-1]+'_D.dat')),
+					the file %s' % (','.join(node_dirs[nodelist[n]+'_D'])),
+				os.path.join(stagedir, nodelist[n-1]+'_D.dat'),
 				logfile,
 				0,
 				'')
@@ -175,11 +175,11 @@ if __name__=='__main__':
 		type='string',
 		help='Directory where the files will be extracted.')
 #
-        parser.add_option('-i',
-                '--if',
-                dest='interface',
-                type='string',
-                help='Network Interface name to be used for MPI messaging.')
+	parser.add_option('-i',
+		'--if',
+		dest='interface',
+		type='string',
+		help='Network Interface name to be used for MPI messaging.')
 #
 	parser.add_option('-l',
 		'--logfile',
