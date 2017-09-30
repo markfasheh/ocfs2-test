@@ -296,6 +296,8 @@ f_do_umount()
 
 f_runtest()
 {
+	local xattr_nums=
+
 	((TEST_NO++))
 	echo >>${LOG_FILE}
 	echo "==========================================================">>${LOG_FILE}
@@ -406,8 +408,9 @@ f_runtest()
         echo -ne "[${TEST_NO}] Check Huge Multinode Xattr EA_Entry_Nums:">> ${LOG_FILE}
         echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
-        echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_MCA_BTL} ${MPI_MCA_BTL_IF} -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 10000 -n user -t normal -l 100 -s 200 ${WORKPLACE}">>${LOG_FILE}
-        ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_MCA_BTL} ${MPI_MCA_BTL_IF} -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 10000 -n user -t normal -l 100 -s 200 ${WORKPLACE}>>${LOG_FILE} 2>&1
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && xattr_nums=10 || xattr_nums=10000
+        echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_MCA_BTL} ${MPI_MCA_BTL_IF} -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x ${xattr_nums} -n user -t normal -l 100 -s 200 ${WORKPLACE}">>${LOG_FILE}
+        ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_MCA_BTL} ${MPI_MCA_BTL_IF} -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x ${xattr_nums} -n user -t normal -l 100 -s 200 ${WORKPLACE}>>${LOG_FILE} 2>&1
         RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -422,8 +425,9 @@ f_runtest()
         echo -ne "[${TEST_NO}] Check All Max Multinode Xattr Arguments Together:">> ${LOG_FILE}
         echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
-        echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_MCA_BTL} ${MPI_MCA_BTL_IF} -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 255 -s 65536 ${WORKPLACE}">>${LOG_FILE}
-        ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_MCA_BTL} ${MPI_MCA_BTL_IF} -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 255 -s 65536 ${WORKPLACE}>>${LOG_FILE} 2>&1
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && xattr_nums=10 || xattr_nums=1000
+        echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_MCA_BTL} ${MPI_MCA_BTL_IF} -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x ${xattr_nums} -n user -t normal -l 255 -s 65536 ${WORKPLACE}">>${LOG_FILE}
+        ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_MCA_BTL} ${MPI_MCA_BTL_IF} -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x ${xattr_nums} -n user -t normal -l 255 -s 65536 ${WORKPLACE}>>${LOG_FILE} 2>&1
         RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
@@ -438,14 +442,16 @@ f_runtest()
         echo -ne "[${TEST_NO}] Launch Concurrent Adding Test:">> ${LOG_FILE}
         echo >>${LOG_FILE}
         echo "==========================================================">>${LOG_FILE}
-        echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_MCA_BTL} ${MPI_MCA_BTL_IF} -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 255 -s 5000 -o -r -k ${WORKPLACE}">>${LOG_FILE}
-        ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_MCA_BTL} ${MPI_MCA_BTL_IF} -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 255 -s 5000 -o -r -k ${WORKPLACE}>>${LOG_FILE} 2>&1
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && xattr_nums=10 || xattr_nums=1000
+        echo -e "Testing Binary:\t\t${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_MCA_BTL} ${MPI_MCA_BTL_IF} -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x ${xattr_nums} -n user -t normal -l 255 -s 5000 -o -r -k ${WORKPLACE}">>${LOG_FILE}
+        ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_MCA_BTL} ${MPI_MCA_BTL_IF} -np ${MPI_RANKS} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x ${xattr_nums} -n user -t normal -l 255 -s 5000 -o -r -k ${WORKPLACE}>>${LOG_FILE} 2>&1
         RET=$?
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
         ${RM} -rf ${WORKPLACE}/* || exit 1
 	((TEST_PASS++))
 
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && return # no stress test in fastmode
 	
 	((TEST_NO++))
 	echo >>${LOG_FILE}
