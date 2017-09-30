@@ -259,6 +259,7 @@ f_run_data_test()
 	echo_status ${RET} |tee -a ${RUN_LOG_FILE}
 	exit_or_not ${RET}
 
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && return # no stress test in fastmode
 
 	echo >>${DATA_LOG_FILE}
         echo "==========================================================">>${DATA_LOG_FILE}
@@ -290,6 +291,7 @@ f_run_dirs_test()
         echo_status ${RET} |tee -a ${RUN_LOG_FILE}
         exit_or_not ${RET}
 
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && return # no stress test in fastmode
 
 	echo >>${DIRS_LOG_FILE}
         echo "==========================================================">>${DIRS_LOG_FILE}
