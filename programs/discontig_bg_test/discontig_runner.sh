@@ -1014,6 +1014,9 @@ function f_single_runner()
 function f_multi_inodes_test()
 {
 
+	local num_inodes=100
+	local num_processes=10
+
 	f_LogMsg ${LOG_FILE} "Activate inode discontig-bg on ${DEVICE}"
 	${DISCONTIG_ACTIVATE_BIN} -t inode -r 800 -b ${BLOCKSIZE} -c ${CLUSTERSIZE} -d ${DEVICE} -o ${LOG_DIR} -l ${LABELNAME} -m ${MPI_HOSTS} -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >>${LOG_FILE} 2>&1
 	RET=$?
@@ -1027,9 +1030,10 @@ function f_multi_inodes_test()
 	WORK_PLACE=${MOUNT_POINT}/${WORK_PLACE_DIRENT}
 	${MKDIR_BIN} -p ${WORK_PLACE}
 
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && { num_inodes=10; num_processes=2; }
 	f_LogMsg ${LOG_FILE} "Spawning inodes from multi-nodes"
-	f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${SPAWN_INODES_BIN} -n 20000 -m 100 -w ${WORK_PLACE}"
-	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${SPAWN_INODES_BIN} -n 100 -m 10 -w ${WORK_PLACE} >>${LOG_FILE} 2>&1
+	f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${SPAWN_INODES_BIN} -n ${num_inodes} -m ${num_processes} -w ${WORK_PLACE}"
+	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${SPAWN_INODES_BIN} -n ${num_inodes} -m ${num_processes} -w ${WORK_PLACE} >>${LOG_FILE} 2>&1
 
 	f_LogMsg ${LOG_FILE} "[*] Umount volume from nodes ${MPI_HOSTS}:"
 	f_remote_umount ${LOG_FILE} ${MOUNT_POINT} ${MPI_HOSTS}
@@ -1081,7 +1085,12 @@ function f_multi_extents_test()
 	${MKDIR_BIN} -p ${WORK_PLACE}
 
 	filename=${WORK_PLACE}/multi_nodes_extents_testfile
-	filesize=$((${remain_space}/${num_hosts}/2*1024*1024))
+	if [ ${OCFS2TEST_FASTMODE} -eq 1 ] ; then
+		filesize=$((${remain_space}/${num_hosts}/600*1024*1024))
+	else
+		filesize=$((${remain_space}/${num_hosts}/2*1024*1024))
+	fi
+
 	f_LogMsg ${LOG_FILE} "Generate extents from multi-nodes"
 	f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${GEN_EXTENTS_BIN} -f ${filename} -l ${filesize} -c ${CLUSTERSIZE} -k 1 -m"
 	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${GEN_EXTENTS_BIN} -f ${filename} -l ${filesize} -c ${CLUSTERSIZE} -k 1 -m>>${LOG_FILE} 2>&1
@@ -1117,6 +1126,7 @@ function f_multi_extents_test()
 
 function f_multi_xattr_test()
 {
+	local xattr_nums=2
 	local remain_space=1024
 
 	f_LogMsg ${LOG_FILE} "Activate extents discontig-bg on ${DEVICE}"
@@ -1134,28 +1144,31 @@ function f_multi_xattr_test()
 	${MKDIR_BIN} -p ${WORK_PLACE}
 
 	f_LogMsg ${LOG_FILE} "Stress xattr filling-up test with multiple processes."
-        f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 50 -s 150 -f 500 -r -k ${WORK_PLACE}"
-        ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x 2 -n user -t normal -l 50 -s 150 -f 500 -r -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
+        f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x ${xattr_nums} -n user -t normal -l 50 -s 150 -f 500 -r -k ${WORK_PLACE}"
+        ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${XATTR_TEST_BIN} -i 1 -x ${xattr_nums} -n user -t normal -l 50 -s 150 -f 500 -r -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
                 f_LogMsg ${LOG_FILE} "Volume get filled up with xattr blocks."
 	}
 
 	f_LogMsg ${LOG_FILE} "Cleanup allocated xattr blocks"
 	${RM_BIN} -rf ${WORK_PLACE}/*
 
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && xattr_nums=10 || xattr_nums=1000
 	f_LogMsg ${LOG_FILE} "Concurrent adding test."
-	f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 200 -s 1000 -o -r -k ${WORK_PLACE}"
-	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_XATTR_TEST_BIN} -i 1 -x 1000 -n user -t normal -l 200 -s 1000 -o -r -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
+	f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_XATTR_TEST_BIN} -i 1 -x ${xattr_nums} -n user -t normal -l 200 -s 1000 -o -r -k ${WORK_PLACE}"
+	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_XATTR_TEST_BIN} -i 1 -x ${xattr_nums} -n user -t normal -l 200 -s 1000 -o -r -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
 		f_LogMsg ${LOG_FILE} "concurrent xattr adding test failed"
 	}
 
 	f_LogMsg ${LOG_FILE} "Cleanup allocated xattr blocks"
 	${RM_BIN} -rf ${WORK_PLACE}/*
 
+	if [ ${OCFS2TEST_FASTMODE} -eq 0 ] ; then # do not run stress test in fastmode
 	f_LogMsg ${LOG_FILE} "Stress multi-nodes xattr test."
 	f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_XATTR_TEST_BIN} -i 1 -x 2000 -n user -t normal -l 255 -s 5000  -r -k ${WORK_PLACE}"
 	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_XATTR_TEST_BIN} -i 1 -x 2000 -n user -t normal -l 255 -s 5000  -r -k ${WORK_PLACE} >>${LOG_FILE} 2>&1 || {
 		f_LogMsg ${LOG_FILE} "stress multi-nodes xattr test failed."
 	}
+	fi
 
 	f_LogMsg ${LOG_FILE} "[*] Umount volume from nodes ${MPI_HOSTS}:"
 	f_remote_umount ${LOG_FILE} ${MOUNT_POINT} ${MPI_HOSTS}
@@ -1183,6 +1196,8 @@ function f_multi_xattr_test()
 
 function f_multi_refcount_test()
 {
+	local refcounts=
+	local refxattrs=
 	local remain_space=1024
 
 	f_LogMsg ${LOG_FILE} "Activate extents discontig-bg on ${DEVICE}"
@@ -1199,9 +1214,10 @@ function f_multi_refcount_test()
 	WORK_PLACE=${MOUNT_POINT}/${WORK_PLACE_DIRENT}
 	${MKDIR_BIN} -p ${WORK_PLACE}
 
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && refcounts=5 || refcounts=100
 	f_LogMsg ${LOG_FILE} "Basic multi-refcount test"
-	f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_REFCOUNT_TEST_BIN} -i 1 -l 10485760 -n 100 -w ${WORK_PLACE} -f "
-	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_REFCOUNT_TEST_BIN} -i 1 -l 10485760 -n 100 -w ${WORK_PLACE} -f >>${LOG_FILE} 2>&1 || {
+	f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_REFCOUNT_TEST_BIN} -i 1 -l 10485760 -n ${refcounts} -w ${WORK_PLACE} -f"
+	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_REFCOUNT_TEST_BIN} -i 1 -l 10485760 -n ${refcounts} -w ${WORK_PLACE} -f >>${LOG_FILE} 2>&1 || {
 		f_LogMsg ${LOG_FILE} "Basic multi-refcount test failed."
 	}
 
@@ -1209,23 +1225,27 @@ function f_multi_refcount_test()
 	${RM_BIN} -rf ${WORK_PLACE}/*
 
 	f_LogMsg ${LOG_FILE} "Concurrent multi-refcount test"
-	f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_REFCOUNT_TEST_BIN} -i 1 -l 10485760 -n 100 -w ${WORK_PLACE} -c"
-	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_REFCOUNT_TEST_BIN} -i 1 -l 10485760 -n 100 -w ${WORK_PLACE} -c>>${LOG_FILE} 2>&1 || {
+	f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_REFCOUNT_TEST_BIN} -i 1 -l 10485760 -n ${refcounts} -w ${WORK_PLACE} -c"
+	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_REFCOUNT_TEST_BIN} -i 1 -l 10485760 -n ${refcounts} -w ${WORK_PLACE} -c>>${LOG_FILE} 2>&1 || {
 		f_LogMsg ${LOG_FILE} "Concurrent multi-refcount test failed."
 	}
 
 	f_LogMsg ${LOG_FILE} "Cleanup allocated refcount blocks"
 	${RM_BIN} -rf ${WORK_PLACE}/*
 
+	refcounts=10
+	refxattrs=1000
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && { refcounts=2; refxattrs=10; } 
 	f_LogMsg ${LOG_FILE} "Combined multi-refcount&xattr test"
-	f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_REFCOUNT_TEST_BIN} -i 1 -l 10485760 -n 10 -w ${WORK_PLACE} -x 1000"
-	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_REFCOUNT_TEST_BIN} -i 1 -l 10485760 -n 10 -w ${WORK_PLACE} -x 1000 >>${LOG_FILE} 2>&1 || {
+	f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_REFCOUNT_TEST_BIN} -i 1 -l 10485760 -n ${refcounts} -w ${WORK_PLACE} -x ${refxattrs}"
+	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_REFCOUNT_TEST_BIN} -i 1 -l 10485760 -n ${refcounts} -w ${WORK_PLACE} -x ${refxattrs} >>${LOG_FILE} 2>&1 || {
 		f_LogMsg ${LOG_FILE} "Combined multi-refcount&xattr test failed."
 	}
 
 	f_LogMsg ${LOG_FILE} "Cleanup allocated refcount blocks"
 	${RM_BIN} -rf ${WORK_PLACE}/*
 
+	if [ ${OCFS2TEST_FASTMODE} -eq 0 ] ; then # do not run stress test in fastmode
 	f_LogMsg ${LOG_FILE} "Stress multi-refcount test"
 	f_LogMsg ${LOG_FILE} "CMD: ${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_REFCOUNT_TEST_BIN} -i 1 -p 1000 -l 10485760 -n 100 -w ${WORK_PLACE} -s"
 	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} --host ${MPI_HOSTS} ${MULTI_REFCOUNT_TEST_BIN} -i 1 -p 1000 -l 10485760 -n 100 -w ${WORK_PLACE} -s>>${LOG_FILE} 2>&1 || {
@@ -1234,6 +1254,7 @@ function f_multi_refcount_test()
 
 	f_LogMsg ${LOG_FILE} "Cleanup allocated refcount blocks"
 	${RM_BIN} -rf ${WORK_PLACE}/*
+	fi
 	
 	f_LogMsg ${LOG_FILE} "[*] Umount volume from nodes ${MPI_HOSTS}:"
 	f_remote_umount ${LOG_FILE} ${MOUNT_POINT} ${MPI_HOSTS}
