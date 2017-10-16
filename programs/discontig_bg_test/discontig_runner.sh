@@ -1086,7 +1086,7 @@ function f_multi_extents_test()
 
 	filename=${WORK_PLACE}/multi_nodes_extents_testfile
 	if [ ${OCFS2TEST_FASTMODE} -eq 1 ] ; then
-		filesize=$((${remain_space}/${num_hosts}/600*1024*1024))
+		filesize=$((${remain_space}/${num_hosts}/40*1024*1024))
 	else
 		filesize=$((${remain_space}/${num_hosts}/2*1024*1024))
 	fi
