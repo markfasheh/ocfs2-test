@@ -321,6 +321,14 @@ function f_fillup_volume_almost_full()
 	f_exit_or_not ${RET}
 
 	sync
+
+	#operations above may cause sub allocator bitmap changes,
+	#update them
+	extents=`f_get_eb_num_of_contig_bg`
+	recs=`f_get_recs_in_eb`
+
+	FILL_CONTIG_IBG_NUM=`f_get_inodes_num_of_contig_bg`
+	FILL_CONTIG_EBG_M=$((${extents}*${recs}*${CLUSTERSIZE}/1024/1024))
 }
 
 function f_activate_discontig()
