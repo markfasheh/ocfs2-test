@@ -58,7 +58,7 @@ REMOTE_UMOUNT_BIN="${BINDIR}/remote_umount.py"
 MKFS_BIN="`which sudo` -u root `which mkfs.ocfs2`"
 CHMOD_BIN="`which sudo` -u root `which chmod`"
 CHOWN_BIN="`which sudo` -u root `which chown`"
-IFCONFIG_BIN="`which sudo` -u root `which ifconfig`"
+IP_BIN="`which sudo` -u root `which ip`"
 
 XATTR_TEST_BIN="${BINDIR}/xattr-multi-test"
 
@@ -209,7 +209,7 @@ f_setup()
 	fi
 
 	if [ ! -z "${INTERFACE}" ]; then
-		${IFCONFIG_BIN} ${INTERFACE} >/dev/null 2>&1 || {
+		${IP_BIN} addr show ${INTERFACE} >/dev/null 2>&1 || {
 			echo "Invalid NIC";
 			f_usage;
 		} 
