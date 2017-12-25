@@ -329,13 +329,15 @@ ${DEVICE} ${FEATURES} ${JOURNALSIZE} ${BLOCKS} ${CLUSTER_STACK} ${CLUSTER_NAME}
 
 run_open_delete_test()
 {
+	local count=10000
 	local workplace=${MOUNT_POINT}/open_delete_test
 	local testfile=${workplace}/open_delete_test_file
 	local logdir=${LOG_DIR}/open_delete
 	local logfile=${logdir}/open_delete_${DATE}.log
 
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && count=10
 	run_common_testcase "open_delete" "sparse,unwritten,inline-data" \
-"${BINDIR}/open_delete.py -f ${testfile} -i 10000 -I ${INTERFACE} -l ${logfile} -n ${NODE_LIST}"
+"${BINDIR}/open_delete.py -f ${testfile} -i ${count} -I ${INTERFACE} -l ${logfile} -n ${NODE_LIST}"
 
 }
 
@@ -351,34 +353,40 @@ run_cross_delete_test()
 
 run_write_append_truncate_test()
 {
+	local count=20000
 	local logdir=${LOG_DIR}/write_append_truncate
 	local logfile=${logdir}/write_append_truncate_${DATE}.log
 	local workplace=${MOUNT_POINT}/write_append_truncate_test
 	local testfile=${workplace}/write_append_truncate_test_file
 
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && count=20
 	run_common_testcase "write_append_truncate" "sparse,unwritten,inline-data" \
-"${BINDIR}/run_write_append_truncate.py -i 20000 -I ${INTERFACE} -l ${logfile} -n ${NODE_LIST} -f ${testfile}"
+"${BINDIR}/run_write_append_truncate.py -i ${count} -I ${INTERFACE} -l ${logfile} -n ${NODE_LIST} -f ${testfile}"
 }
 
 run_multi_mmap_test()
 {
+	local count=20000
 	local logdir=${LOG_DIR}/multi_mmap
 	local logfile=${logdir}/multi_mmap_${DATE}.log
 	local workplace=${MOUNT_POINT}/multi_mmap_test
 	local testfile=${workplace}/multi_mmap_test_file
 
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && count=10
 	run_common_testcase "multi_mmap" "sparse,unwritten,inline-data" \
-"${BINDIR}/run_multi_mmap.py -i 20000 -I ${INTERFACE} -l ${logfile} -n ${NODE_LIST} -c -b 6000 --hole -f ${testfile}"
+"${BINDIR}/run_multi_mmap.py -i ${count} -I ${INTERFACE} -l ${logfile} -n ${NODE_LIST} -c -b 6000 --hole -f ${testfile}"
 }
 
 run_create_racer_test()
 {
+	local count=40000
 	local logdir=${LOG_DIR}/create_racer
 	local logfile=${logdir}/create_racer_${DATE}.log
 	local workplace=${MOUNT_POINT}/create_racer_test
 
+	[ ${OCFS2TEST_FASTMODE} -eq 1 ] && count=10
 	run_common_testcase "create_racer" "sparse,unwritten,inline-data" \
-"${BINDIR}/run_create_racer.py -c 40000 -i ${INTERFACE} -l ${logfile} -n ${NODE_LIST} -p ${workplace}"
+"${BINDIR}/run_create_racer.py -c ${count} -i ${INTERFACE} -l ${logfile} -n ${NODE_LIST} -p ${workplace}"
 }
 
 run_xattr_test()
