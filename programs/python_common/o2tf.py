@@ -336,16 +336,18 @@ def GetOcfs2NIC(DEBUGON, Cluster):
 				print('GetOcfs2NIC: IPAddress = %s' % \
 					IPAddress)
 			fd.close()
-			out = os.popen('/sbin/ifconfig | awk \' \
-				/^eth/{eth=$1}/inet addr:'+ 
-				IPAddress+'/{print eth;exit}\'')
-			NIC=out.read().strip('\n')
+			out = os.popen('ip addr show | awk \' \
+					/eth[[:digit:]]+:/{eth=$2}/inet '+
+					IPAddress+'/{print eth;exit}\' | tr -d :')
+
+
+			NIC=string.strip(out.read(), '\n')
 			out.close()
 			if not NIC:
-				out = os.popen('/sbin/ifconfig | awk \' \
-					/^bond/{eth=$1}/inet addr:'+
-					IPAddress+'/{print eth;exit}\'')
-				NIC=out.read().strip('\n')
+				out = os.popen('ip addr show | awk \' \
+						/bond[[:ditit:]]+/{eth=$2}/inet '+
+						IPAddress+'/{print eth;exit}\'  | tr -d :')
+				NIC=string.strip(out.read(), '\n')
 				out.close()
 
 			if DEBUGON:

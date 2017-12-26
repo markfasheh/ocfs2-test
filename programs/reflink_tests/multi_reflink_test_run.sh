@@ -61,7 +61,7 @@ LABELNAME="ocfs2-multi-refcount-tests-`uname -m`"
 WORK_PLACE_DIRENT=ocfs2-multi-refcount-tests
 WORK_PLACE=
 MULTI_REFLINK_TEST_BIN="${BINDIR}/multi_reflink_test"
-IFCONFIG_BIN="`which sudo` -u root `which ifconfig`"
+IP_BIN="`which sudo` -u root `which ip`"
 
 DEFAULT_LOG_DIR=${O2TDIR}/log
 LOG_DIR=
@@ -179,7 +179,7 @@ ${MOUNT_POINT}`"
 	fi
 
 	if [ ! -z "${INTERFACE}" ]; then
-		${IFCONFIG_BIN} ${INTERFACE} >/dev/null 2>&1 || {
+		${IP_BIN} addr show ${INTERFACE} >/dev/null 2>&1 || {
 			echo "Invalid NIC";
 			f_usage;
 		} 

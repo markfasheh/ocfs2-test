@@ -34,7 +34,7 @@ ECHO="`which echo` -e"
 O2CLUSTER="`which o2cluster`"
 
 SUDO="`which sudo` -u root"
-IFCONFIG_BIN="`which ifconfig`"
+IP_BIN="`which ip`"
 SED=`which sed`
 
 REMOTE_MOUNT_BIN="${BINDIR}/remote_mount.py"
@@ -208,7 +208,7 @@ f_setup()
         fi
 
 	if [ ! -z "${INTERFACE}" ]; then
-		${IFCONFIG_BIN} ${INTERFACE} >/dev/null 2>&1 || {
+		${IP_BIN} addr show ${INTERFACE} >/dev/null 2>&1 || {
 			echo "Invalid NIC";
 			f_usage;
 		}

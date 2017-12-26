@@ -67,4 +67,4 @@ o2tf.printlog('ocfs2_nicdown: Bringing interface %s down' % NIC,
 	logfile,
 	0,
 	'')
-os.system('/sbin/ifconfig %s down' % NIC)
+os.system('/sbin/ip link set %s down' % NIC)
