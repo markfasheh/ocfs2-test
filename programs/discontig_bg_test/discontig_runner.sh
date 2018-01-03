@@ -48,7 +48,7 @@ BLOCKSIZE=
 CLUSTERSIZE=
 JOURNALSIZE=0
 BLOCKS=0
-LABELNAME="ocfs2-discontig-bg-tests"
+LABELNAME="ocfs2-discontig-bg-tests-`date '+%y%m%d%H%M%S'`"
 MOUNT_OPTS="localalloc=0"
 OLD_MOUNT_OPTS=
 DEVICE=
