@@ -152,8 +152,8 @@ if __name__=='__main__':
 	if len(args) != 0:
 		parser.error('incorrect number of arguments')
 #
-        if options.debug:
-                DEBUGON=1
+	if options.debug:
+		DEBUGON=1
 #
 	if options.filename:
 		filename = options.filename
