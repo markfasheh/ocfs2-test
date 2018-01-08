@@ -129,12 +129,12 @@ if __name__=='__main__':
 		type='int',
 		help='Number of times the test will be repeated.')
 #
-        parser.add_option('-D',
-                '--debug',
-                action="store_true",
-                dest='debug',
-                default=False,
-                help='Turn the debug option on. Default=False.')
+	parser.add_option('-D',
+			'--debug',
+			action="store_true",
+			dest='debug',
+			default=False,
+			help='Turn the debug option on. Default=False.')
 #
 	parser.add_option('-l',
 		'--logfile',
