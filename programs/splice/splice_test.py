@@ -162,7 +162,7 @@ if __name__=='__main__':
 		parser.error('Please specify working directory.')
 	else:
 		if not os.path.isdir(options.directory):
-			os.makedirs(options.directory, 0755)
+			os.makedirs(options.directory, 0o755)
 	directory = options.directory
 	if options.logfile:
 		logfile = options.logfile+'_'+lhostname
