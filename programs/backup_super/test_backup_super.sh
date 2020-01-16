@@ -355,7 +355,7 @@ function volume_small_test()
 	local tmp_block_count=`expr $tmp_vol_size / 1024`
 	#If block count is too small, mkfs will failed.
 	if [ `expr $tmp_block_count` -lt 20000 ]; then
-		$tmp_block_count=20000
+		tmp_block_count=20000
 	fi
 
 	# Since tunefs will return 0, we need to grep
