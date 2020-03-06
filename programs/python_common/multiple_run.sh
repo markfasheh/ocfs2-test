@@ -73,6 +73,19 @@ set -o pipefail
 ################################################################################
 # Utility Functions
 ################################################################################
+f_detect_if()
+{
+	if ${IP_BIN} addr | ${GREP} -m 1 "eth[0-9]:" >/dev/null 2>&1 ; then
+		INTERFACE=`${IP_BIN} addr | ${GREP} -m 1 "eth[0-9]:" | ${AWK} -F ': ' '{ print $2 }'`
+		return
+	fi
+
+	if ${IP_BIN} addr | ${GREP} -m 1 "ens[0-9]:" >/dev/null 2>&1 ; then
+		INTERFACE=`${IP_BIN} addr | ${GREP} -m 1 "ens[0-9]:" | ${AWK} -F ': ' '{ print $2 }'`
+		return
+	fi
+}
+
 f_usage()
 {
     echo "usage: `basename ${0}` <-k kerneltarball> [-b blocksize] [-c clustersize] <-n nodes> [-i nic] \
@@ -135,6 +148,8 @@ f_setup()
 		echo "Should not run tests as root"
 		exit 1
 	fi
+
+	f_detect_if
 
 	f_getoptions $*
 
@@ -497,7 +512,7 @@ run_flock_unit_test()
 
 	run_common_testcase "flock_unit" "sparse,unwritten,inline-data" \
 "${TOUCH_BIN} ${testfile1} && ${TOUCH_BIN} ${testfile2} && ${BINDIR}/run_flock_unit_test.py \
--l ${fcntl_logfile} -n ${NODE_LIST} -t fcntl -e ${testfile1} -f ${testfile2} \
+-l ${fcntl_logfile}  -i ${INTERFACE} -n ${NODE_LIST} -t fcntl -e ${testfile1} -f ${testfile2} \
 && ${BINDIR}/run_flock_unit_test.py -l ${flock_logfile} -i ${INTERFACE} -n ${NODE_LIST} -t \
 flock -e ${testfile1} -f ${testfile2}"
 }
