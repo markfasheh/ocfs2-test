@@ -23,7 +23,7 @@ if [ $# -ne 1 -a $# -ne 2 ]; then
    exit 1;
 fi;
 
-MPIRUN=`which mpirun`
+MPIRUN=`PATH=$PATH:/usr/lib64/mpi/gcc/openmpi/bin:/usr/lib64/mpi/gcc/openmpi1/bin which mpirun`
 RC=$?
 if [ "$RC" != "0" ];then
 	MPIRUN=`rpm -ql openmpi|grep bin|grep mpirun`
