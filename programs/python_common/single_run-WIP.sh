@@ -756,10 +756,13 @@ run_sendfile()
 		do_mount ${device} ${mountpoint} ${mountopts}
 
 		# Generate original date file
-		dd if=/dev/random of=${workfile} bs=${clustersize} count=4
+		dd if=/dev/random iflag=fullblock of=${workfile} bs=${clustersize} count=4
                 outlog=${logdir}/sendfile_${mopt}.log
 
 		nc -l ${port} >${verifyfile} &
+		ncpid=$!
+		sleep 3	# let nc listen ready
+
 		sendfiletest ${workfile} `hostname` >${outlog} 2>&1
 		RC=$?
 
@@ -770,6 +773,10 @@ run_sendfile()
 			log_message "md5sum verification failed."
 			RC=1
 		fi
+
+		# make sure nc command exits
+		ps -efL | grep "nc -l" | grep $ncpid && kill -9 $ncpid >${outlog} 2>&1
+		sleep 3
 
 		do_umount ${mountpoint}
 
