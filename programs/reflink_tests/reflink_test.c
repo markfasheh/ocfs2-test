@@ -2167,7 +2167,7 @@ static int directio_test(void)
 	int ret, o_flags_rw, o_flags_ro;
 	int sub_testno = 1;
 
-	unsigned long align_slice = 512;
+	unsigned long align_slice = 4096;
 	unsigned long align_filesz = align_slice;
 
 	while (align_filesz < file_size)

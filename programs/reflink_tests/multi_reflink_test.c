@@ -623,7 +623,7 @@ static int directio_test(void)
 	unsigned long append_size = 0, truncate_size = 0;
 	unsigned long interval, offset = 0;
 
-	unsigned long align_slice = 512;
+	unsigned long align_slice = 4096;
 	unsigned long align_filesz = align_slice;
 
 	o_flags_rw = open_rw_flags;
