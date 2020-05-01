@@ -363,7 +363,7 @@ function volume_small_test()
 	#generate a tmp vol size which is less than 1G
 
 	local tmp_vol_size=`expr $RANDOM \* $FIRST_BACKUP_OFF / 32767`
-	local tmp_block_count=`expr $tmp_vol_size / 1024`
+	local tmp_block_count=`expr $tmp_vol_size / $blocksize`
 	#If block count is too small, mkfs will failed.
 	if [ `expr $tmp_block_count` -lt 20000 ]; then
 		tmp_block_count=20000
@@ -371,7 +371,7 @@ function volume_small_test()
 
 	# Since tunefs will return 0, we need to grep
 	# the output of stderr and find what we want.
-	echo "y" |${MKFS_BIN} -b 1K -C 4K ${DEVICE} -N 4 --no-backup-super $tmp_block_count \
+	echo "y" |${MKFS_BIN} -b $blocksize -C 4K ${DEVICE} -N 4 --no-backup-super $tmp_block_count \
  --cluster-stack=${CLUSTER_STACK} --cluster-name=${CLUSTER_NAME}
 	err=`${TUNEFS_BIN} --backup-super ${DEVICE} 2>&1`
 	echo $err|grep "too small to contain backup superblocks"
