@@ -164,7 +164,7 @@ do_consume() {
 
 	# find the free space
 	freespace=`df --block-size=${fillbsz} ${device} |
-		awk -v DEV=${device} 'BEGIN {dev=DEV;} // { if ($1 == dev) print $4; }'`
+		awk -v MNT=${mntdir} 'BEGIN {mnt=MNT;} // { if ($6 == mnt) print $4; }'`
 
 	if [ $file_type -eq 0 ]
 	then
