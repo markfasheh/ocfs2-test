@@ -871,7 +871,7 @@ run_reserve_space()
 				do_mount ${device} ${mountpoint} ${mountopts}
 
 				outlog=${logdir}/reserve_space_${mopt}_${blocksize}_${clustersize}.log
-				space_free=`df|grep ${device}|awk '{print $4}'`
+				space_free=`df|grep ${mountpoint}|awk '{print $4}'`
 				space_free=$((${space_free}*1024))
 
 				for i in `seq ${iter}`;do
