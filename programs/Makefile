@@ -60,7 +60,8 @@ SUBDIRS =			\
 	directio_test		\
 	discontig_bg_test	\
 	verify_readonly		\
-	online_filecheck
+	online_filecheck	\
+	nocluster
 
 ifdef OCFS2_TEST_DX_DIRS
 	SUBDIRS += dx_dirs_tests

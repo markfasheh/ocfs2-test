@@ -244,7 +244,7 @@ f_setup()
 		TESTCASES="all"
 	fi
 
-	SUPPORTED_TESTCASES="all xattr inline reflink write_append_truncate multi_mmap create_racer flock_unit cross_delete open_delete lvb_torture"
+	SUPPORTED_TESTCASES="all xattr inline reflink write_append_truncate multi_mmap create_racer flock_unit cross_delete open_delete lvb_torture nocluster"
 	for cas in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 		echo ${SUPPORTED_TESTCASES} | grep -sqw $cas
 		if [ $? -ne 0 ]; then
@@ -442,6 +442,16 @@ ${logdir} -d ${DEVICE} -b "${BLOCKSIZE}" -c "${CLUSTERSIZE}" -s ${CLUSTER_STACK}
 	LogRC $?
 }
 
+run_nocluster_test()
+{
+	local logdir=${LOG_DIR}/multi-nocluster-test
+
+	LogRunMsg "nocluster-test"
+	${BINDIR}/nocluster-multi-run.sh -r ${SLOTS} -f ${NODE_LIST} -a ssh -o ${logdir} \
+-d ${DEVICE} -b "${BLOCKSIZE}" -c "${CLUSTERSIZE}" -s ${CLUSTER_STACK} -n ${CLUSTER_NAME} ${MOUNT_POINT} >> ${LOGFILE} 2>&1
+	LogRC $?
+}
+
 run_lvb_torture_test()
 {
 	LogRunMsg "lvb_torture"
@@ -563,6 +573,12 @@ for tc in `${ECHO} ${TESTCASES} | ${SED} "s:,: :g"`; do
 	if [ "$tc"X = "reflink"X -o "$tc"X = "all"X ]; then
 		START=$(date +%s)
 		run_reflink_test
+		continue
+	fi
+
+	if [ "$tc"X = "nocluster"X -o "$tc"X = "all"X ]; then
+		START=$(date +%s)
+		run_nocluster_test
 		continue
 	fi
 
