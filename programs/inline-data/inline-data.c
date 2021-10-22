@@ -253,18 +253,6 @@ static int teardown(void)
 	return 0;
 }
 
-static void sigchld_handler()
-{
-	pid_t pid;
-	int status;
-
-	while (1) {
-		pid = wait3(&status, WNOHANG, NULL);
-		if (pid <= 0)
-			break;
-	}
-}
-
 static void kill_all_children()
 {
 	int i;
@@ -315,8 +303,6 @@ static int concurrent_rw_test(void)
 	fd = prep_file(max_inline_size);
 	if (fd < 0)
 		return -1;
-
-	signal(SIGCHLD, sigchld_handler);
 
 	for (i = 0; i < child_nums; i++) {
 		pid = fork();
@@ -394,8 +380,6 @@ static int multi_file_rw_test(int test_num)
 
 	fflush(stderr);
 	fflush(stdout);
-
-	signal(SIGCHLD, sigchld_handler);
 
 	for (j = 0; j < file_nums; j++) {
 		pid = fork();
