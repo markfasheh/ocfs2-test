@@ -344,7 +344,7 @@ else
 	bslist="512 1024 4096"
 fi
 
-if [ "CLUSTERSIZE" != "NONE" ];then
+if [ "$CLUSTERSIZE" != "NONE" ];then
 	cslist="$CLUSTERSIZE"
 else
 	cslist="4096 32768 1048576"
