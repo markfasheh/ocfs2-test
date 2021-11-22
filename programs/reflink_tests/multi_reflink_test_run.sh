@@ -61,6 +61,7 @@ LABELNAME="ocfs2-multi-refcount-tests-`uname -m`"
 WORK_PLACE_DIRENT=ocfs2-multi-refcount-tests
 WORK_PLACE=
 MULTI_REFLINK_TEST_BIN="${BINDIR}/multi_reflink_test"
+MULTI_REFLINK_SNAP_BIN="${BINDIR}/multi_reflink_snap.sh"
 IP_BIN="`which sudo` -u root `which ip`"
 
 DEFAULT_LOG_DIR=${O2TDIR}/log
@@ -371,6 +372,25 @@ ${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_TEST_BIN} -i 1 -p 100 -l \
 	RET=$?
         f_exit_or_not ${RET}
 	fi
+
+	((TEST_NO++))
+	local work_file="testimage"
+	f_LogRunMsg ${RUN_LOG_FILE} "[${TEST_NO}] Concurrent Snapshot Test:"
+	${MKDIR_BIN} -p ${WORK_PLACE}/snapshots >>${LOG_FILE} 2>&1
+	dd if=/dev/zero of=${WORK_PLACE}/${work_file} bs=1k count=102400 >>${LOG_FILE} 2>&1
+	f_LogMsg ${LOG_FILE} "[${TEST_NO}] Concurrent Snapshot Test, CMD:\
+${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np \
+${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_SNAP_BIN} ${WORK_PLACE} ${work_file}"
+	${MPIRUN} ${MPI_PLS_AGENT_ARG} ${MPI_BTL_ARG} ${MPI_BTL_IF_ARG} -np \
+${MPI_RANKS} --host ${MPI_HOSTS} ${MULTI_REFLINK_SNAP_BIN} ${WORK_PLACE} ${work_file} >>${LOG_FILE} 2>&1
+	RET=$?
+	f_echo_status ${RET}| tee -a ${RUN_LOG_FILE}
+	f_exit_or_not ${RET}
+	((TEST_PASS++))
+	f_LogMsg ${LOG_FILE} "Cleanup working place"
+	${RM_BIN} -rf ${WORK_PLACE}/* >>${LOG_FILE} 2>&1
+	RET=$?
+	f_exit_or_not ${RET}
 
 	f_LogRunMsg ${RUN_LOG_FILE} "[*] Umount volume from nodes ${MPI_HOSTS}:"
 	f_LogMsg ${LOG_FILE} "[*] Umount volume from nodes ${MPI_HOSTS}:"
