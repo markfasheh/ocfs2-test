@@ -51,7 +51,7 @@ endif
 
 DIST_FILES = $(SOURCES) reflink_test_run.sh multi_reflink_test_run.sh
 
-BIN_EXTRA = reflink_test_run.sh multi_reflink_test_run.sh reflink_files.sh
+BIN_EXTRA = reflink_test_run.sh multi_reflink_test_run.sh reflink_files.sh multi_reflink_snap.sh
 
 BIN_PROGRAMS = reflink_test multi_reflink_test
 
