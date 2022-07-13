@@ -125,7 +125,7 @@ AC_SUBST(OCFS2_TEST_ENABLE_THIRDPARTY)
 AC_MSG_RESULT($enable_third_party)
 
 dnl check for Python
-AM_PATH_PYTHON(2.3, , AC_MSG_ERROR([could not find Python 2.3 or higher.]))
+AX_PYTHON()
 
 API_COMPAT_HEADERS=""
 API_COMPAT_CFLAGS=""
