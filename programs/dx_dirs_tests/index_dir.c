@@ -926,7 +926,7 @@ void random_test(void)
 static void sigchld_handler()
 {
         pid_t pid;
-        union wait status;
+        int status;
 
         while (1) {
                 pid = wait3(&status, WNOHANG, NULL);
