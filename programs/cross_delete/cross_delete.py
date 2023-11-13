@@ -103,7 +103,7 @@ def BuildCrList(nodelist, nodelen, dirlist, dirlen):
 			remove(os.path.join(stagedir, nodelist[n]+'_C.dat'))
 		fd = open(os.path.join(stagedir, nodelist[n]+'_C.dat'), 'w')
 		fd.write(','.join(node_dirs[nodelist[n]+'_C']))
-		fd.close
+		fd.close()
 		if DEBUGON:
 			o2tf.printlog('cross_delete:BuildDelList: (%s) was written to \
 				the file %s' % (','.join(node_dirs[nodelist[n]+'_C'])),
@@ -125,7 +125,7 @@ def BuildDelList(nodelist, dirlist):
 				remove(os.path.join(stagedir,nodelist[n]+'_D.dat'))
 			fd = open(os.path.join(stagedir,nodelist[n]+'_D.dat'), 'w')
 			fd.write(','.join(node_dirs[nodelist[n-1]+'_D']))
-			fd.close
+			fd.close()
 			if DEBUGON:
 				o2tf.printlog('cross_delete:BuildDelList: (%s) was written to \
 					the file %s' % (','.join(node_dirs[nodelist[n-1]+'_D'])),
@@ -135,7 +135,7 @@ def BuildDelList(nodelist, dirlist):
 				'')
 			fd = open(os.path.join(stagedir, nodelist[n-1]+'_D.dat'), 'w')
 			fd.write(','.join(node_dirs[nodelist[n]+'_D']))
-			fd.close
+			fd.close()
 			if DEBUGON:
 				o2tf.printlog('cross_delete:BuildDelList: (%s) was written to \
 					the file %s' % (','.join(node_dirs[nodelist[n]+'_D'])),
