@@ -1,6 +1,7 @@
-AC_PREREQ(2.54)
+AC_PREREQ([2.69])
 
-AC_INIT(programs)
+AC_INIT
+AC_CONFIG_SRCDIR([programs])
 
 PACKAGE=ocfs2-test
 
@@ -52,7 +53,6 @@ AC_PROG_RANLIB
 
 AC_PATH_PROG(AR, ar)
 
-AC_HEADER_STDC
 AC_C_CONST
 
 if test "x$GCC" != "xyes"; then
