@@ -21,10 +21,17 @@
 # XXX: Future improvements:
 #	 
 # Program	  : cross_delete.py
-# Description : Run a build of the kernel on each one of the ocfs2
-#					 partitions mounted, in parallel.
-#					 i.e: The system has 7 partitions, it will run 7
-#							builds in parallel, one for each partition.
+# Description :
+#
+# create a dir $BASEDIR/x1/x2/xn and extract contents on it
+# -# on node 1.
+# -# create a dir $BASEDIR/y1/y2/yn and extrace contents on it
+# -# on node 2.
+# -# On node 1, remove the directory $BASEDIR/x1.
+# -# On node 2, remove the directory $BASEDIR/y1.
+# -#
+# -# Removal of the directories are not performed in parallel.
+#
 # Author		  : Marcos E. Matsunaga 
 # E-mail		  : Marcos.Matsunaga@oracle.com
 
@@ -303,10 +310,10 @@ for y in range(count):
 		cmdline = os.path.join(config.BINDIR, 'crdel_gen_files.py -D')
 	else:
 		cmdline = os.path.join(config.BINDIR, 'crdel_gen_files.py')
-	ret = o2tf.openmpi_run( DEBUGON, nproc, str('%s -s %s -l %s -t %s' % \
+	ret = o2tf.openmpi_run( DEBUGON, nproc, str('%s -s %s -l %s -t %s -n %s' % \
 		(cmdline, stagedir,
 		config.LOGFILE,
-		tarfile) ),
+		tarfile, ','.join(nodelist)) ),
 		','.join(nodelist),
 		'ssh',
 		options.interface,
@@ -323,8 +330,8 @@ for y in range(count):
 		cmdline = os.path.join(config.BINDIR, 'crdel_del_files.py -D')
 	else:
 		cmdline = os.path.join(config.BINDIR, 'crdel_del_files.py')
-	ret = o2tf.openmpi_run( DEBUGON, nproc, str('%s -s %s -l %s ' % \
-		(cmdline, stagedir, config.LOGFILE) ),
+	ret = o2tf.openmpi_run( DEBUGON, nproc, str('%s -s %s -l %s -n %s' % \
+		(cmdline, stagedir, config.LOGFILE, ','.join(nodelist)) ),
 		','.join(nodelist),
 		'ssh',
 		options.interface,

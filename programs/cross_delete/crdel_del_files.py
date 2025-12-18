@@ -45,6 +45,7 @@ if __name__=='__main__':
 	parser = optparse.OptionParser('usage: %prog [-D|--debug] \
 		[-l|-logfile logfilename] \
 		[-s | --stagedir stagedir] \
+		[-n | --nodes nodes] \
 		[-h|--help]')
 #
 	parser.add_option('-D',
@@ -66,6 +67,12 @@ if __name__=='__main__':
 		type='string',
 		help='Directory that will have the workfiles used \
 			by the test.')
+
+	parser.add_option('-n',
+		'--nodes',
+		dest='nodes',
+		type='string',
+		help='IP addresses of all test nodes.')
 #
 	(options, args) = parser.parse_args()
 #	  if len(args) != 0:
@@ -75,14 +82,31 @@ if __name__=='__main__':
 		DEBUGON=1
 	logfile = options.logfile
 	stagedir = options.stagedir
+	nodes = options.nodes
 #
 # First thing. Check if the dirlist is actually a directory or a file 
 # containing the directory list.
 #
-fd = open(os.path.join(stagedir, socket.gethostname() + '_D.dat'), 'r')
-dirlist = fd.read().split(',')
-fd.close()
-dirlen = len(dirlist)
+hostname = socket.gethostname()
+dat_file = ''
+if os.path.exists(os.path.join(stagedir, socket.gethostname() + '_D.dat')):
+	dat_file = os.path.join(stagedir, socket.gethostname() + '_D.dat')
+elif nodes != '':
+		for node in options.nodes.split(','):
+			name = socket.gethostbyaddr(node)[0]
+			if name:
+				# the name could belike 'ocfs2-node1.ha.foo.bar.'
+				name = name.split(".")[0]
+				if name == hostname:
+					dat_file = os.path.join(stagedir, node + '_C.dat')
+					break
+
+if dat_file != '':
+	fd = open(dat_file, 'r')
+	dirlist = fd.read().split(',')
+	fd.close()
+	dirlen = len(dirlist)
+
 if DEBUGON:
 	o2tf.printlog('crdel_del_files: dirlist = (%s)' % dirlist,
 		logfile,
@@ -100,6 +124,10 @@ if DEBUGON:
 		logfile,
 		0,
 		'')
+	o2tf.printlog('crdel_del_files: nodes = (%s)' % nodes,
+		logfile,
+		0,
+		'')
 #
 for i in range(dirlen):
 	o2tf.printlog('crdel_del_files: Removing directory %s.' % 
@@ -112,6 +140,6 @@ for i in range(dirlen):
 # Remove the workfile after it is done.
 #
 from os import access, F_OK
-if os.access(os.path.join(stagedir, socket.gethostname()), F_OK) == 1:
-	os.remove(os.path.join(stagedir, socket.gethostname() + '_D.dat'))
+if os.access(dat_file, F_OK) == 1:
+	os.remove(dat_file)
 sys.exit()
