@@ -1,12 +1,13 @@
-AC_PREREQ(2.54)
+AC_PREREQ([2.69])
 
-AC_INIT(programs)
+AC_INIT
+AC_CONFIG_SRCDIR([programs])
 
 PACKAGE=ocfs2-test
 
 AC_SUBST(PACKAGE)
 
-MPICC=`PATH=$PATH:/usr/lib64/mpi/gcc/openmpi/bin:/usr/lib64/mpi/gcc/openmpi1/bin which mpicc`
+MPICC=`PATH=$PATH:/usr/lib64/mpi/gcc/openmpi/bin:/usr/lib64/mpi/gcc/openmpi4/bin which mpicc`
 INSTALLDIR=/usr/local
 # Adjust these for the software version.
 MAJOR_VERSION=1
@@ -52,7 +53,6 @@ AC_PROG_RANLIB
 
 AC_PATH_PROG(AR, ar)
 
-AC_HEADER_STDC
 AC_C_CONST
 
 if test "x$GCC" != "xyes"; then
@@ -125,7 +125,7 @@ AC_SUBST(OCFS2_TEST_ENABLE_THIRDPARTY)
 AC_MSG_RESULT($enable_third_party)
 
 dnl check for Python
-AM_PATH_PYTHON(2.3, , AC_MSG_ERROR([could not find Python 2.3 or higher.]))
+AX_PYTHON()
 
 API_COMPAT_HEADERS=""
 API_COMPAT_CFLAGS=""

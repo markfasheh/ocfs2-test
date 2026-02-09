@@ -40,8 +40,8 @@ DIST_FILES = \
 	Postamble.make				\
 	aclocal.m4				\
 	mbvendor.m4				\
-	python.m4				\
-	pythondev.m4				\
+	ax_python.m4				\
+	ax_python_devel.m4				\
 	runlog.m4				\
 	config.guess				\
 	config.sub				\

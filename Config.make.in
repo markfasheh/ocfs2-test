@@ -19,6 +19,7 @@ sbindir = @sbindir@
 includedir = @includedir@
 libdir = @libdir@
 datadir = @datadir@
+datarootdir = @datarootdir@
 sysconfdir = @sysconfdir@
 mandir = @mandir@
 

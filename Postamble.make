@@ -192,20 +192,6 @@ dist-copy: dist-mkdir $(DIST_ALL_FILES) $(DIST_RULES)
 
 dist-all: dist-copy dist-subdirs
 
-dist-bye:
-	-rm -rf $(DIST_TOPDIR)
-
-dist-fresh: dist-bye
-	$(TOPDIR)/mkinstalldirs $(DIST_TOPDIR)
-
-dist: dist-fresh dist-all
-	GZIP=$(GZIP_OPTS) tar chozf $(DIST_TOPDIR).tar.gz $(DIST_TOPDIR)
-	$(MAKE) dist-bye
-
-distclean: clean
-	rm -f Config.make config.status config.cache config.log
-
-
 LOCAL_DFILES := $(wildcard .*.d)
 ifneq ($(LOCAL_DFILES),)
 .PHONY: $(LOCAL_DFILES)
